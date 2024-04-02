@@ -1,4 +1,4 @@
-package net.taskwolf.webhook;
+package net.taskwolf.device;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
@@ -12,7 +12,7 @@ import net.taskwolf.core.module.ModuleInformation;
 import net.taskwolf.core.module.ModuleLoadPriority;
 import net.taskwolf.core.trigger.TriggerFactory;
 import net.taskwolf.core.trigger.TriggerInformation;
-import net.taskwolf.webhook.trigger.DeviceTriggerFactory;
+import net.taskwolf.device.trigger.DeviceTriggerFactory;
 import org.springframework.boot.SpringApplication;
 
 import java.util.List;

@@ -1,14 +1,12 @@
-package net.taskwolf.webhook;
+package net.taskwolf.device;
 
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
-import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor(staticName = "create")
 public class DeviceComponentSelect implements InputComponentSelect {

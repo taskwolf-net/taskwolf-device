@@ -1,4 +1,4 @@
-package net.taskwolf.webhook.trigger;
+package net.taskwolf.device.trigger;
 
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.trigger.Trigger;

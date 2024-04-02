@@ -1,4 +1,4 @@
-package net.taskwolf.webhook.access;
+package net.taskwolf.device.access;
 
 public final class DeviceModificationController {
 

@@ -1,4 +1,4 @@
-package net.taskwolf.webhook;
+package net.taskwolf.device;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

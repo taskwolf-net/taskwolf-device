@@ -1,4 +1,4 @@
-package net.taskwolf.webhook;
+package net.taskwolf.device;
 
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;

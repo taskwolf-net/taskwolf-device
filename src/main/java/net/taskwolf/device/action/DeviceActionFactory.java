@@ -1,4 +1,4 @@
-package net.taskwolf.webhook.action;
+package net.taskwolf.device.action;
 
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.action.Action;
