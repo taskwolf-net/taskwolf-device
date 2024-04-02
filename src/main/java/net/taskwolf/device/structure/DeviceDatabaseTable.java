@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public final class DeviceDatabaseTable extends DatabaseTable {
   private static final String TABLE_NAME = "device";
@@ -20,8 +19,7 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       DatabaseColumn.Type.PRIMARY_KEY));
     columns.add(DatabaseColumn.create("machine", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
-    columns.add(DatabaseColumn.create("password", DatabaseDataType.TEXT));
-    columns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT));
+    columns.add(DatabaseColumn.create("information", DatabaseDataType.TEXT));
     return new DeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
   }
 
@@ -36,13 +34,13 @@ public final class DeviceDatabaseTable extends DatabaseTable {
 
   public void insertDevice(Device device) {
     insertDevice(device.id(), device.machineId(), device.ownerId(),
-      device.password(), device.device());
+      device.information());
   }
 
   public void insertDevice(
-    String id, String machineId, UUID owner, String password, String device
+    String id, String machineId, UUID ownerId, String information
   ) {
-    insert(DatabaseRow.of(id, machineId, owner, password, device));
+    insert(DatabaseRow.of(id, machineId, ownerId, information));
   }
 
   public void deleteDevice(String deviceId) {
@@ -72,12 +70,16 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     return exists(DatabaseCell.create(deviceId));
   }
 
+  public CompletableFuture<Boolean> deviceExists(String machineId, UUID ownerId) {
+    return exists("machine=" + machineId + " AND owner=" + ownerId + " ALLOW FILTERING");
+  }
+
   public CompletableFuture<Device> findDevice(String deviceId) {
     return selectRow(DatabaseCell.create(deviceId)).thenApply(Device::of);
   }
 
-  public CompletableFuture<List<Device>> findDevicesByOwner(UUID ownerId) {
-    return selectRows("owner=" + ownerId  + " ALLOW FILTERING").thenApply(rows ->
-      rows.stream().map(Device::of).collect(Collectors.toList()));
+  public CompletableFuture<Device> findDevice(String machineId, UUID ownerId) {
+    return selectRow("machine=" + machineId + " AND owner=" + ownerId +
+      " ALLOW FILTERING").thenApply(Device::of);
   }
 }
