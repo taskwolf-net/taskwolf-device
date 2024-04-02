@@ -37,25 +37,26 @@ public final class DeviceModificationController extends TaskwolfRestController {
     var body = TaskwolfRequestBody.of(payload, response);
     var deviceId = body.getString("device");
     var information = body.getString("information");
+    var type = body.getString("type");
     findUser(request).thenAccept(user ->
       deviceDatabaseTable.deviceExists(deviceId, user.id()).thenAccept(exists ->
-        deviceLogin(user, deviceId, information, exists)));
+        deviceLogin(user, deviceId, information, type, exists)));
   }
 
   private void deviceLogin(
-    User user, String deviceId, String information, boolean exists
+    User user, String deviceId, String information, String type, boolean exists
   ) {
     if (exists) {
       return;
     }
     deviceDatabaseTable.generateAvailableDeviceId().thenAccept(id ->
-      deviceLogin(user, deviceId, information, id));
+      deviceLogin(user, deviceId, information, type, id));
   }
 
   private void deviceLogin(
-    User user, String deviceId, String information, String id
+    User user, String deviceId, String information, String type, String id
   ) {
-    deviceDatabaseTable.insertDevice(id, deviceId, user.id(), information);
+    deviceDatabaseTable.insertDevice(id, deviceId, user.id(), information, type);
     userDeviceDatabaseTable.addDevice(user.id(), id);
   }
 

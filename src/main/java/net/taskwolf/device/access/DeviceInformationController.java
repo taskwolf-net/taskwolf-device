@@ -52,19 +52,19 @@ public final class DeviceInformationController extends TaskwolfRestController {
     findUser(request).thenApply(user ->
       userTargetDatabaseTable.findTargetSecured(user.id()).thenAccept(target ->
         userDeviceDatabaseTable.findDevices(target).thenAccept(devices ->
-          findDevice(body.getString("device"), devices)
+          findDevice(user, body.getString("device"), devices)
             .thenAccept(futureResponse::complete))));
     return futureResponse;
   }
 
   private CompletableFuture<Map<String, Object>> findDevice(
-    String deviceId, List<String> targetDevices
+    User user, String deviceId, List<String> targetDevices
   ) {
     if (!targetDevices.contains(deviceId)) {
       return CompletableFuture.completedFuture(Maps.newHashMap());
     }
-    return deviceDatabaseTable.findDevice(deviceId).thenCompose(
-      this::gatherDeviceInformation);
+    return deviceDatabaseTable.findDevice(deviceId).thenCompose(device ->
+      gatherDeviceInformation(user, device));
   }
 
   @RequestMapping(path = "/devices/selected/", method = RequestMethod.GET)
@@ -74,8 +74,8 @@ public final class DeviceInformationController extends TaskwolfRestController {
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     findUser(request).thenApply(user ->
       userTargetDatabaseTable.findTargetSecured(user.id()).thenAccept(target ->
-        collectDevices(target).thenAccept(devices ->
-          collectDevicesInformation(devices).thenApply(futureResponse::complete))));
+        collectDevices(target).thenAccept(devices -> collectDevicesInformation(
+          user, devices).thenApply(futureResponse::complete))));
     return futureResponse;
   }
 
@@ -90,35 +90,38 @@ public final class DeviceInformationController extends TaskwolfRestController {
   }
 
   private CompletableFuture<Map<String, Object>> collectDevicesInformation(
-    List<Device> devices
+    User user, List<Device> devices
   ) {
     if (devices.isEmpty()) {
       return CompletableFuture.completedFuture(Map.of("devices",
         Lists.newArrayList()));
     }
     var futureResponse = new CompletableFuture<Map<String, Object>>();
-    AsyncIterator.execute(devices, this::gatherDeviceInformation, devices.size(),
+    AsyncIterator.execute(devices, device ->
+        gatherDeviceInformation(user, device), devices.size(),
       information -> futureResponse.complete(Map.of("devices", information)));
     return futureResponse;
   }
 
   private CompletableFuture<Map<String, Object>> gatherDeviceInformation(
-    Device device
+    User user, Device device
   ) {
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     userDatabaseTable().findUserIfExists(device.ownerId())
       .thenAccept(owner -> futureResponse.complete(
-        assemblyDeviceInformation(device, owner)));
+        assemblyDeviceInformation(user, device, owner)));
     return futureResponse;
   }
 
   private Map<String, Object> assemblyDeviceInformation(
-    Device device, User owner
+    User user, Device device, User owner
   ) {
     var information = Maps.<String, Object>newHashMap();
     information.put("id", device.id());
     information.put("information", device.information());
     information.put("owner", owner.name());
+    information.put("ownDevice", user.id().equals(owner.id()));
+    information.put("type", device.type());
     return information;
   }
 }
