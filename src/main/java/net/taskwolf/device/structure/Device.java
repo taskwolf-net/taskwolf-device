@@ -12,11 +12,13 @@ import java.util.UUID;
 @RequiredArgsConstructor(staticName = "create")
 public final class Device {
   public static Device of(DatabaseRow row) {
-    return create(row.findCell(0).stringValue(), row.findCell(1).uuidValue(),
-      row.findCell(2).stringValue(), row.findCell(3).stringValue());
+    return create(row.findCell(0).stringValue(), row.findCell(1).stringValue(),
+      row.findCell(2).uuidValue(), row.findCell(3).stringValue(),
+      row.findCell(4).stringValue());
   }
 
   private final String id;
+  private final String machineId;
   private final UUID ownerId;
   private final String password;
   private final String device;

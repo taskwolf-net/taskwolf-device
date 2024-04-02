@@ -18,6 +18,7 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     var columns = Lists.<DatabaseColumn>newArrayList();
     columns.add(DatabaseColumn.create("id", DatabaseDataType.TEXT,
       DatabaseColumn.Type.PRIMARY_KEY));
+    columns.add(DatabaseColumn.create("machine", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
     columns.add(DatabaseColumn.create("password", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT));
@@ -34,14 +35,14 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   }
 
   public void insertDevice(Device device) {
-    insertDevice(device.id(), device.ownerId(), device.password(),
-      device.device());
+    insertDevice(device.id(), device.machineId(), device.ownerId(),
+      device.password(), device.device());
   }
 
   public void insertDevice(
-    String id, UUID owner, String password, String device
+    String id, String machineId, UUID owner, String password, String device
   ) {
-    insert(DatabaseRow.of(id, owner, password, device));
+    insert(DatabaseRow.of(id, machineId, owner, password, device));
   }
 
   public void deleteDevice(String deviceId) {
