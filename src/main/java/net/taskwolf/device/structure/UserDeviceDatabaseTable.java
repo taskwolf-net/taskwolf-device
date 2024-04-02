@@ -104,4 +104,10 @@ public final class UserDeviceDatabaseTable extends DatabaseTable {
     return selectRow(DatabaseCell.create(userId))
       .thenApply(row -> row.findCell(1).listValue());
   }
+
+  public CompletableFuture<List<UUID>> findUsersOfDevice(String deviceId) {
+    return selectRows("devices CONTAINS '" + deviceId + "'")
+      .thenApply(rows -> rows.stream().map(row ->
+        row.findCell(0).uuidValue()).toList());
+  }
 }

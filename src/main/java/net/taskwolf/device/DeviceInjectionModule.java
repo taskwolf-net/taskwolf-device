@@ -29,6 +29,7 @@ public final class DeviceInjectionModule extends AbstractModule {
     var userDeviceDatabaseTable = UserDeviceDatabaseTable.create(connection,
       keyspace);
     userDeviceDatabaseTable.createIfNotExists();
+    userDeviceDatabaseTable.createIndexIfNotExists("devices");
     return userDeviceDatabaseTable;
   }
 }

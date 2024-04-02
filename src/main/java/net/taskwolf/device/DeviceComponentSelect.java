@@ -27,7 +27,7 @@ public class DeviceComponentSelect implements InputComponentSelect {
       AsyncIterator.execute(deviceIds, deviceDatabaseTable::findDevice,
         deviceIds.size(), devices -> futureResponse.complete(
           devices.stream().map(device -> new JSONObject(Map.of("identifier",
-              device.id(), "name", device.device())).toString())
+              device.id(), "name", device.information())).toString())
             .collect(Collectors.toList()))));
     return futureResponse;
   }
