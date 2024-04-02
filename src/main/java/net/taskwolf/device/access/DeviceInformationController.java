@@ -118,7 +118,7 @@ public final class DeviceInformationController extends TaskwolfRestController {
     var information = Maps.<String, Object>newHashMap();
     information.put("id", device.id());
     information.put("information", device.information());
-    information.put("creator", owner.name());
+    information.put("owner", owner.name());
     return information;
   }
 }
