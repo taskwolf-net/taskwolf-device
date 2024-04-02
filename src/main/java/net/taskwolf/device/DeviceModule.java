@@ -12,6 +12,10 @@ import net.taskwolf.core.module.ModuleInformation;
 import net.taskwolf.core.module.ModuleLoadPriority;
 import net.taskwolf.core.trigger.TriggerFactory;
 import net.taskwolf.core.trigger.TriggerInformation;
+import net.taskwolf.core.workflow.component.input.InputComponentSelect;
+import net.taskwolf.device.action.DeviceActionFactory;
+import net.taskwolf.device.structure.DeviceDatabaseTable;
+import net.taskwolf.device.structure.UserDeviceDatabaseTable;
 import net.taskwolf.device.trigger.DeviceTriggerFactory;
 import org.springframework.boot.SpringApplication;
 
@@ -22,7 +26,9 @@ import java.util.List;
 public final class DeviceModule extends Module {
   private Log log;
   private TriggerFactory triggerFactory;
+  private ActionFactory actionFactory;
   private AccountLink accountLink;
+  private InputComponentSelect deviceComponentSelect;
 
   public DeviceModule(Injector injector) {
     super(injector.createChildInjector(DeviceInjectionModule.create()));
@@ -34,7 +40,11 @@ public final class DeviceModule extends Module {
     injector().getInstance(SpringApplication.class).addInitializers(
       injector().getInstance(DeviceContextInitializer.class));
     triggerFactory = DeviceTriggerFactory.create();
+    actionFactory = DeviceActionFactory.create();
     accountLink = DeviceAccountLink.create();
+    deviceComponentSelect = DeviceComponentSelect.create(
+      injector().getInstance(DeviceDatabaseTable.class),
+      injector().getInstance(UserDeviceDatabaseTable.class));
   }
 
   @Override
@@ -49,7 +59,7 @@ public final class DeviceModule extends Module {
 
   @Override
   public ActionFactory actionFactory() {
-    return null;
+    return actionFactory;
   }
 
   @Override
