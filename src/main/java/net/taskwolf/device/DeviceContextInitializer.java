@@ -4,6 +4,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import net.taskwolf.device.notification.DeviceNotificationDatabaseTable;
+import net.taskwolf.device.notification.FirebaseDeviceDatabaseTable;
+import net.taskwolf.device.notification.NotificationDatabaseTable;
+import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
 import org.springframework.context.ApplicationContextInitializer;
@@ -14,11 +18,19 @@ import org.springframework.context.ConfigurableApplicationContext;
 public final class DeviceContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
   private final DeviceDatabaseTable deviceDatabaseTable;
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
+  private final NotificationDatabaseTable notificationDatabaseTable;
+  private final DeviceNotificationDatabaseTable deviceNotificationDatabaseTable;
+  private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
+  private final NotificationFactory notificationFactory;
 
   @Override
   public void initialize(ConfigurableApplicationContext applicationContext) {
     var beanFactory = applicationContext.getBeanFactory();
     beanFactory.registerSingleton("deviceDatabaseTable", deviceDatabaseTable);
     beanFactory.registerSingleton("userDeviceDatabaseTable", userDeviceDatabaseTable);
+    beanFactory.registerSingleton("pushNotificationDatabaseTable", notificationDatabaseTable);
+    beanFactory.registerSingleton("deviceNotificationDatabaseTable", deviceNotificationDatabaseTable);
+    beanFactory.registerSingleton("firebaseDeviceDatabaseTable", firebaseDeviceDatabaseTable);
+    beanFactory.registerSingleton("notificationFactory", notificationFactory);
   }
 }
