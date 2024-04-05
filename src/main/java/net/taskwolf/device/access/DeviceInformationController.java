@@ -125,7 +125,7 @@ public final class DeviceInformationController extends TaskwolfRestController {
     information.put("information", device.information());
     information.put("owner", owner.name());
     information.put("ownDevice", target.equals(device.ownerId()));
-    information.put("type", device.type());
+    information.put("platform", device.platform());
     return information;
   }
 

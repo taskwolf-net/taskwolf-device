@@ -20,7 +20,7 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     columns.add(DatabaseColumn.create("machine", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
     columns.add(DatabaseColumn.create("information", DatabaseDataType.TEXT));
-    columns.add(DatabaseColumn.create("type", DatabaseDataType.TEXT));
+    columns.add(DatabaseColumn.create("platform", DatabaseDataType.TEXT));
     return new DeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
   }
 
@@ -35,13 +35,14 @@ public final class DeviceDatabaseTable extends DatabaseTable {
 
   public void insertDevice(Device device) {
     insertDevice(device.id(), device.machineId(), device.ownerId(),
-      device.information(), device.type());
+      device.information(), device.platform().toString());
   }
 
   public void insertDevice(
-    String id, String machineId, UUID ownerId, String information, String type
+    String id, String machineId, UUID ownerId, String information,
+    String platform
   ) {
-    insert(DatabaseRow.of(id, machineId, ownerId, information, type));
+    insert(DatabaseRow.of(id, machineId, ownerId, information, platform));
   }
 
   public void deleteDevice(String deviceId) {
