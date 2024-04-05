@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.database.DatabaseConnection;
 import net.taskwolf.core.database.DatabaseKeyspace;
 
-@RequiredArgsConstructor(staticName = "creaet")
+@RequiredArgsConstructor(staticName = "create")
 public final class NotificationInjectionModule extends AbstractModule {
   @Provides
   @Singleton

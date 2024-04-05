@@ -14,7 +14,7 @@ import net.taskwolf.device.structure.UserDeviceDatabaseTable;
 public final class DeviceInjectionModule extends AbstractModule {
   @Override
   protected void configure() {
-    install(NotificationInjectionModule.creaet());
+    install(NotificationInjectionModule.create());
   }
 
   @Provides
