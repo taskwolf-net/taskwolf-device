@@ -15,7 +15,7 @@ public final class FirebaseDeviceDatabaseTable extends DatabaseTable {
     var columns = Lists.<DatabaseColumn>newArrayList();
     columns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT,
       DatabaseColumn.Type.PRIMARY_KEY));
-    columns.add(DatabaseColumn.create("token", DatabaseDataType.TEXT));
+    columns.add(DatabaseColumn.create("identifier", DatabaseDataType.TEXT));
     return new FirebaseDeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
   }
 
@@ -26,36 +26,36 @@ public final class FirebaseDeviceDatabaseTable extends DatabaseTable {
     super(connection, keyspace, name, columns);
   }
 
-  public void storeDeviceToken(String deviceId, String token) {
+  public void storeDeviceIdentifier(String deviceId, String identifier) {
     exists(DatabaseCell.create(deviceId)).thenAccept(exists ->
-      storeDeviceToken(deviceId, token, exists));
+      storeDeviceIdentifier(deviceId, identifier, exists));
   }
 
-  private void storeDeviceToken(String deviceId, String token, boolean exists) {
+  private void storeDeviceIdentifier(String deviceId, String identifier, boolean exists) {
     if (!exists) {
-      insertDeviceToken(deviceId, token);
+      insertDeviceIdentifier(deviceId, identifier);
     } else {
-      updateDeviceToken(deviceId, token);
+      updateDeviceIdentifier(deviceId, identifier);
     }
   }
 
-  private CompletableFuture<Void> insertDeviceToken(String deviceId, String token) {
-    return insert(DatabaseRow.of(deviceId, token));
+  private CompletableFuture<Void> insertDeviceIdentifier(String deviceId, String identifier) {
+    return insert(DatabaseRow.of(deviceId, identifier));
   }
 
-  private CompletableFuture<Void> updateDeviceToken(String deviceId, String token) {
-    return update(DatabaseCell.create(deviceId), DatabaseRow.of(deviceId, token));
+  private CompletableFuture<Void> updateDeviceIdentifier(String deviceId, String identifier) {
+    return update(DatabaseCell.create(deviceId), DatabaseRow.of(deviceId, identifier));
   }
 
-  public void deleteDeviceToken(String deviceId) {
+  public void deleteDeviceIdentifier(String deviceId) {
     delete(DatabaseCell.create(deviceId));
   }
 
-  public CompletableFuture<Boolean> deviceTokenExists(String deviceId) {
+  public CompletableFuture<Boolean> deviceIdentifierExists(String deviceId) {
     return exists(DatabaseCell.create(deviceId));
   }
 
-  public CompletableFuture<String> findDeviceToken(String deviceId) {
+  public CompletableFuture<String> findDeviceIdentifier(String deviceId) {
     return selectRow(DatabaseCell.create(deviceId))
       .thenApply(row -> row.findCell(1).stringValue());
   }

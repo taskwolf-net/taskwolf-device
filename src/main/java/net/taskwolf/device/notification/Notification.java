@@ -28,15 +28,15 @@ public final class Notification {
   }
 
   private void publishMobileNotification() {
-    firebaseDeviceDatabaseTable.findDeviceToken(device.id())
+    firebaseDeviceDatabaseTable.findDeviceIdentifier(device.id())
       .thenAccept(this::publishMobileNotification);
   }
 
   private static final String FIREBASE_URL = "https://fcm.googleapis.com/fcm/send";
 
-  private void publishMobileNotification(String token) {
+  private void publishMobileNotification(String identifier) {
     var body = new JSONObject();
-    body.put("to", token);
+    body.put("to", identifier);
     var notification = new JSONObject();
     notification.put("title", title);
     notification.put("body", body);
