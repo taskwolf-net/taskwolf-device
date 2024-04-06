@@ -19,6 +19,12 @@ public final class DeviceInjectionModule extends AbstractModule {
 
   @Provides
   @Singleton
+  DeviceConfiguration provideDeviceConfiguration() throws Exception {
+    return DeviceConfiguration.createAndLoad();
+  }
+
+  @Provides
+  @Singleton
   DeviceDatabaseTable provideDeviceDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
   ) {
