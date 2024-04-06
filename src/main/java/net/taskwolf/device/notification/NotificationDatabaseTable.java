@@ -8,7 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public final class NotificationDatabaseTable extends DatabaseTable {
-  private static final String TABLE_NAME = "notification";
+  private static final String TABLE_NAME = "push_notification";
 
   public static NotificationDatabaseTable create(
     DatabaseConnection connection, DatabaseKeyspace keyspace
