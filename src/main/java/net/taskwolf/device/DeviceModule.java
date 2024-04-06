@@ -14,6 +14,8 @@ import net.taskwolf.core.trigger.TriggerFactory;
 import net.taskwolf.core.trigger.TriggerInformation;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
 import net.taskwolf.device.action.DeviceActionFactory;
+import net.taskwolf.device.action.DeviceNotificationAction;
+import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
 import net.taskwolf.device.trigger.DeviceTriggerFactory;
@@ -40,7 +42,9 @@ public final class DeviceModule extends Module {
     injector().getInstance(SpringApplication.class).addInitializers(
       injector().getInstance(DeviceContextInitializer.class));
     triggerFactory = DeviceTriggerFactory.create();
-    actionFactory = DeviceActionFactory.create();
+    actionFactory = DeviceActionFactory.create(
+      injector().getInstance(DeviceDatabaseTable.class),
+      injector().getInstance(NotificationFactory.class));
     accountLink = DeviceAccountLink.create();
     deviceComponentSelect = DeviceComponentSelect.create(
       injector().getInstance(DeviceDatabaseTable.class),
@@ -80,6 +84,7 @@ public final class DeviceModule extends Module {
 
   @Override
   public List<ActionInformation> actionInformation() {
-    return Lists.newArrayList();
+    return Lists.newArrayList(DeviceNotificationAction.information(
+      deviceComponentSelect));
   }
 }
