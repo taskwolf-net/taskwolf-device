@@ -39,31 +39,31 @@ public final class DeviceModificationController extends TaskwolfRestController {
     var body = TaskwolfRequestBody.of(payload, response);
     var deviceId = body.getString("device");
     var information = body.getString("information");
-    var type = body.getString("type");
+    var platform = body.getString("platform");
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     findUser(request).thenAccept(user ->
       deviceDatabaseTable.deviceExists(deviceId, user.id()).thenAccept(exists ->
-        deviceLogin(user, deviceId, information, type, exists)
+        deviceLogin(user, deviceId, information, platform, exists)
           .thenAccept(futureResponse::complete)));
     return futureResponse;
   }
 
   private CompletableFuture<Map<String, Object>> deviceLogin(
-    User user, String deviceId, String information, String type, boolean exists
+    User user, String deviceId, String information, String platform, boolean exists
   ) {
     if (exists) {
       return deviceDatabaseTable.findDevice(deviceId, user.id())
         .thenApply(device -> Map.of("id", device.id()));
     }
     var futureId = deviceDatabaseTable.generateAvailableDeviceId();
-    futureId.thenAccept(id -> deviceLogin(user, deviceId, information, type, id));
+    futureId.thenAccept(id -> deviceLogin(user, deviceId, information, platform, id));
     return futureId.thenApply(id -> Map.of("id", id));
   }
 
   private void deviceLogin(
-    User user, String deviceId, String information, String type, String id
+    User user, String deviceId, String information, String platform, String id
   ) {
-    deviceDatabaseTable.insertDevice(id, deviceId, user.id(), information, type);
+    deviceDatabaseTable.insertDevice(id, deviceId, user.id(), information, platform);
     userDeviceDatabaseTable.addDevice(user.id(), id);
   }
 
