@@ -99,14 +99,14 @@ public final class DeviceNotificationDatabaseTable extends DatabaseTable {
     return exists(DatabaseCell.create(deviceId));
   }
 
-  public CompletableFuture<List<String>> findNotificationsIfExists(String deviceId) {
-    var futureResponse = new CompletableFuture<List<String>>();
+  public CompletableFuture<List<UUID>> findNotificationsIfExists(String deviceId) {
+    var futureResponse = new CompletableFuture<List<UUID>>();
     notificationExists(deviceId).thenAccept(exists ->
       findNotificationsIfExists(deviceId, exists).thenAccept(futureResponse::complete));
     return futureResponse;
   }
 
-  private CompletableFuture<List<String>> findNotificationsIfExists(
+  private CompletableFuture<List<UUID>> findNotificationsIfExists(
     String deviceId, boolean exists
   ) {
     if (!exists) {
@@ -115,7 +115,7 @@ public final class DeviceNotificationDatabaseTable extends DatabaseTable {
     return findNotifications(deviceId);
   }
 
-  public CompletableFuture<List<String>> findNotifications(String deviceId) {
+  public CompletableFuture<List<UUID>> findNotifications(String deviceId) {
     return selectRow(DatabaseCell.create(deviceId))
       .thenApply(row -> row.findCell(1).listValue());
   }
