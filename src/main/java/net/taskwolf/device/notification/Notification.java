@@ -53,7 +53,7 @@ public final class Notification {
   }
 
   private void publishDesktopNotification(UUID notificationId) {
-    notificationDatabaseTable.insertNotification(notificationId, body, title);
+    notificationDatabaseTable.insertNotification(notificationId, title, body);
     deviceNotificationDatabaseTable.addNotification(device.id(), notificationId);
   }
 }
