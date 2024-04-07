@@ -74,6 +74,9 @@ public final class DeviceNotificationAction implements Action {
   }
 
   private CompletableFuture<ActionResult> publishNotification(Device device) {
+    if (!device.workflowNotifications()) {
+      return ActionResult.futureFailure("device.action.notification.failure.device.permission");
+    }
     notificationFactory.createNotification(device, notificationTitle,
       notificationBody).publish();
     return ActionResult.futureSuccess(buildInformation(device));
