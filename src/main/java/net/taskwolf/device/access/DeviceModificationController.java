@@ -85,7 +85,7 @@ public final class DeviceModificationController extends TaskwolfRestController {
     String firebaseToken, String id
   ) {
     deviceDatabaseTable.insertDevice(id, deviceId, user.id(), information,
-      platform.toString());
+      platform.toString(), true, true, false);
     userDeviceDatabaseTable.addDevice(user.id(), id);
     if (platform.isMobile()) {
       firebaseDeviceDatabaseTable.storeDeviceIdentifier(id, firebaseToken);

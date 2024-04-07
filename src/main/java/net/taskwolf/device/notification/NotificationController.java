@@ -38,6 +38,77 @@ public final class NotificationController extends TaskwolfRestController {
     this.deviceNotificationDatabaseTable = deviceNotificationDatabaseTable;
   }
 
+  @RequestMapping(path = "/device/notification/settings/", method = RequestMethod.POST)
+  public CompletableFuture<Map<String, Object>> findNotificationsSettings(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    var deviceId = body.getString("device");
+    var futureResponse = new CompletableFuture<Map<String, Object>>();
+    findUser(request).thenApply(user -> deviceDatabaseTable.deviceExists(deviceId)
+      .thenAccept(exists -> findNotificationsSettings(user, deviceId, exists)
+        .thenAccept(futureResponse::complete)));
+    return futureResponse;
+  }
+
+  private CompletableFuture<Map<String, Object>> findNotificationsSettings(
+    User user, String deviceId, boolean exists
+  ) {
+    if (!exists) {
+      return CompletableFuture.completedFuture(Maps.newHashMap());
+    }
+    return deviceDatabaseTable.findDevice(deviceId).thenApply(device ->
+      findNotificationsSettings(user, device));
+  }
+
+  private Map<String, Object> findNotificationsSettings(
+    User user, Device device
+  ) {
+    if (!user.id().equals(device.ownerId())) {
+      return Maps.newHashMap();
+    }
+    return Map.of("workflowNotifications", device.workflowNotifications(),
+      "errorNotifications", device.errorNotifications(), "newsNotifications",
+      device.newsNotifications());
+  }
+
+  @RequestMapping(path = "/device/notification/settings/update/", method = RequestMethod.POST)
+  public void updateNotificationsSettings(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    var deviceId = body.getString("device");
+    findUser(request).thenApply(user -> deviceDatabaseTable.deviceExists(deviceId)
+      .thenAccept(exists -> updateNotificationsSettings(user, deviceId,
+        body.getBoolean("workflowNotifications"), body.getBoolean("errorNotifications"),
+        body.getBoolean("newsNotifications"), exists)));
+  }
+
+  private void updateNotificationsSettings(
+    User user, String deviceId, boolean workflowNotifications,
+    boolean errorNotifications, boolean newsNotifications, boolean exists
+  ) {
+    if (!exists) {
+      return;
+    }
+    deviceDatabaseTable.findDevice(deviceId).thenAccept(device ->
+      updateNotificationsSettings(user, device, workflowNotifications,
+        errorNotifications, newsNotifications));
+  }
+
+  private void updateNotificationsSettings(
+    User user, Device device, boolean workflowNotifications,
+    boolean errorNotifications, boolean newsNotifications
+  ) {
+    if (!user.id().equals(device.ownerId())) {
+      return;
+    }
+    deviceDatabaseTable.updateDeviceNotificationSettings(device,
+      workflowNotifications, errorNotifications, newsNotifications);
+  }
+
   @RequestMapping(path = "/device/desktop/notifications/", method = RequestMethod.POST)
   public CompletableFuture<Map<String, Object>> findNotifications(
     HttpServletRequest request, @RequestBody String payload,

@@ -21,6 +21,12 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     columns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
     columns.add(DatabaseColumn.create("information", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("platform", DatabaseDataType.TEXT));
+    columns.add(DatabaseColumn.create("workflowNotifications",
+      DatabaseDataType.BOOLEAN));
+    columns.add(DatabaseColumn.create("errorNotifications",
+      DatabaseDataType.BOOLEAN));
+    columns.add(DatabaseColumn.create("newsNotifications",
+      DatabaseDataType.BOOLEAN));
     return new DeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
   }
 
@@ -35,14 +41,28 @@ public final class DeviceDatabaseTable extends DatabaseTable {
 
   public void insertDevice(Device device) {
     insertDevice(device.id(), device.machineId(), device.ownerId(),
-      device.information(), device.platform().toString());
+      device.information(), device.platform().toString(),
+      device.workflowNotifications(), device.errorNotifications(),
+      device.newsNotifications());
   }
 
   public void insertDevice(
     String id, String machineId, UUID ownerId, String information,
-    String platform
+    String platform, boolean workflowNotifications, boolean errorNotifications,
+    boolean newsNotifications
   ) {
-    insert(DatabaseRow.of(id, machineId, ownerId, information, platform));
+    insert(DatabaseRow.of(id, machineId, ownerId, information, platform,
+      workflowNotifications, errorNotifications, newsNotifications));
+  }
+
+  public void updateDeviceNotificationSettings(
+    Device device, boolean workflowNotifications, boolean errorNotifications,
+    boolean newsNotifications
+  ) {
+    update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
+      device.machineId(), device.ownerId(), device.information(),
+      device.platform().toString(), workflowNotifications, errorNotifications,
+      newsNotifications));
   }
 
   public void deleteDevice(String deviceId) {
