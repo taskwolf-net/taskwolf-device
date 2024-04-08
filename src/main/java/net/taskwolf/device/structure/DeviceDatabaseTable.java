@@ -104,4 +104,9 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     return selectRow("machine='" + machineId + "' AND owner=" + ownerId +
       " ALLOW FILTERING").thenApply(Device::of);
   }
+
+  public CompletableFuture<List<Device>> findDevicesOfOwner(UUID ownerId) {
+    return selectRows("owner=" + ownerId + " ALLOW FILTERING").thenApply(rows ->
+      rows.stream().map(Device::of).toList());
+  }
 }
