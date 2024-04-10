@@ -1,6 +1,6 @@
 package net.taskwolf.device.action;
 
-import com.datastax.oss.driver.shaded.guava.common.collect.Maps;
+import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import net.taskwolf.core.action.Action;
 import net.taskwolf.core.action.ActionInformation;
