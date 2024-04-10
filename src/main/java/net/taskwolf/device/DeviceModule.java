@@ -5,6 +5,9 @@ import com.google.inject.Injector;
 import net.taskwolf.core.account.AccountLink;
 import net.taskwolf.core.action.ActionFactory;
 import net.taskwolf.core.action.ActionInformation;
+import net.taskwolf.core.distribution.packet.PacketEventRepository;
+import net.taskwolf.core.distribution.packet.PacketRegistry;
+import net.taskwolf.core.event.HookRegistry;
 import net.taskwolf.core.log.Log;
 import net.taskwolf.core.module.Module;
 import net.taskwolf.core.module.ModuleDescription;
@@ -14,7 +17,16 @@ import net.taskwolf.core.trigger.TriggerFactory;
 import net.taskwolf.core.trigger.TriggerInformation;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
 import net.taskwolf.device.action.DeviceActionFactory;
+import net.taskwolf.device.action.DeviceCommandAction;
 import net.taskwolf.device.action.DeviceNotificationAction;
+import net.taskwolf.device.command.CommandExecutionDatabaseTable;
+import net.taskwolf.device.command.CommandRequestRepository;
+import net.taskwolf.device.distribution.event.*;
+import net.taskwolf.device.distribution.hook.CommandRequestHook;
+import net.taskwolf.device.distribution.hook.CommandResponseHook;
+import net.taskwolf.device.distribution.hook.NotificationRequestHook;
+import net.taskwolf.device.distribution.hook.NotificationResponseHook;
+import net.taskwolf.device.distribution.packet.incoming.*;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
@@ -44,11 +56,55 @@ public final class DeviceModule extends Module {
     triggerFactory = DeviceTriggerFactory.create();
     actionFactory = DeviceActionFactory.create(
       injector().getInstance(DeviceDatabaseTable.class),
-      injector().getInstance(NotificationFactory.class));
+      injector().getInstance(NotificationFactory.class),
+      injector().getInstance(CommandExecutionDatabaseTable.class),
+      injector().getInstance(CommandRequestRepository.class));
     accountLink = DeviceAccountLink.create();
     deviceComponentSelect = DeviceComponentSelect.create(
       injector().getInstance(DeviceDatabaseTable.class),
       injector().getInstance(UserDeviceDatabaseTable.class));
+    registerPackets();
+    registerPacketEvents();
+    registerHooks();
+  }
+
+  private void registerPackets() throws Exception {
+    var packetRegistry = injector().getInstance(PacketRegistry.class);
+    packetRegistry.registerPacket(PacketIncomingDeviceLogin.class);
+    packetRegistry.registerPacket(PacketIncomingDeviceLogout.class);
+    packetRegistry.registerPacket(PacketIncomingNotificationRequest.class);
+    packetRegistry.registerPacket(PacketIncomingNotificationResponse.class);
+    packetRegistry.registerPacket(PacketIncomingCommandRequest.class);
+    packetRegistry.registerPacket(PacketIncomingCommandResponse.class);
+  }
+
+  private void registerPacketEvents() {
+    var packetEventRepository = injector().getInstance(PacketEventRepository.class);
+    packetEventRepository.registerEvent(PacketIncomingDeviceLogin.class,
+      (client, packet) -> DeviceLoginEvent.create(packet.deviceId(), client));
+    packetEventRepository.registerEvent(PacketIncomingDeviceLogout.class,
+      (client, packet) -> DeviceLogoutEvent.create(packet.deviceId()));
+    packetEventRepository.registerEvent(PacketIncomingNotificationRequest.class,
+      (client, packet) -> NotificationRequestEvent.create(packet.notificationId(),
+        packet.deviceId(), packet.title(), packet.body(), client));
+    packetEventRepository.registerEvent(PacketIncomingNotificationResponse.class,
+      (client, packet) -> NotificationResponseEvent.create(packet.notificationId(),
+        packet.delivered()));
+    packetEventRepository.registerEvent(PacketIncomingCommandRequest.class,
+      (client, packet) -> CommandRequestEvent.create(packet.commandId(),
+        packet.deviceId(), packet.command(), client));
+    packetEventRepository.registerEvent(PacketIncomingCommandResponse.class,
+      (client, packet) -> CommandResponseEvent.create(packet.commandId(),
+        packet.delivered(), packet.output(), packet.errorMessage(),
+        packet.exitCode()));
+  }
+
+  private void registerHooks() {
+    var hookRegistry = injector().getInstance(HookRegistry.class);
+    hookRegistry.register(injector().getInstance(CommandRequestHook.class));
+    hookRegistry.register(injector().getInstance(CommandResponseHook.class));
+    hookRegistry.register(injector().getInstance(NotificationRequestHook.class));
+    hookRegistry.register(injector().getInstance(NotificationResponseHook.class));
   }
 
   @Override
@@ -84,7 +140,8 @@ public final class DeviceModule extends Module {
 
   @Override
   public List<ActionInformation> actionInformation() {
-    return Lists.newArrayList(DeviceNotificationAction.information(
-      deviceComponentSelect));
+    return Lists.newArrayList(
+      DeviceNotificationAction.information(deviceComponentSelect),
+      DeviceCommandAction.information(deviceComponentSelect));
   }
 }
