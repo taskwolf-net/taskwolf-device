@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import net.taskwolf.core.action.ActionResult;
+import net.taskwolf.device.structure.Device;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -13,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor(staticName = "create")
 public final class CommandRequest {
   private final UUID id;
-  private final String device;
+  private final Device device;
   private final String command;
   private final CompletableFuture<ActionResult> futureResult;
 }

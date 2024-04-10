@@ -89,7 +89,7 @@ public final class DeviceCommandAction implements Action {
   ) {
     var futureResponse = new CompletableFuture<ActionResult>();
     commandRequestRepository.registerCommandRequest(CommandRequest.create(
-      commandId, device.id(), command, futureResponse));
+      commandId, device, command, futureResponse));
     return futureResponse;
   }
 }
