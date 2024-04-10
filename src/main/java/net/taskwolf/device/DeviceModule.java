@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import net.taskwolf.core.account.AccountLink;
 import net.taskwolf.core.action.ActionFactory;
 import net.taskwolf.core.action.ActionInformation;
+import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.distribution.packet.PacketEventRepository;
 import net.taskwolf.core.distribution.packet.PacketRegistry;
 import net.taskwolf.core.event.HookRegistry;
@@ -21,6 +22,8 @@ import net.taskwolf.device.action.DeviceCommandAction;
 import net.taskwolf.device.action.DeviceNotificationAction;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequestRepository;
+import net.taskwolf.device.connection.DeviceConnectionRepository;
+import net.taskwolf.device.connection.DeviceWebSocket;
 import net.taskwolf.device.distribution.event.*;
 import net.taskwolf.device.distribution.hook.CommandRequestHook;
 import net.taskwolf.device.distribution.hook.CommandResponseHook;
@@ -33,6 +36,7 @@ import net.taskwolf.device.structure.UserDeviceDatabaseTable;
 import net.taskwolf.device.trigger.DeviceTriggerFactory;
 import org.springframework.boot.SpringApplication;
 
+import java.security.Key;
 import java.util.List;
 
 @ModuleDescription(name = "device", version = "1.0.0-SNAPSHOT",
@@ -54,18 +58,22 @@ public final class DeviceModule extends Module {
     injector().getInstance(SpringApplication.class).addInitializers(
       injector().getInstance(DeviceContextInitializer.class));
     triggerFactory = DeviceTriggerFactory.create();
-    actionFactory = DeviceActionFactory.create(
-      injector().getInstance(DeviceDatabaseTable.class),
+    var deviceDatabaseTable = injector().getInstance(DeviceDatabaseTable.class);
+    actionFactory = DeviceActionFactory.create(deviceDatabaseTable,
       injector().getInstance(NotificationFactory.class),
       injector().getInstance(CommandExecutionDatabaseTable.class),
       injector().getInstance(CommandRequestRepository.class));
     accountLink = DeviceAccountLink.create();
-    deviceComponentSelect = DeviceComponentSelect.create(
-      injector().getInstance(DeviceDatabaseTable.class),
+    deviceComponentSelect = DeviceComponentSelect.create(deviceDatabaseTable,
       injector().getInstance(UserDeviceDatabaseTable.class));
     registerPackets();
     registerPacketEvents();
     registerHooks();
+    var socket = DeviceWebSocket.of(5151, deviceDatabaseTable,
+      injector().getInstance(DeviceConnectionRepository.class),
+      injector().getInstance(DistributionClientRegistry.class),
+      injector().getInstance(Key.class));
+    socket.start();
   }
 
   private void registerPackets() throws Exception {
