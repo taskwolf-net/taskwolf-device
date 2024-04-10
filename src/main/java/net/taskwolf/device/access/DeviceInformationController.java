@@ -5,7 +5,6 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
-import net.taskwolf.core.access.TaskwolfRestController;
 import net.taskwolf.core.iterator.AsyncIterator;
 import net.taskwolf.core.organization.OrganizationDatabaseTable;
 import net.taskwolf.core.user.User;
@@ -26,8 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-public final class DeviceInformationController extends TaskwolfRestController {
-  private final DeviceDatabaseTable deviceDatabaseTable;
+public final class DeviceInformationController extends DeviceController {
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final UserTargetDatabaseTable userTargetDatabaseTable;
   private final OrganizationDatabaseTable organizationDatabaseTable;
@@ -39,8 +37,7 @@ public final class DeviceInformationController extends TaskwolfRestController {
     UserTargetDatabaseTable userTargetDatabaseTable,
     OrganizationDatabaseTable organizationDatabaseTable
   ) {
-    super(secretKey, userDatabaseTable);
-    this.deviceDatabaseTable = deviceDatabaseTable;
+    super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
     this.userTargetDatabaseTable = userTargetDatabaseTable;
     this.organizationDatabaseTable = organizationDatabaseTable;
@@ -67,7 +64,7 @@ public final class DeviceInformationController extends TaskwolfRestController {
     if (!targetDevices.contains(deviceId)) {
       return CompletableFuture.completedFuture(Maps.newHashMap());
     }
-    return deviceDatabaseTable.findDevice(deviceId).thenCompose(device ->
+    return deviceDatabaseTable().findDevice(deviceId).thenCompose(device ->
       gatherDeviceInformation(target, device));
   }
 
@@ -88,7 +85,7 @@ public final class DeviceInformationController extends TaskwolfRestController {
   ) {
     var futureResponse = new CompletableFuture<List<Device>>();
     userDeviceDatabaseTable.findDevicesIfExists(targetId).thenAccept(deviceIds ->
-      AsyncIterator.execute(deviceIds, deviceDatabaseTable::findDevice,
+      AsyncIterator.execute(deviceIds, deviceDatabaseTable()::findDevice,
         deviceIds.size(), futureResponse::complete));
     return futureResponse;
   }
@@ -137,28 +134,16 @@ public final class DeviceInformationController extends TaskwolfRestController {
     var body = TaskwolfRequestBody.of(payload, response);
     var deviceId = body.getString("device");
     var futureResponse = new CompletableFuture<Map<String, Object>>();
-    findUser(request).thenAccept(user -> deviceDatabaseTable.deviceExists(deviceId)
-      .thenAccept(exists -> findDeviceOrganizations(user, deviceId, exists)
-        .thenAccept(futureResponse::complete)));
+    findUser(request).thenAccept(user -> performDeviceOperation(user.id(),
+      deviceId, device -> findDeviceOrganizations(user, device)
+        .thenAccept(futureResponse::complete),
+      () -> futureResponse.complete(Maps.newHashMap())));
     return futureResponse;
-  }
-
-  private CompletableFuture<Map<String, Object>> findDeviceOrganizations(
-    User user, String deviceId, boolean exists
-  ) {
-    if (!exists) {
-      return CompletableFuture.completedFuture(Maps.newHashMap());
-    }
-    return deviceDatabaseTable.findDevice(deviceId).thenCompose(device ->
-      findDeviceOrganizations(user, device));
   }
 
   private CompletableFuture<Map<String, Object>> findDeviceOrganizations(
     User user, Device device
   ) {
-    if (!user.id().equals(device.ownerId())) {
-      return CompletableFuture.completedFuture(Maps.newHashMap());
-    }
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     userDeviceDatabaseTable.findUsersOfDevice(device.id()).thenApply(users ->
         users.stream().filter(entry -> !entry.equals(user.id())).toList())

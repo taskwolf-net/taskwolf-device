@@ -3,7 +3,6 @@ package net.taskwolf.device.access;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
-import net.taskwolf.core.access.TaskwolfRestController;
 import net.taskwolf.core.user.User;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.device.notification.FirebaseDeviceDatabaseTable;
@@ -22,8 +21,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-public final class DeviceModificationController extends TaskwolfRestController {
-  private final DeviceDatabaseTable deviceDatabaseTable;
+public final class DeviceModificationController extends DeviceController {
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
 
@@ -33,8 +31,7 @@ public final class DeviceModificationController extends TaskwolfRestController {
     UserDeviceDatabaseTable userDeviceDatabaseTable,
     FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable
   ) {
-    super(secretKey, userDatabaseTable);
-    this.deviceDatabaseTable = deviceDatabaseTable;
+    super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
   }
@@ -51,7 +48,7 @@ public final class DeviceModificationController extends TaskwolfRestController {
     var firebaseToken = platform.isAndroid() ? body.getString("firebaseToken") : "";
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     findUser(request).thenAccept(user ->
-      deviceDatabaseTable.deviceExists(deviceId, user.id()).thenAccept(exists ->
+      deviceDatabaseTable().deviceExists(deviceId, user.id()).thenAccept(exists ->
         deviceLogin(user, deviceId, information, platform, firebaseToken, exists)
           .thenAccept(futureResponse::complete)));
     return futureResponse;
@@ -62,10 +59,10 @@ public final class DeviceModificationController extends TaskwolfRestController {
     String firebaseToken, boolean exists
   ) {
     if (exists) {
-      return deviceDatabaseTable.findDevice(deviceId, user.id())
+      return deviceDatabaseTable().findDevice(deviceId, user.id())
         .thenApply(device -> existingDeviceLogin(device, platform, firebaseToken));
     }
-    var futureId = deviceDatabaseTable.generateAvailableDeviceId();
+    var futureId = deviceDatabaseTable().generateAvailableDeviceId();
     futureId.thenAccept(id -> newDeviceLogin(user, deviceId, information,
       platform, firebaseToken, id));
     return futureId.thenApply(id -> Map.of("id", id));
@@ -84,8 +81,8 @@ public final class DeviceModificationController extends TaskwolfRestController {
     User user, String deviceId, String information, DevicePlatform platform,
     String firebaseToken, String id
   ) {
-    deviceDatabaseTable.insertDevice(id, deviceId, user.id(), information,
-      platform.toString(), true, true, false);
+    deviceDatabaseTable().insertDevice(id, deviceId, user.id(), information,
+      platform.toString(), true, true, false, true);
     userDeviceDatabaseTable.addDevice(user.id(), id);
     if (platform.isMobile()) {
       firebaseDeviceDatabaseTable.storeDeviceIdentifier(id, firebaseToken);
@@ -101,7 +98,7 @@ public final class DeviceModificationController extends TaskwolfRestController {
     var deviceId = body.getString("device");
     var organizationId = body.getUUID("organization");
     findUser(request).thenAccept(user ->
-      deviceDatabaseTable.deviceExists(deviceId).thenAccept(exists ->
+      deviceDatabaseTable().deviceExists(deviceId).thenAccept(exists ->
         addDeviceToOrganization(user, deviceId, organizationId, exists)));
   }
 
@@ -117,7 +114,7 @@ public final class DeviceModificationController extends TaskwolfRestController {
     if (user.id().equals(organizationId)) {
       return;
     }
-    deviceDatabaseTable.findDevice(deviceId).thenAccept(device ->
+    deviceDatabaseTable().findDevice(deviceId).thenAccept(device ->
       userDeviceDatabaseTable.addDevice(organizationId, device.id()));
   }
 
@@ -130,7 +127,7 @@ public final class DeviceModificationController extends TaskwolfRestController {
     var deviceId = body.getString("device");
     var organizationId = body.getUUID("organization");
     findUser(request).thenAccept(user ->
-      deviceDatabaseTable.deviceExists(deviceId).thenAccept(exists ->
+      deviceDatabaseTable().deviceExists(deviceId).thenAccept(exists ->
         removeDeviceFromOrganization(user, deviceId, organizationId, exists)));
   }
 
@@ -146,7 +143,7 @@ public final class DeviceModificationController extends TaskwolfRestController {
     if (user.id().equals(organizationId)) {
       return;
     }
-    deviceDatabaseTable.findDevice(deviceId).thenAccept(device ->
+    deviceDatabaseTable().findDevice(deviceId).thenAccept(device ->
       userDeviceDatabaseTable.removeDevice(organizationId, device.id()));
   }
 
@@ -157,23 +154,12 @@ public final class DeviceModificationController extends TaskwolfRestController {
   ) {
     var body = TaskwolfRequestBody.of(payload, response);
     var deviceId = body.getString("device");
-    findUser(request).thenAccept(user ->
-      deviceDatabaseTable.deviceExists(deviceId).thenAccept(exists ->
-        deleteDevice(user, deviceId, exists)));
-  }
-
-  private void deleteDevice(
-    User user, String deviceId, boolean exists
-  ) {
-    if (!exists) {
-      return;
-    }
-    deviceDatabaseTable.findDevice(deviceId, user.id())
-      .thenAccept(this::deleteDevice);
+    performDeviceOperation(findUserId(request), deviceId, this::deleteDevice,
+      () -> {});
   }
 
   private void deleteDevice(Device device) {
-    deviceDatabaseTable.deleteDevice(device.id());
+    deviceDatabaseTable().deleteDevice(device.id());
     userDeviceDatabaseTable.findUsersOfDevice(device.id()).thenAccept(users ->
       users.forEach(user -> userDeviceDatabaseTable.removeDevice(user, device.id())));
   }
