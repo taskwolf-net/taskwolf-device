@@ -27,6 +27,8 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       DatabaseDataType.BOOLEAN));
     columns.add(DatabaseColumn.create("newsNotifications",
       DatabaseDataType.BOOLEAN));
+    columns.add(DatabaseColumn.create("commandExecution",
+      DatabaseDataType.BOOLEAN));
     return new DeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
   }
 
@@ -43,16 +45,17 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     insertDevice(device.id(), device.machineId(), device.ownerId(),
       device.information(), device.platform().toString(),
       device.workflowNotifications(), device.errorNotifications(),
-      device.newsNotifications());
+      device.newsNotifications(), device.commandExecution());
   }
 
   public void insertDevice(
     String id, String machineId, UUID ownerId, String information,
     String platform, boolean workflowNotifications, boolean errorNotifications,
-    boolean newsNotifications
+    boolean newsNotifications, boolean commandExecution
   ) {
     insert(DatabaseRow.of(id, machineId, ownerId, information, platform,
-      workflowNotifications, errorNotifications, newsNotifications));
+      workflowNotifications, errorNotifications, newsNotifications,
+      commandExecution));
   }
 
   public void updateDeviceNotificationSettings(
@@ -62,7 +65,16 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
       device.machineId(), device.ownerId(), device.information(),
       device.platform().toString(), workflowNotifications, errorNotifications,
-      newsNotifications));
+      newsNotifications, device.commandExecution()));
+  }
+
+  public void updateDeviceCommandSettings(
+    Device device, boolean commandExecution
+  ) {
+    update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
+      device.machineId(), device.ownerId(), device.information(),
+      device.platform().toString(), device.workflowNotifications(),
+      device.errorNotifications(), device.newsNotifications(), commandExecution));
   }
 
   public void deleteDevice(String deviceId) {

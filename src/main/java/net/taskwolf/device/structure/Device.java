@@ -16,7 +16,7 @@ public final class Device {
       row.findCell(2).uuidValue(), row.findCell(3).stringValue(),
       DevicePlatform.valueOf(row.findCell(4).stringValue().toUpperCase()),
       row.findCell(5).booleanValue(), row.findCell(6).booleanValue(),
-      row.findCell(7).booleanValue());
+      row.findCell(7).booleanValue(), row.findCell(8).booleanValue());
   }
 
   private final String id;
@@ -27,4 +27,5 @@ public final class Device {
   private final boolean workflowNotifications;
   private final boolean errorNotifications;
   private final boolean newsNotifications;
+  private final boolean commandExecution;
 }
