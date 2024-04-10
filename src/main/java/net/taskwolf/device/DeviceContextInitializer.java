@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import net.taskwolf.device.command.CommandExecutionDatabaseTable;
+import net.taskwolf.device.command.CommandRequestRepository;
 import net.taskwolf.device.notification.DeviceNotificationDatabaseTable;
 import net.taskwolf.device.notification.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.notification.NotificationDatabaseTable;
@@ -22,6 +24,8 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
   private final DeviceNotificationDatabaseTable deviceNotificationDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final NotificationFactory notificationFactory;
+  private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
+  private final CommandRequestRepository commandRequestRepository;
 
   @Override
   public void initialize(ConfigurableApplicationContext applicationContext) {
@@ -32,5 +36,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     beanFactory.registerSingleton("deviceNotificationDatabaseTable", deviceNotificationDatabaseTable);
     beanFactory.registerSingleton("firebaseDeviceDatabaseTable", firebaseDeviceDatabaseTable);
     beanFactory.registerSingleton("notificationFactory", notificationFactory);
+    beanFactory.registerSingleton("commandExecutionDatabaseTable", commandExecutionDatabaseTable);
+    beanFactory.registerSingleton("commandRequestRepository", commandRequestRepository);
   }
 }
