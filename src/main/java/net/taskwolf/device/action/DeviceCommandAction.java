@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import net.taskwolf.core.action.Action;
 import net.taskwolf.core.action.ActionInformation;
 import net.taskwolf.core.action.ActionResult;
+import net.taskwolf.core.distribution.NodeType;
+import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.workflow.component.input.InputComponentDataType;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
 import net.taskwolf.core.workflow.component.input.InputComponentVariable;
@@ -12,6 +14,7 @@ import net.taskwolf.core.workflow.placeholder.PlaceholderDissolve;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequest;
 import net.taskwolf.device.command.CommandRequestRepository;
+import net.taskwolf.device.distribution.packet.outgoing.PacketOutgoingCommandRequest;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.json.JSONObject;
@@ -47,16 +50,18 @@ public final class DeviceCommandAction implements Action {
   public static DeviceCommandAction of(
     DeviceDatabaseTable deviceDatabaseTable,
     CommandExecutionDatabaseTable commandExecutionDatabaseTable,
-    CommandRequestRepository commandRequestRepository, JSONObject content
+    CommandRequestRepository commandRequestRepository,
+    DistributionClientRegistry clientRegistry, JSONObject content
   ) {
     return create(deviceDatabaseTable, commandExecutionDatabaseTable,
-      commandRequestRepository, content.getString("device"),
+      commandRequestRepository, clientRegistry, content.getString("device"),
       content.getString("command"));
   }
 
   private final DeviceDatabaseTable deviceDatabaseTable;
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
   private final CommandRequestRepository commandRequestRepository;
+  private final DistributionClientRegistry clientRegistry;
   private final String deviceId;
   private String command;
 
@@ -90,6 +95,9 @@ public final class DeviceCommandAction implements Action {
     var futureResponse = new CompletableFuture<ActionResult>();
     commandRequestRepository.registerCommandRequest(CommandRequest.create(
       commandId, device, command, futureResponse));
+    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst()
+      .get().sendPacket(new PacketOutgoingCommandRequest(commandId,
+        device.id(), command));
     return futureResponse;
   }
 }
