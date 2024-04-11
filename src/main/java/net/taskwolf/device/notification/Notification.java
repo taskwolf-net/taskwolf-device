@@ -1,10 +1,12 @@
 package net.taskwolf.device.notification;
 
 import lombok.RequiredArgsConstructor;
+import net.taskwolf.core.distribution.NodeType;
+import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.device.DeviceConfiguration;
+import net.taskwolf.device.distribution.packet.outgoing.PacketOutgoingNotificationRequest;
 import net.taskwolf.device.structure.Device;
 import org.json.JSONObject;
-import org.springframework.http.HttpHeaders;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -15,10 +17,9 @@ import java.util.UUID;
 
 @RequiredArgsConstructor(staticName = "create")
 public final class Notification {
-  private final NotificationDatabaseTable notificationDatabaseTable;
-  private final DeviceNotificationDatabaseTable deviceNotificationDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
+  private final DistributionClientRegistry clientRegistry;
   private final Device device;
   private final String title;
   private final String body;
@@ -51,12 +52,13 @@ public final class Notification {
   }
 
   private void publishDesktopNotification() {
-    notificationDatabaseTable.generateAvailableNotificationId()
-      .thenAccept(this::publishDesktopNotification);
+    //TODO: GENERATE VALID NOTIFICATION ID (FOR STATISTICS / NOTIFICATION HISTORY)
+    publishDesktopNotification(UUID.randomUUID());
   }
 
   private void publishDesktopNotification(UUID notificationId) {
-    notificationDatabaseTable.insertNotification(notificationId, title, body);
-    deviceNotificationDatabaseTable.addNotification(device.id(), notificationId);
+    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
+      .sendPacket(new PacketOutgoingNotificationRequest(notificationId,
+        device.id(), title, body));
   }
 }

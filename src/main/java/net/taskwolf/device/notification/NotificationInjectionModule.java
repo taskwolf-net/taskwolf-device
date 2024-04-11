@@ -11,28 +11,6 @@ import net.taskwolf.core.database.DatabaseKeyspace;
 public final class NotificationInjectionModule extends AbstractModule {
   @Provides
   @Singleton
-  NotificationDatabaseTable provideNotificationDatabaseTable(
-    DatabaseConnection connection, DatabaseKeyspace keyspace
-  ) {
-    var notificationDatabaseTable = NotificationDatabaseTable.create(connection,
-      keyspace);
-    notificationDatabaseTable.createIfNotExists();
-    return notificationDatabaseTable;
-  }
-
-  @Provides
-  @Singleton
-  DeviceNotificationDatabaseTable provideDeviceNotificationDatabaseTable(
-    DatabaseConnection connection, DatabaseKeyspace keyspace
-  ) {
-    var deviceNotificationDatabaseTable = DeviceNotificationDatabaseTable.create(
-      connection, keyspace);
-    deviceNotificationDatabaseTable.createIfNotExists();
-    return deviceNotificationDatabaseTable;
-  }
-
-  @Provides
-  @Singleton
   FirebaseDeviceDatabaseTable provideFirebaseDeviceDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
   ) {
