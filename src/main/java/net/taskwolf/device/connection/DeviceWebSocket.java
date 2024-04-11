@@ -78,7 +78,7 @@ public final class DeviceWebSocket extends WebSocketServer {
   private void classifyConnection(
     UUID userId, String deviceId, WebSocket connection, boolean exists
   ) {
-    if (!exists || connectionRepository.findConnection(deviceId).isPresent()) {
+    if (!exists) {
       connection.close();
       return;
     }
