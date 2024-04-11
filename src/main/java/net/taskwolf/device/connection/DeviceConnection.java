@@ -13,4 +13,20 @@ public final class DeviceConnection {
   private final Device device;
   @Getter
   private final WebSocket socket;
+
+  private static final String NOTIFICATION_FORMAT = "Notification %s %s";
+
+  public void sendNotification(String title, String body) {
+    socket.send(String.format(NOTIFICATION_FORMAT, title, body));
+  }
+
+  private static final String COMMAND_FORMAT = "Command %s";
+
+  public void executeCommand(String command) {
+    socket.send(String.format(COMMAND_FORMAT, command));
+  }
+
+  public void close() {
+    socket.close();
+  }
 }
