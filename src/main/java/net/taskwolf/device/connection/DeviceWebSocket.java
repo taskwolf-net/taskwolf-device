@@ -3,8 +3,11 @@ package net.taskwolf.device.connection;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.distribution.NodeType;
+import net.taskwolf.core.distribution.client.DistributionClient;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
+import net.taskwolf.device.distribution.packet.outgoing.PacketOutgoingCommandResponse;
 import net.taskwolf.device.distribution.packet.outgoing.PacketOutgoingDeviceLogin;
+import net.taskwolf.device.distribution.packet.outgoing.PacketOutgoingDeviceLogout;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.java_websocket.WebSocket;
@@ -15,6 +18,7 @@ import java.net.InetSocketAddress;
 import java.security.Key;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @RequiredArgsConstructor(staticName = "create")
@@ -104,16 +108,48 @@ public final class DeviceWebSocket extends WebSocketServer {
     }
   }
 
+  private static final String COMMAND_RESPONSE_FORMAT =
+    "Command Response (.*) (.*) (.*) (.*)";
+
   @Override
   public void onMessage(WebSocket connection, String message) {
+    var deviceConnection = connectionRepository.findConnectionBySocket(connection);
+    if (deviceConnection.isEmpty()) {
+      return;
+    }
+    var pattern = Pattern.compile(COMMAND_RESPONSE_FORMAT);
+    var matcher = pattern.matcher(message);
+    if (!matcher.matches()) {
+      return;
+    }
+    try {
+      processCommandResponse(matcher);
+    } catch (Exception ignored) {
+    }
+  }
 
+  private void processCommandResponse(Matcher matcher) throws Exception {
+    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
+      .sendPacket(new PacketOutgoingCommandResponse(UUID.fromString(matcher.group(1)), true,
+        matcher.group(2), matcher.group(3), Integer.valueOf(matcher.group(4))));
   }
 
   @Override
   public void onClose(
     WebSocket connection, int code, String reason, boolean remote
   ) {
+    var proxy = findProxyClient();
+    var deviceConnection = connectionRepository.findConnectionBySocket(connection);
+    if (deviceConnection.isEmpty()) {
+      return;
+    }
+    proxy.sendPacket(new PacketOutgoingDeviceLogout(deviceConnection.get()
+      .device().id()));
+  }
 
+  private DistributionClient findProxyClient() {
+    return clientRegistry.findClientsByType(NodeType.PROXY)
+      .stream().findFirst().get();
   }
 
   @Override
