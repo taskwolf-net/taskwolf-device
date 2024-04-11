@@ -59,10 +59,11 @@ public final class DeviceModule extends Module {
       injector().getInstance(DeviceContextInitializer.class));
     triggerFactory = DeviceTriggerFactory.create();
     var deviceDatabaseTable = injector().getInstance(DeviceDatabaseTable.class);
+    var clientRegistry = injector().getInstance(DistributionClientRegistry.class);
     actionFactory = DeviceActionFactory.create(deviceDatabaseTable,
       injector().getInstance(NotificationFactory.class),
       injector().getInstance(CommandExecutionDatabaseTable.class),
-      injector().getInstance(CommandRequestRepository.class));
+      injector().getInstance(CommandRequestRepository.class), clientRegistry);
     accountLink = DeviceAccountLink.create();
     deviceComponentSelect = DeviceComponentSelect.create(deviceDatabaseTable,
       injector().getInstance(UserDeviceDatabaseTable.class));
@@ -70,8 +71,7 @@ public final class DeviceModule extends Module {
     registerPacketEvents();
     registerHooks();
     var socket = DeviceWebSocket.of(5151, deviceDatabaseTable,
-      injector().getInstance(DeviceConnectionRepository.class),
-      injector().getInstance(DistributionClientRegistry.class),
+      injector().getInstance(DeviceConnectionRepository.class), clientRegistry,
       injector().getInstance(Key.class));
     socket.start();
   }
