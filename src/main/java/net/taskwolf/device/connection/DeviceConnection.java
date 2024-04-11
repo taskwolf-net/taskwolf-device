@@ -6,6 +6,8 @@ import lombok.experimental.Accessors;
 import net.taskwolf.device.structure.Device;
 import org.java_websocket.WebSocket;
 
+import java.util.UUID;
+
 @Accessors(fluent = true)
 @RequiredArgsConstructor(staticName = "create")
 public final class DeviceConnection {
@@ -20,10 +22,10 @@ public final class DeviceConnection {
     socket.send(String.format(NOTIFICATION_FORMAT, title, body));
   }
 
-  private static final String COMMAND_FORMAT = "Command %s";
+  private static final String COMMAND_FORMAT = "Command %s %s";
 
-  public void executeCommand(String command) {
-    socket.send(String.format(COMMAND_FORMAT, command));
+  public void executeCommand(UUID commandId, String command) {
+    socket.send(String.format(COMMAND_FORMAT, commandId.toString(), command));
   }
 
   public void close() {

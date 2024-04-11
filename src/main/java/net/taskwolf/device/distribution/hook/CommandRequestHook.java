@@ -20,6 +20,6 @@ public final class CommandRequestHook implements Hook {
     if (connection.isEmpty()) {
       return;
     }
-    connection.get().executeCommand(event.command());
+    connection.get().executeCommand(event.commandId(), event.command());
   }
 }
