@@ -51,6 +51,7 @@ public final class DeviceWebSocket extends WebSocketServer {
 
   @Override
   public void onStart() {
+    setReuseAddr(true);
     setConnectionLostTimeout(1);
   }
 
