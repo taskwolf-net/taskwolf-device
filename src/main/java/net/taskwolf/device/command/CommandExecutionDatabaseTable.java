@@ -68,7 +68,9 @@ public final class CommandExecutionDatabaseTable extends DatabaseTable {
       .thenApply(CommandExecution::of);
   }
 
-  public CompletableFuture<List<CommandExecution>> findExecutionsOfDevice(String deviceId) {
+  public CompletableFuture<List<CommandExecution>> findExecutionsOfDevice(
+    String deviceId
+  ) {
     return selectRows("device='" + deviceId + "' ALLOW FILTERING")
       .thenApply(rows -> rows.stream().map(CommandExecution::of).toList());
   }
