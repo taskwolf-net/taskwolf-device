@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import net.taskwolf.core.account.AccountLink;
 import net.taskwolf.core.action.ActionFactory;
 import net.taskwolf.core.action.ActionInformation;
+import net.taskwolf.core.distribution.NodeType;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.distribution.packet.PacketEventRepository;
 import net.taskwolf.core.distribution.packet.PacketRegistry;
@@ -29,6 +30,7 @@ import net.taskwolf.device.distribution.hook.CommandResponseHook;
 import net.taskwolf.device.distribution.hook.NotificationRequestHook;
 import net.taskwolf.device.distribution.hook.NotificationResponseHook;
 import net.taskwolf.device.distribution.packet.incoming.*;
+import net.taskwolf.device.distribution.packet.outgoing.PacketOutgoingDeviceLogout;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
@@ -46,6 +48,7 @@ public final class DeviceModule extends Module {
   private ActionFactory actionFactory;
   private AccountLink accountLink;
   private InputComponentSelect deviceComponentSelect;
+  private DeviceWebSocket socket;
 
   public DeviceModule(Injector injector) {
     super(injector.createChildInjector(DeviceInjectionModule.create()));
@@ -68,7 +71,7 @@ public final class DeviceModule extends Module {
     registerPackets();
     registerPacketEvents();
     registerHooks();
-    var socket = DeviceWebSocket.of(5151, deviceDatabaseTable,
+    socket = DeviceWebSocket.of(5151, deviceDatabaseTable,
       injector().getInstance(DeviceConnectionRepository.class), clientRegistry,
       injector().getInstance(Key.class));
     socket.start();
@@ -114,8 +117,15 @@ public final class DeviceModule extends Module {
   }
 
   @Override
-  public void disable() {
-
+  public void disable() throws Exception {
+    var connections = injector().getInstance(DeviceConnectionRepository.class)
+      .allConnection();
+    var proxy = injector().getInstance(DistributionClientRegistry.class)
+      .findClientsByType(NodeType.PROXY).stream().findFirst().get();
+    for (var connection : connections) {
+      proxy.sendPacket(new PacketOutgoingDeviceLogout(connection.device().id()));
+    }
+    socket.stop();
   }
 
   @Override
