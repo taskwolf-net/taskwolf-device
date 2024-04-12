@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.Key;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -82,6 +83,8 @@ public final class CommandController extends DeviceController {
     Device device
   ) {
     return commandExecutionDatabaseTable.findExecutionsOfDevice(device.id())
+      .thenApply(executions -> executions.stream().sorted(
+        Comparator.comparing(CommandExecution::created).reversed()).toList())
       .thenApply(executions -> Map.of("history", executions.stream()
         .map(this::assemblyCommandInformation).toList()));
   }
