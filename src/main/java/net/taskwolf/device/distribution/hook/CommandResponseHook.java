@@ -31,7 +31,7 @@ public final class CommandResponseHook implements Hook {
       return;
     }
     var request = optionalRequest.get();
-    if (event.delivered()) {
+    if (!event.delivered()) {
       request.futureResult().complete(ActionResult.failure(
         "device.action.command.failure.device.offline"));
       return;
