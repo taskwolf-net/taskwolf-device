@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.structure.Device;
@@ -17,19 +18,23 @@ import java.security.Key;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
 public final class CommandController extends DeviceController {
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
+  private final CommandRequestRepository commandRequestRepository;
 
   private CommandController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable,
-    CommandExecutionDatabaseTable commandExecutionDatabaseTable
+    CommandExecutionDatabaseTable commandExecutionDatabaseTable,
+    CommandRequestRepository commandRequestRepository
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.commandExecutionDatabaseTable = commandExecutionDatabaseTable;
+    this.commandRequestRepository = commandRequestRepository;
   }
 
   @RequestMapping(path = "/device/command/settings/", method = RequestMethod.POST)
@@ -89,6 +94,52 @@ public final class CommandController extends DeviceController {
     information.put("errorMessage", execution.errorMessage());
     information.put("exitCode", execution.exitCode());
     information.put("time", formatTime(execution.created()));
+    return information;
+  }
+
+  @RequestMapping(path = "/device/command/response/", method = RequestMethod.POST)
+  public void deviceCommandResponse(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    performDeviceOperation(findUserId(request), body.getString("device"),
+      device -> deviceCommandResponse(body.getUUID("command"),
+        body.getString("output"), body.getString("errorMessage"),
+        body.getInt("exitCode")), () -> {});
+  }
+
+  private void deviceCommandResponse(
+    UUID command, String output, String errorMessage, int exitCode
+  ) {
+    var optionalRequest = commandRequestRepository.findCommandRequest(command);
+    if (optionalRequest.isEmpty()) {
+      return;
+    }
+    var request = optionalRequest.get();
+    long time = System.currentTimeMillis();
+    request.futureResult().complete(ActionResult.success(
+      buildCommandResponseInformation(request.device(), request.command(),
+        output, errorMessage, exitCode, formatTime(time))));
+    commandRequestRepository.unregisterCommandRequest(request);
+    commandExecutionDatabaseTable.insertCommandExecution(request.id(),
+      request.device().id(), time, request.command(), output, errorMessage,
+      exitCode);
+  }
+
+  private Map<String, Object> buildCommandResponseInformation(
+    Device device, String command, String commandOutput,
+    String commandErrorMessage, int commandExitCode, String commandExecutionTime
+  ) {
+    var information = Maps.<String, Object>newHashMap();
+    information.put("deviceId", device.id());
+    information.put("deviceName", device.information());
+    information.put("devicePlatform", device.platform());
+    information.put("command", command);
+    information.put("commandOutput", commandOutput);
+    information.put("commandErrorMessage", commandErrorMessage);
+    information.put("commandExitCode", commandExitCode);
+    information.put("commandExecutionTime", commandExecutionTime);
     return information;
   }
 
