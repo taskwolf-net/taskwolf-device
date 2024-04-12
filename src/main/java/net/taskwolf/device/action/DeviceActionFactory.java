@@ -3,9 +3,7 @@ package net.taskwolf.device.action;
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.action.Action;
 import net.taskwolf.core.action.ActionFactory;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
-import net.taskwolf.device.command.CommandExecutionDatabaseTable;
-import net.taskwolf.device.command.CommandRequestRepository;
+import net.taskwolf.device.command.CommandFactory;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.json.JSONObject;
@@ -14,9 +12,7 @@ import org.json.JSONObject;
 public final class DeviceActionFactory implements ActionFactory {
   private final DeviceDatabaseTable deviceDatabaseTable;
   private final NotificationFactory notificationFactory;
-  private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
-  private final CommandRequestRepository commandRequestRepository;
-  private final DistributionClientRegistry clientRegistry;
+  private final CommandFactory commandFactory;
 
   @Override
   public Action create(String type, String content) {
@@ -26,9 +22,7 @@ public final class DeviceActionFactory implements ActionFactory {
         notificationFactory, json);
     }
     if (type.equals("device-command-action")) {
-      return DeviceCommandAction .of(deviceDatabaseTable,
-        commandExecutionDatabaseTable, commandRequestRepository,
-        clientRegistry, json);
+      return DeviceCommandAction.of(deviceDatabaseTable, commandFactory, json);
     }
     return null;
   }

@@ -4,23 +4,17 @@ import lombok.AllArgsConstructor;
 import net.taskwolf.core.action.Action;
 import net.taskwolf.core.action.ActionInformation;
 import net.taskwolf.core.action.ActionResult;
-import net.taskwolf.core.distribution.NodeType;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.workflow.component.input.InputComponentDataType;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
 import net.taskwolf.core.workflow.component.input.InputComponentVariable;
 import net.taskwolf.core.workflow.component.output.OutputComponentVariable;
 import net.taskwolf.core.workflow.placeholder.PlaceholderDissolve;
-import net.taskwolf.device.command.CommandExecutionDatabaseTable;
-import net.taskwolf.device.command.CommandRequest;
-import net.taskwolf.device.command.CommandRequestRepository;
-import net.taskwolf.device.distribution.packet.outgoing.PacketOutgoingCommandRequest;
+import net.taskwolf.device.command.CommandFactory;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.json.JSONObject;
 
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor(staticName = "create")
@@ -36,32 +30,27 @@ public final class DeviceCommandAction implements Action {
         "device", "device.action.command.input.device.description", deviceComponentSelect))
       .withInputVariable(InputComponentVariable.createRequired("device.action.command.input.command.name",
         "command", "device.action.command.input.command.description", InputComponentDataType.TEXT))
-      .withOutputVariable(OutputComponentVariable.create("device.action.notification.output.device.id", "deviceId"))
-      .withOutputVariable(OutputComponentVariable.create("device.action.notification.output.device.name", "deviceName"))
-      .withOutputVariable(OutputComponentVariable.create("device.action.notification.output.device.platform", "devicePlatform"))
-      .withOutputVariable(OutputComponentVariable.create("device.action.notification.output.command", "command"))
-      .withOutputVariable(OutputComponentVariable.create("device.action.notification.output.command.output", "commandOutput"))
-      .withOutputVariable(OutputComponentVariable.create("device.action.notification.output.command.error.message", "commandErrorMessage"))
-      .withOutputVariable(OutputComponentVariable.create("device.action.notification.output.command.exit.code", "commandExitCode"))
-      .withOutputVariable(OutputComponentVariable.create("device.action.notification.output.command.execution.time", "commandExecutionTime"))
+      .withOutputVariable(OutputComponentVariable.create("device.action.command.output.device.id", "deviceId"))
+      .withOutputVariable(OutputComponentVariable.create("device.action.command.output.device.name", "deviceName"))
+      .withOutputVariable(OutputComponentVariable.create("device.action.command.output.device.platform", "devicePlatform"))
+      .withOutputVariable(OutputComponentVariable.create("device.action.command.output.command", "command"))
+      .withOutputVariable(OutputComponentVariable.create("device.action.command.output.command.output", "commandOutput"))
+      .withOutputVariable(OutputComponentVariable.create("device.action.command.output.command.error.message", "commandErrorMessage"))
+      .withOutputVariable(OutputComponentVariable.create("device.action.command.output.command.exit.code", "commandExitCode"))
+      .withOutputVariable(OutputComponentVariable.create("device.action.command.output.command.execution.time", "commandExecutionTime"))
       .build();
   }
 
   public static DeviceCommandAction of(
-    DeviceDatabaseTable deviceDatabaseTable,
-    CommandExecutionDatabaseTable commandExecutionDatabaseTable,
-    CommandRequestRepository commandRequestRepository,
-    DistributionClientRegistry clientRegistry, JSONObject content
+    DeviceDatabaseTable deviceDatabaseTable, CommandFactory commandFactory,
+    JSONObject content
   ) {
-    return create(deviceDatabaseTable, commandExecutionDatabaseTable,
-      commandRequestRepository, clientRegistry, content.getString("device"),
+    return create(deviceDatabaseTable, commandFactory, content.getString("device"),
       content.getString("command"));
   }
 
   private final DeviceDatabaseTable deviceDatabaseTable;
-  private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
-  private final CommandRequestRepository commandRequestRepository;
-  private final DistributionClientRegistry clientRegistry;
+  private final CommandFactory commandFactory;
   private final String deviceId;
   private String command;
 
@@ -85,19 +74,8 @@ public final class DeviceCommandAction implements Action {
     if (!device.commandExecution()) {
       return ActionResult.futureFailure("device.action.command.failure.device.permission");
     }
-    return commandExecutionDatabaseTable.generateAvailableExecutionId()
-      .thenCompose(id -> executeCommand(device, id));
-  }
-
-  private CompletableFuture<ActionResult> executeCommand(
-    Device device, UUID commandId
-  ) {
     var futureResponse = new CompletableFuture<ActionResult>();
-    commandRequestRepository.registerCommandRequest(CommandRequest.create(
-      commandId, device, command, futureResponse));
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst()
-      .get().sendPacket(new PacketOutgoingCommandRequest(commandId,
-        device.id(), command));
+    commandFactory.createCommand(device, command).execute(futureResponse);
     return futureResponse;
   }
 }
