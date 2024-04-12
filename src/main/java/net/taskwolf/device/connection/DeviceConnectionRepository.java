@@ -34,4 +34,8 @@ public final class DeviceConnectionRepository {
       .filter(connection -> connection.socket().equals(socket))
       .findFirst();
   }
+
+  public List<DeviceConnection> allConnection() {
+    return List.copyOf(connections);
+  }
 }
