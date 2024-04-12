@@ -103,13 +103,13 @@ public final class DeviceWebSocket extends WebSocketServer {
     try {
       return Optional.of(UUID.fromString(Jwts.parser().setSigningKey(secretKey)
         .build().parseClaimsJws(token).getPayload().get("id", String.class)));
-    } catch (Exception var3) {
+    } catch (Exception exception) {
       return Optional.empty();
     }
   }
 
   private static final String COMMAND_RESPONSE_FORMAT =
-    "Command Response (.*) (.*) (.*) (.*)";
+    "Command Response (.*) '(.*)' '(.*)' (.*)";
 
   @Override
   public void onMessage(WebSocket connection, String message) {
@@ -130,8 +130,8 @@ public final class DeviceWebSocket extends WebSocketServer {
 
   private void processCommandResponse(Matcher matcher) throws Exception {
     clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingCommandResponse(UUID.fromString(matcher.group(1)), true,
-        matcher.group(2), matcher.group(3), Integer.valueOf(matcher.group(4))));
+      .sendPacket(new PacketOutgoingCommandResponse(UUID.fromString(matcher.group(1)),
+        true, matcher.group(2), matcher.group(3), Integer.valueOf(matcher.group(4))));
   }
 
   @Override
