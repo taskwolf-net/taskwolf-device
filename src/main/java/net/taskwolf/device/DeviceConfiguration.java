@@ -17,6 +17,7 @@ public final class DeviceConfiguration extends Configuration {
   }
 
   private String firebaseToken;
+  private int webSocketPort;
 
   private DeviceConfiguration(String path) {
     super(path);
@@ -25,5 +26,6 @@ public final class DeviceConfiguration extends Configuration {
   @Override
   protected void deserialize(JSONObject json) {
     firebaseToken = json.getString("firebaseToken");
+    webSocketPort = json.getInt("webSocketPort");
   }
 }

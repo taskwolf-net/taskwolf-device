@@ -71,9 +71,10 @@ public final class DeviceModule extends Module {
     registerPackets();
     registerPacketEvents();
     registerHooks();
-    socket = DeviceWebSocket.of(5151, deviceDatabaseTable,
-      injector().getInstance(DeviceConnectionRepository.class), clientRegistry,
-      injector().getInstance(Key.class));
+    socket = DeviceWebSocket.of(
+      injector().getInstance(DeviceConfiguration.class).webSocketPort(),
+      deviceDatabaseTable, injector().getInstance(DeviceConnectionRepository.class),
+      clientRegistry, injector().getInstance(Key.class));
     socket.start();
   }
 
@@ -124,6 +125,7 @@ public final class DeviceModule extends Module {
       .findClientsByType(NodeType.PROXY).stream().findFirst().get();
     for (var connection : connections) {
       proxy.sendPacket(new PacketOutgoingDeviceLogout(connection.device().id()));
+      connection.close();
     }
     socket.stop();
   }
