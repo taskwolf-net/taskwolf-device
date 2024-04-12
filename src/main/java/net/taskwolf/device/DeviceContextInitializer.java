@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequestRepository;
-import net.taskwolf.device.notification.FirebaseDeviceDatabaseTable;
+import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;

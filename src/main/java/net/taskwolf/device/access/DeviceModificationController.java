@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
 import net.taskwolf.core.user.User;
 import net.taskwolf.core.user.UserDatabaseTable;
-import net.taskwolf.device.notification.FirebaseDeviceDatabaseTable;
+import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.DevicePlatform;

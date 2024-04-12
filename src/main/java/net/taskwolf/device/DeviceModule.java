@@ -20,8 +20,7 @@ import net.taskwolf.core.workflow.component.input.InputComponentSelect;
 import net.taskwolf.device.action.DeviceActionFactory;
 import net.taskwolf.device.action.DeviceCommandAction;
 import net.taskwolf.device.action.DeviceNotificationAction;
-import net.taskwolf.device.command.CommandExecutionDatabaseTable;
-import net.taskwolf.device.command.CommandRequestRepository;
+import net.taskwolf.device.command.CommandFactory;
 import net.taskwolf.device.connection.DeviceConnectionRepository;
 import net.taskwolf.device.connection.DeviceWebSocket;
 import net.taskwolf.device.distribution.event.*;
@@ -62,8 +61,7 @@ public final class DeviceModule extends Module {
     var clientRegistry = injector().getInstance(DistributionClientRegistry.class);
     actionFactory = DeviceActionFactory.create(deviceDatabaseTable,
       injector().getInstance(NotificationFactory.class),
-      injector().getInstance(CommandExecutionDatabaseTable.class),
-      injector().getInstance(CommandRequestRepository.class), clientRegistry);
+      injector().getInstance(CommandFactory.class));
     accountLink = DeviceAccountLink.create();
     deviceComponentSelect = DeviceComponentSelect.create(deviceDatabaseTable,
       injector().getInstance(UserDeviceDatabaseTable.class));

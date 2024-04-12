@@ -1,4 +1,4 @@
-package net.taskwolf.device.notification;
+package net.taskwolf.device.firebase;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -8,7 +8,7 @@ import net.taskwolf.core.database.DatabaseConnection;
 import net.taskwolf.core.database.DatabaseKeyspace;
 
 @RequiredArgsConstructor(staticName = "create")
-public final class NotificationInjectionModule extends AbstractModule {
+public final class FirebaseInjectionModule extends AbstractModule {
   @Provides
   @Singleton
   FirebaseDeviceDatabaseTable provideFirebaseDeviceDatabaseTable(

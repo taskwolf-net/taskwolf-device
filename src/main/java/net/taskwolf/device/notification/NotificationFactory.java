@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.device.DeviceConfiguration;
+import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
 
 @Singleton

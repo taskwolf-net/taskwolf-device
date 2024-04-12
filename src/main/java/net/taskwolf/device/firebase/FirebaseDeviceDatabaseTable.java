@@ -1,4 +1,4 @@
-package net.taskwolf.device.notification;
+package net.taskwolf.device.firebase;
 
 import com.google.common.collect.Lists;
 import net.taskwolf.core.database.*;
