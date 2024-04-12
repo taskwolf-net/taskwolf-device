@@ -46,7 +46,8 @@ public final class CommandController extends DeviceController {
     var deviceId = body.getString("device");
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     performDeviceOperation(findUserId(request), deviceId,
-      device -> Map.of("commandExecution", device.commandExecution()),
+      device -> futureResponse.complete(Map.of("commandExecution",
+        device.commandExecution())),
       () -> futureResponse.complete(Maps.newHashMap()));
     return futureResponse;
   }
