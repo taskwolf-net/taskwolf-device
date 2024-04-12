@@ -139,12 +139,14 @@ public final class DeviceWebSocket extends WebSocketServer {
     WebSocket connection, int code, String reason, boolean remote
   ) {
     var proxy = findProxyClient();
-    var deviceConnection = connectionRepository.findConnectionBySocket(connection);
-    if (deviceConnection.isEmpty()) {
+    var deviceConnectionOptional = connectionRepository
+      .findConnectionBySocket(connection);
+    if (deviceConnectionOptional.isEmpty()) {
       return;
     }
-    proxy.sendPacket(new PacketOutgoingDeviceLogout(deviceConnection.get()
-      .device().id()));
+    var deviceConnection = deviceConnectionOptional.get();
+    connectionRepository.unregisterConnection(deviceConnection);
+    proxy.sendPacket(new PacketOutgoingDeviceLogout(deviceConnection.device().id()));
   }
 
   private DistributionClient findProxyClient() {
