@@ -101,6 +101,25 @@ public final class CommandController extends DeviceController {
     return information;
   }
 
+  @RequestMapping(path = "/device/command/history/reset/", method = RequestMethod.POST)
+  public CompletableFuture<Map<String, Object>> resetCommandHistory(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    var deviceId = body.getString("device");
+    var futureResponse = new CompletableFuture<Map<String, Object>>();
+    performDeviceOperation(findUserId(request), deviceId,
+      this::resetCommandHistory, () -> futureResponse.complete(Maps.newHashMap()));
+    return futureResponse;
+  }
+
+  private void resetCommandHistory(Device device) {
+    commandExecutionDatabaseTable.findExecutionsOfDevice(device.id())
+      .thenAccept(executions -> executions.forEach(execution ->
+        commandExecutionDatabaseTable.deleteCommandExecution(execution.id())));
+  }
+
   @RequestMapping(path = "/device/command/response/", method = RequestMethod.POST)
   public void deviceCommandResponse(
     HttpServletRequest request, @RequestBody String payload,
