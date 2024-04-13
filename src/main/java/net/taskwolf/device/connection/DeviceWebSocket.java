@@ -28,8 +28,10 @@ public final class DeviceWebSocket extends WebSocketServer {
     DeviceConnectionRepository connectionRepository,
     DistributionClientRegistry clientRegistry, Key secretKey
   ) {
-    return new DeviceWebSocket(new InetSocketAddress(port), deviceDatabaseTable,
-      connectionRepository, clientRegistry, secretKey);
+    var socket = new DeviceWebSocket(new InetSocketAddress(port),
+      deviceDatabaseTable, connectionRepository, clientRegistry, secretKey);
+    socket.setReuseAddr(true);
+    return socket;
   }
 
   private final DeviceDatabaseTable deviceDatabaseTable;
@@ -51,7 +53,6 @@ public final class DeviceWebSocket extends WebSocketServer {
 
   @Override
   public void onStart() {
-    setReuseAddr(true);
     setConnectionLostTimeout(1);
   }
 
