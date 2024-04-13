@@ -21,6 +21,7 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     columns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
     columns.add(DatabaseColumn.create("information", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("platform", DatabaseDataType.TEXT));
+    columns.add(DatabaseColumn.create("language", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("workflowNotifications",
       DatabaseDataType.BOOLEAN));
     columns.add(DatabaseColumn.create("errorNotifications",
@@ -43,19 +44,27 @@ public final class DeviceDatabaseTable extends DatabaseTable {
 
   public void insertDevice(Device device) {
     insertDevice(device.id(), device.machineId(), device.ownerId(),
-      device.information(), device.platform().toString(),
+      device.information(), device.platform().toString(), device.language(),
       device.workflowNotifications(), device.errorNotifications(),
       device.newsNotifications(), device.commandExecution());
   }
 
   public void insertDevice(
     String id, String machineId, UUID ownerId, String information,
-    String platform, boolean workflowNotifications, boolean errorNotifications,
-    boolean newsNotifications, boolean commandExecution
+    String platform, String language, boolean workflowNotifications,
+    boolean errorNotifications, boolean newsNotifications,
+    boolean commandExecution
   ) {
     insert(DatabaseRow.of(id, machineId, ownerId, information, platform,
-      workflowNotifications, errorNotifications, newsNotifications,
+      language, workflowNotifications, errorNotifications, newsNotifications,
       commandExecution));
+  }
+
+  public void updateDeviceLanguage(Device device, String language) {
+    update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
+      device.machineId(), device.ownerId(), device.information(),
+      device.platform().toString(), language, device.workflowNotifications(),
+      device.errorNotifications(), device.newsNotifications()));
   }
 
   public void updateDeviceNotificationSettings(
@@ -64,8 +73,8 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   ) {
     update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
       device.machineId(), device.ownerId(), device.information(),
-      device.platform().toString(), workflowNotifications, errorNotifications,
-      newsNotifications, device.commandExecution()));
+      device.platform().toString(), device.language(), workflowNotifications,
+      errorNotifications, newsNotifications, device.commandExecution()));
   }
 
   public void updateDeviceCommandSettings(
@@ -73,8 +82,9 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   ) {
     update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
       device.machineId(), device.ownerId(), device.information(),
-      device.platform().toString(), device.workflowNotifications(),
-      device.errorNotifications(), device.newsNotifications(), commandExecution));
+      device.platform().toString(), device.language(),
+      device.workflowNotifications(), device.errorNotifications(),
+      device.newsNotifications(), commandExecution));
   }
 
   public void deleteDevice(String deviceId) {

@@ -15,8 +15,9 @@ public final class Device {
     return create(row.findCell(0).stringValue(), row.findCell(1).stringValue(),
       row.findCell(2).uuidValue(), row.findCell(3).stringValue(),
       DevicePlatform.valueOf(row.findCell(4).stringValue().toUpperCase()),
-      row.findCell(5).booleanValue(), row.findCell(6).booleanValue(),
-      row.findCell(7).booleanValue(), row.findCell(8).booleanValue());
+      row.findCell(5).stringValue(), row.findCell(6).booleanValue(),
+      row.findCell(7).booleanValue(), row.findCell(8).booleanValue(),
+      row.findCell(9).booleanValue());
   }
 
   private final String id;
@@ -24,6 +25,7 @@ public final class Device {
   private final UUID ownerId;
   private final String information;
   private final DevicePlatform platform;
+  private final String language;
   private final boolean workflowNotifications;
   private final boolean errorNotifications;
   private final boolean newsNotifications;

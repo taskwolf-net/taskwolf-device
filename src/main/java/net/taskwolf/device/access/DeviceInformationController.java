@@ -161,5 +161,18 @@ public final class DeviceInformationController extends DeviceController {
         .thenApply(owner -> Map.of("id", organization.id(),
           "name", organization.name(), "owner", owner.name())));
   }
+
+  @RequestMapping(path = "/device/language/find/", method = RequestMethod.POST)
+  public CompletableFuture<Map<String, Object>> findDeviceLanguage(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    var futureResponse = new CompletableFuture<Map<String, Object>>();
+    performDeviceOperation(findUserId(request), body.getString("device"),
+      device -> futureResponse.complete(Map.of("language", device.language())),
+        () -> futureResponse.complete(Maps.newHashMap()));
+    return futureResponse;
+  }
 }
 

@@ -82,7 +82,7 @@ public final class DeviceModificationController extends DeviceController {
     String firebaseToken, String id
   ) {
     deviceDatabaseTable().insertDevice(id, deviceId, user.id(), information,
-      platform.toString(), true, true, false, true);
+      platform.toString(), user.language(), true, true, false, true);
     userDeviceDatabaseTable.addDevice(user.id(), id);
     if (platform.isMobile()) {
       firebaseDeviceDatabaseTable.storeDeviceIdentifier(id, firebaseToken);
@@ -147,7 +147,19 @@ public final class DeviceModificationController extends DeviceController {
       userDeviceDatabaseTable.removeDevice(organizationId, device.id()));
   }
 
-  @RequestMapping(path = "/device/delete/", method = RequestMethod.GET)
+  @RequestMapping(path = "/device/language/change/", method = RequestMethod.POST)
+  public void changeLanguage(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    var deviceId = body.getString("device");
+    performDeviceOperation(findUserId(request), deviceId, device ->
+        deviceDatabaseTable().updateDeviceLanguage(device, device.language()),
+      () -> {});
+  }
+
+  @RequestMapping(path = "/device/delete/", method = RequestMethod.POST)
   public void deleteDevice(
     HttpServletRequest request, @RequestBody String payload,
     HttpServletResponse response
