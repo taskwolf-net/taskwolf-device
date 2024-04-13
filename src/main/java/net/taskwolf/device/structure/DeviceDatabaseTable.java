@@ -64,7 +64,8 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
       device.machineId(), device.ownerId(), device.information(),
       device.platform().toString(), language, device.workflowNotifications(),
-      device.errorNotifications(), device.newsNotifications()));
+      device.errorNotifications(), device.newsNotifications(),
+      device.commandExecution()));
   }
 
   public void updateDeviceNotificationSettings(

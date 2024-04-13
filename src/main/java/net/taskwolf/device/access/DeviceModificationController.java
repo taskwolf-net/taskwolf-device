@@ -155,8 +155,8 @@ public final class DeviceModificationController extends DeviceController {
     var body = TaskwolfRequestBody.of(payload, response);
     var deviceId = body.getString("device");
     performDeviceOperation(findUserId(request), deviceId, device ->
-        deviceDatabaseTable().updateDeviceLanguage(device, device.language()),
-      () -> {});
+      deviceDatabaseTable().updateDeviceLanguage(device,
+        body.getString("language")), () -> {});
   }
 
   @RequestMapping(path = "/device/delete/", method = RequestMethod.POST)
