@@ -1,17 +1,13 @@
 package net.taskwolf.device.file;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Singleton
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({@Inject}))
+@RequiredArgsConstructor(staticName = "create")
 public final class FileRequestRepository {
   private final List<FileRequest> requests = Lists.newArrayList();
 

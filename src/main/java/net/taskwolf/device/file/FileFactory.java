@@ -2,15 +2,13 @@ package net.taskwolf.device.file;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
+import com.google.inject.name.Named;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
 
 @Singleton
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({@Inject}))
 public final class FileFactory {
   private final FileRequestRepository fileStorageRepository;
   private final FileRequestRepository fileInfoRepository;
@@ -20,6 +18,27 @@ public final class FileFactory {
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
   private final DistributionClientRegistry clientRegistry;
+
+  @Inject
+  private FileFactory(
+    @Named("fileStorageRequestRepository") FileRequestRepository fileStorageRepository,
+    @Named("fileInfoRequestRepository") FileRequestRepository fileInfoRepository,
+    @Named("fileStorageDatabaseTable") FileHistoryDatabaseTable fileStorageDatabaseTable,
+    @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable,
+    FileDatabaseTable fileDatabaseTable,
+    FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable,
+    DeviceConfiguration deviceConfiguration,
+    DistributionClientRegistry clientRegistry
+  ) {
+    this.fileStorageRepository = fileStorageRepository;
+    this.fileInfoRepository = fileInfoRepository;
+    this.fileStorageDatabaseTable = fileStorageDatabaseTable;
+    this.fileInfoDatabaseTable = fileInfoDatabaseTable;
+    this.fileDatabaseTable = fileDatabaseTable;
+    this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
+    this.deviceConfiguration = deviceConfiguration;
+    this.clientRegistry = clientRegistry;
+  }
 
   public File createFile(Device device, String path) {
     return File.create(fileStorageRepository, fileInfoRepository,
