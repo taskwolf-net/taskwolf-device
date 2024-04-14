@@ -15,6 +15,5 @@ public final class FileStorageRequestEvent extends Event {
   private final UUID infoId;
   private final String deviceId;
   private final String path;
-  private final byte[] content;
   private final DistributionClient client;
 }

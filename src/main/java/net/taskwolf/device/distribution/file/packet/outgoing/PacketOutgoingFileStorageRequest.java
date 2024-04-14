@@ -9,16 +9,14 @@ public final class PacketOutgoingFileStorageRequest extends PacketOutgoing {
   private final UUID storageId;
   private final String deviceId;
   private final String path;
-  private final byte[] content;
 
   public PacketOutgoingFileStorageRequest(
-    UUID storageId, String deviceId, String path, byte[] content
+    UUID storageId, String deviceId, String path
   ) {
     super(0x26);
     this.storageId = storageId;
     this.deviceId = deviceId;
     this.path = path;
-    this.content = content;
   }
 
   @Override
@@ -26,8 +24,6 @@ public final class PacketOutgoingFileStorageRequest extends PacketOutgoing {
     buffer.writeUUID(storageId);
     buffer.writeString(deviceId);
     buffer.writeString(path);
-    buffer.writeVarInt(content.length);
-    buffer.raw().writeBytes(content);
   }
 }
 
