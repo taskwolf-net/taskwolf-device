@@ -1,5 +1,6 @@
 package net.taskwolf.device.access;
 
+import com.google.common.hash.Hashing;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Map;
 import java.util.UUID;
@@ -160,19 +162,34 @@ public final class DeviceModificationController extends DeviceController {
   }
 
   @RequestMapping(path = "/device/delete/", method = RequestMethod.POST)
-  public void deleteDevice(
+  public CompletableFuture<Map<String, Object>> deleteDevice(
     HttpServletRequest request, @RequestBody String payload,
     HttpServletResponse response
   ) {
     var body = TaskwolfRequestBody.of(payload, response);
-    var deviceId = body.getString("device");
-    performDeviceOperation(findUserId(request), deviceId, this::deleteDevice,
-      () -> {});
+    var futureResponse = new CompletableFuture<Map<String, Object>>();
+    findUser(request).thenAccept(user -> performDeviceOperation(user.id(),
+      body.getString("device"), device -> futureResponse.complete(
+        deleteDevice(user, device, body.getString("password"))),
+      () -> futureResponse.complete(Map.of("success", false))));
+    return futureResponse;
   }
 
-  private void deleteDevice(Device device) {
+  private Map<String, Object> deleteDevice(
+    User user, Device device, String password
+  ) {
+    if (!user.passwordHash().equals(hashPassword(password))) {
+      return Map.of("success", false);
+    }
     deviceDatabaseTable().deleteDevice(device.id());
-    userDeviceDatabaseTable.findUsersOfDevice(device.id()).thenAccept(users ->
-      users.forEach(user -> userDeviceDatabaseTable.removeDevice(user, device.id())));
+    userDeviceDatabaseTable.findUsersOfDevice(device.id())
+      .thenAccept(users -> users.forEach(target ->
+        userDeviceDatabaseTable.removeDevice(target, device.id())));
+    return Map.of("success", true);
+  }
+
+  private String hashPassword(String password) {
+    return Hashing.sha256().hashString(password, StandardCharsets.UTF_8)
+      .toString();
   }
 }
