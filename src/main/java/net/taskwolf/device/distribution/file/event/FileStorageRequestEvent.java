@@ -12,7 +12,7 @@ import java.util.UUID;
 @Accessors(fluent = true)
 @RequiredArgsConstructor(staticName = "create")
 public final class FileStorageRequestEvent extends Event {
-  private final UUID infoId;
+  private final UUID storeId;
   private final String deviceId;
   private final String path;
   private final DistributionClient client;
