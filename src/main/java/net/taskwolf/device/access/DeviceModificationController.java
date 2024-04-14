@@ -161,6 +161,51 @@ public final class DeviceModificationController extends DeviceController {
         body.getString("language")), () -> {});
   }
 
+  @RequestMapping(path = "/device/account/change/", method = RequestMethod.POST)
+  public CompletableFuture<Map<String, Object>> changeDeviceAccount(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    var newEmail = body.getString("newAccountEmail");
+    var futureResponse = new CompletableFuture<Map<String, Object>>();
+    findUser(request).thenAccept(user -> performDeviceOperation(user.id(),
+      body.getString("device"), device -> userDatabaseTable().userExists(newEmail)
+        .thenAccept(exists -> changeDeviceAccount(user, device,
+          body.getString("password"), newEmail, body.getString("newAccountPassword"),
+          exists).thenAccept(futureResponse::complete)),
+      () -> futureResponse.complete(Map.of("success", false))));
+    return futureResponse;
+  }
+
+  private CompletableFuture<Map<String, Object>> changeDeviceAccount(
+    User user, Device device, String password, String newAccountEmail,
+    String newAccountPassword, boolean exists
+  ) {
+    if (!user.passwordHash().equals(hashPassword(password))) {
+      return CompletableFuture.completedFuture(Map.of("success", false,
+        "errorCode", 1000));
+    }
+    if (!exists) {
+      return CompletableFuture.completedFuture(Map.of("success", false,
+        "errorCode", 1001));
+    }
+    return userDatabaseTable().findUser(newAccountEmail).thenApply(target ->
+      changeDeviceAccount(device, newAccountPassword, target));
+  }
+
+  private Map<String, Object> changeDeviceAccount(
+    Device device, String newAccountPassword, User target
+  ) {
+    if (!target.passwordHash().equals(hashPassword(newAccountPassword))) {
+      return Map.of("success", false, "errorCode", 1002);
+    }
+    removeDeviceFromUsers(device).thenAccept(value ->
+      userDeviceDatabaseTable.addDevice(target.id(), device.id()));
+    deviceDatabaseTable().changeDeviceOwner(device, target.id());
+    return Map.of("success", true);
+  }
+
   @RequestMapping(path = "/device/delete/", method = RequestMethod.POST)
   public CompletableFuture<Map<String, Object>> deleteDevice(
     HttpServletRequest request, @RequestBody String payload,
@@ -182,10 +227,14 @@ public final class DeviceModificationController extends DeviceController {
       return Map.of("success", false);
     }
     deviceDatabaseTable().deleteDevice(device.id());
-    userDeviceDatabaseTable.findUsersOfDevice(device.id())
+    removeDeviceFromUsers(device);
+    return Map.of("success", true);
+  }
+
+  private CompletableFuture<Void> removeDeviceFromUsers(Device device) {
+    return userDeviceDatabaseTable.findUsersOfDevice(device.id())
       .thenAccept(users -> users.forEach(target ->
         userDeviceDatabaseTable.removeDevice(target, device.id())));
-    return Map.of("success", true);
   }
 
   private String hashPassword(String password) {

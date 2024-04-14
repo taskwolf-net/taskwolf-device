@@ -60,6 +60,14 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       commandExecution));
   }
 
+  public void changeDeviceOwner(Device device, UUID owner) {
+    update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
+      device.machineId(), owner, device.information(), device.platform().toString(),
+      device.language(), device.workflowNotifications(),
+      device.errorNotifications(), device.newsNotifications(),
+      device.commandExecution()));
+  }
+
   public void updateDeviceLanguage(Device device, String language) {
     update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
       device.machineId(), device.ownerId(), device.information(),
