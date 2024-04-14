@@ -11,10 +11,10 @@ import net.taskwolf.core.database.DatabaseKeyspace;
 public final class FileInjectionModule extends AbstractModule {
   @Provides
   @Singleton
-  FileDatabaseTable provideFileStorageDatabaseTable(
+  FileHistoryDatabaseTable provideFileStorageDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
   ) {
-    var fileDatabaseTable = FileDatabaseTable.create(
+    var fileDatabaseTable = FileHistoryDatabaseTable.create(
       connection, keyspace, "device_file_storage");
     fileDatabaseTable.createIfNotExists();
     return fileDatabaseTable;
@@ -22,10 +22,10 @@ public final class FileInjectionModule extends AbstractModule {
 
   @Provides
   @Singleton
-  FileDatabaseTable provideFileInfoDatabaseTable(
+  FileHistoryDatabaseTable provideFileInfoDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
   ) {
-    var fileDatabaseTable = FileDatabaseTable.create(
+    var fileDatabaseTable = FileHistoryDatabaseTable.create(
       connection, keyspace, "device_file_info");
     fileDatabaseTable.createIfNotExists();
     return fileDatabaseTable;

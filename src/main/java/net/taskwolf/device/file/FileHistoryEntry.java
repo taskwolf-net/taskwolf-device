@@ -10,8 +10,8 @@ import java.util.UUID;
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor(staticName = "create")
-public final class FileEntry {
-  public static FileEntry of(DatabaseRow row) {
+public final class FileHistoryEntry {
+  public static FileHistoryEntry of(DatabaseRow row) {
     return create(row.findCell(0).uuidValue(), row.findCell(1).stringValue(),
       row.findCell(2).stringValue(), row.findCell(3).longValue());
   }
