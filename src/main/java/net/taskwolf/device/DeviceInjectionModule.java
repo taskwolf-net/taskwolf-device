@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.database.DatabaseConnection;
 import net.taskwolf.core.database.DatabaseKeyspace;
 import net.taskwolf.device.command.CommandInjectionModule;
+import net.taskwolf.device.file.FileInjectionModule;
 import net.taskwolf.device.firebase.FirebaseInjectionModule;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
@@ -17,6 +18,7 @@ public final class DeviceInjectionModule extends AbstractModule {
   protected void configure() {
     install(FirebaseInjectionModule.create());
     install(CommandInjectionModule.create());
+    install(FileInjectionModule.create());
   }
 
   @Provides
