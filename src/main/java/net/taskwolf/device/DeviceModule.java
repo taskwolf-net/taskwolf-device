@@ -25,10 +25,7 @@ import net.taskwolf.device.command.CommandFactory;
 import net.taskwolf.device.connection.DeviceConnectionRepository;
 import net.taskwolf.device.connection.DeviceWebSocket;
 import net.taskwolf.device.distribution.event.*;
-import net.taskwolf.device.distribution.hook.CommandRequestHook;
-import net.taskwolf.device.distribution.hook.CommandResponseHook;
-import net.taskwolf.device.distribution.hook.NotificationRequestHook;
-import net.taskwolf.device.distribution.hook.NotificationResponseHook;
+import net.taskwolf.device.distribution.hook.*;
 import net.taskwolf.device.distribution.packet.incoming.*;
 import net.taskwolf.device.distribution.packet.outgoing.PacketOutgoingDeviceLogout;
 import net.taskwolf.device.notification.NotificationFactory;
@@ -86,6 +83,10 @@ public final class DeviceModule extends Module {
     packetRegistry.registerPacket(PacketIncomingNotificationResponse.class);
     packetRegistry.registerPacket(PacketIncomingCommandRequest.class);
     packetRegistry.registerPacket(PacketIncomingCommandResponse.class);
+    packetRegistry.registerPacket(PacketIncomingFileStorageRequest.class);
+    packetRegistry.registerPacket(PacketIncomingFileStorageResponse.class);
+    packetRegistry.registerPacket(PacketIncomingFileInfoRequest.class);
+    packetRegistry.registerPacket(PacketIncomingFileInfoResponse.class);
   }
 
   private void registerPacketEvents() {
@@ -94,19 +95,43 @@ public final class DeviceModule extends Module {
       (client, packet) -> DeviceLoginEvent.create(packet.deviceId(), client));
     packetEventRepository.registerEvent(PacketIncomingDeviceLogout.class,
       (client, packet) -> DeviceLogoutEvent.create(packet.deviceId()));
-    packetEventRepository.registerEvent(PacketIncomingNotificationRequest.class,
+    registerNotificationPacketEvents(packetEventRepository);
+    registerCommandPacketEvents(packetEventRepository);
+    registerFilePacketEvents(packetEventRepository);
+  }
+
+  private void registerNotificationPacketEvents(PacketEventRepository repository) {
+    repository.registerEvent(PacketIncomingNotificationRequest.class,
       (client, packet) -> NotificationRequestEvent.create(packet.notificationId(),
         packet.deviceId(), packet.title(), packet.body(), client));
-    packetEventRepository.registerEvent(PacketIncomingNotificationResponse.class,
+    repository.registerEvent(PacketIncomingNotificationResponse.class,
       (client, packet) -> NotificationResponseEvent.create(packet.notificationId(),
         packet.delivered()));
-    packetEventRepository.registerEvent(PacketIncomingCommandRequest.class,
+  }
+
+  private void registerCommandPacketEvents(PacketEventRepository repository) {
+    repository.registerEvent(PacketIncomingCommandRequest.class,
       (client, packet) -> CommandRequestEvent.create(packet.commandId(),
         packet.deviceId(), packet.command(), client));
-    packetEventRepository.registerEvent(PacketIncomingCommandResponse.class,
+    repository.registerEvent(PacketIncomingCommandResponse.class,
       (client, packet) -> CommandResponseEvent.create(packet.commandId(),
         packet.delivered(), packet.output(), packet.errorMessage(),
         packet.exitCode()));
+  }
+
+  private void registerFilePacketEvents(PacketEventRepository repository) {
+    repository.registerEvent(PacketIncomingFileStorageRequest.class,
+      (client, packet) -> FileStorageRequestEvent.create(packet.storageId(),
+        packet.deviceId(), packet.path(), packet.content(), client));
+    repository.registerEvent(PacketIncomingFileStorageResponse.class,
+      (client, packet) -> FileStorageResponseEvent.create(packet.storageId(),
+        packet.success()));
+    repository.registerEvent(PacketIncomingFileInfoRequest.class,
+      (client, packet) -> FileInfoRequestEvent.create(packet.infoId(),
+        packet.deviceId(), packet.path(), client));
+    repository.registerEvent(PacketIncomingFileInfoResponse.class,
+      (client, packet) -> FileInfoResponseEvent.create(packet.infoId(),
+        packet.content(), packet.success()));
   }
 
   private void registerHooks() {
@@ -115,6 +140,10 @@ public final class DeviceModule extends Module {
     hookRegistry.register(injector().getInstance(CommandResponseHook.class));
     hookRegistry.register(injector().getInstance(NotificationRequestHook.class));
     hookRegistry.register(injector().getInstance(NotificationResponseHook.class));
+    hookRegistry.register(injector().getInstance(FileStorageRequestHook.class));
+    hookRegistry.register(injector().getInstance(FileStorageResponseHook.class));
+    hookRegistry.register(injector().getInstance(FileInfoRequestHook.class));
+    hookRegistry.register(injector().getInstance(FileInfoResponseHook.class));
   }
 
   @Override
