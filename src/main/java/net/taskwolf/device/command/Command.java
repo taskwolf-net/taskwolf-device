@@ -5,7 +5,7 @@ import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.distribution.NodeType;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.device.DeviceConfiguration;
-import net.taskwolf.device.distribution.packet.outgoing.PacketOutgoingCommandRequest;
+import net.taskwolf.device.distribution.command.packet.outgoing.PacketOutgoingCommandRequest;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
 import org.json.JSONObject;
