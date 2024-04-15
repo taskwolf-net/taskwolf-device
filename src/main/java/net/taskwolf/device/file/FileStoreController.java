@@ -11,6 +11,7 @@ import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileStorageResponse;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -117,7 +118,8 @@ public final class FileStoreController extends DeviceController {
     if (content.isEmpty()) {
       return Maps.newHashMap();
     }
-    var result = Map.<String, Object>of("content", content.get());
+    var result = Map.<String, Object>of("content",
+      Base64.encodeBase64String(content.get()));
     clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
       .sendPacket(new PacketOutgoingFileStorageResponse(storageId, true));
     fileStorageRepository.unregisterFileContent(storageId);
