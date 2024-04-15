@@ -60,7 +60,7 @@ dependencies {
   implementation("com.datastax.oss:java-driver-core:4.17.0")
 
   compileOnly("org.json:json:20240303")
-  compileOnly("commons-io:commons-io:2.16.0")
+  compileOnly("commons-io:commons-io:2.16.1")
 
   compileOnly("io.jsonwebtoken:jjwt:0.12.5")
 
