@@ -12,6 +12,7 @@ import net.taskwolf.device.file.FileDatabaseTable;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
 import net.taskwolf.device.file.FileRequestRepository;
 import net.taskwolf.device.structure.Device;
+import org.apache.tomcat.util.codec.binary.Base64;
 
 import java.util.Map;
 
@@ -63,7 +64,7 @@ public final class FileInfoResponseHook implements Hook {
     information.put("devicePlatform", device.platform());
     information.put("filePath", filePath);
     information.put("fileName", fileName);
-    information.put("fileContent", fileContent);
+    information.put("fileContent", Base64.encodeBase64String(fileContent));
     return information;
   }
 }
