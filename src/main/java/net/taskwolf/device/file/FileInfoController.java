@@ -4,10 +4,14 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.distribution.NodeType;
+import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.device.access.DeviceController;
+import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileInfoResponse;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,19 +23,23 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
 public final class FileInfoController extends DeviceController {
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
+  private final DistributionClientRegistry clientRegistry;
 
   private FileInfoController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable, @Qualifier("fileInfoDatabaseTable")
-    FileHistoryDatabaseTable fileInfoDatabaseTable
+    FileHistoryDatabaseTable fileInfoDatabaseTable,
+    DistributionClientRegistry clientRegistry
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.fileInfoDatabaseTable = fileInfoDatabaseTable;
+    this.clientRegistry = clientRegistry;
   }
 
   @RequestMapping(path = "/device/file/info/history/", method = RequestMethod.POST)
@@ -84,6 +92,24 @@ public final class FileInfoController extends DeviceController {
     fileInfoDatabaseTable.findEntriesOfDevice(device.id())
       .thenAccept(entries -> entries.forEach(entry ->
         fileInfoDatabaseTable.deleteEntry(entry.id())));
+  }
+
+  @RequestMapping(path = "/device/file/info/response/", method = RequestMethod.POST)
+  public void deviceFileInfoResponse(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    performDeviceOperation(findUserId(request), body.getString("device"),
+      device -> deviceFileInfoResponse(body.getUUID("info"),
+        Base64.decodeBase64(body.getString("content"))), () -> {});
+  }
+
+  private void deviceFileInfoResponse(
+    UUID infoId, byte[] content
+  ) {
+    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
+      .sendPacket(new PacketOutgoingFileInfoResponse(infoId, content, true));
   }
 
   private String formatTime(long time) {

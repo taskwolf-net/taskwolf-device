@@ -12,5 +12,6 @@ import java.util.UUID;
 @RequiredArgsConstructor(staticName = "create")
 public final class FileInfoResponseEvent extends Event {
   private final UUID infoId;
+  private final byte[] content;
   private final boolean success;
 }

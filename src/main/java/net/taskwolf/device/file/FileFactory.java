@@ -14,7 +14,6 @@ public final class FileFactory {
   private final FileRequestRepository fileInfoRepository;
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
-  private final FileDatabaseTable fileDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
   private final DistributionClientRegistry clientRegistry;
@@ -25,7 +24,6 @@ public final class FileFactory {
     @Named("fileInfoRequestRepository") FileRequestRepository fileInfoRepository,
     @Named("fileStorageDatabaseTable") FileHistoryDatabaseTable fileStorageDatabaseTable,
     @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable,
-    FileDatabaseTable fileDatabaseTable,
     FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable,
     DeviceConfiguration deviceConfiguration,
     DistributionClientRegistry clientRegistry
@@ -34,7 +32,6 @@ public final class FileFactory {
     this.fileInfoRepository = fileInfoRepository;
     this.fileStorageDatabaseTable = fileStorageDatabaseTable;
     this.fileInfoDatabaseTable = fileInfoDatabaseTable;
-    this.fileDatabaseTable = fileDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
     this.deviceConfiguration = deviceConfiguration;
     this.clientRegistry = clientRegistry;
@@ -42,8 +39,7 @@ public final class FileFactory {
 
   public File createFile(Device device, String path, String name) {
     return File.create(fileStorageRepository, fileInfoRepository,
-      fileStorageDatabaseTable, fileInfoDatabaseTable, fileDatabaseTable,
-      firebaseDeviceDatabaseTable, deviceConfiguration, clientRegistry,
-      device, path, name);
+      fileStorageDatabaseTable, fileInfoDatabaseTable, firebaseDeviceDatabaseTable,
+      deviceConfiguration, clientRegistry, device, path, name);
   }
 }

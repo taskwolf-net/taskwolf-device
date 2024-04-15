@@ -11,6 +11,7 @@ import java.util.UUID;
 @Accessors(fluent = true)
 public final class PacketIncomingFileInfoResponse extends PacketIncoming {
   private UUID infoId;
+  private byte[] content;
   private boolean success;
 
   public PacketIncomingFileInfoResponse() {
@@ -20,6 +21,8 @@ public final class PacketIncomingFileInfoResponse extends PacketIncoming {
   @Override
   public void read(PacketBuffer buffer) throws Exception {
     infoId = buffer.readUUID();
+    var length = buffer.readVarInt();
+    content = buffer.raw().readBytes(length).array();
     success = buffer.raw().readBoolean();
   }
 }

@@ -25,7 +25,6 @@ public final class File {
   private final FileRequestRepository fileInfoRepository;
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
-  private final FileDatabaseTable fileDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
   private final DistributionClientRegistry clientRegistry;
@@ -41,39 +40,11 @@ public final class File {
     byte[] content, CompletableFuture<ActionResult> futureResponse,
     UUID storeId
   ) {
-    fileDatabaseTable.insertEntry(storeId, content);
     fileStorageRepository.registerFileRequest(FileRequest.create(storeId,
       device, path, name, futureResponse));
-    if (device.platform().isMobile()) {
-      storeMobileFile(storeId);
-    } else {
-      storeDesktopFile(storeId);
-    }
-  }
-
-  private void storeMobileFile(UUID storeId) {
-    firebaseDeviceDatabaseTable.findDeviceIdentifier(device.id())
-      .thenAccept(identifier -> storeMobileFile(storeId, identifier));
-  }
-
-  private static final String FIREBASE_URL = "https://fcm.googleapis.com/fcm/send";
-
-  private void storeMobileFile(UUID storeId, String identifier) {
-    var requestBody = new JSONObject(Map.of("to", identifier, "data",
-      Map.of("storeId", storeId)));
-    var requestBuilder = HttpRequest.newBuilder().uri(URI.create(FIREBASE_URL))
-      .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
-      .setHeader("Content-Type", "application/json")
-      .setHeader("Authorization", "key=" + deviceConfiguration.firebaseToken())
-      .build();
-    HttpClient.newHttpClient().sendAsync(requestBuilder,
-      HttpResponse.BodyHandlers.ofByteArray());
-  }
-
-  private void storeDesktopFile(UUID storeId) {
     clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
       .sendPacket(new PacketOutgoingFileStorageRequest(storeId, device.id(),
-        path, name));
+        path, name, content));
   }
 
   public void info(CompletableFuture<ActionResult> futureResponse) {
@@ -97,9 +68,11 @@ public final class File {
       .thenAccept(identifier -> findMobileFileInfo(infoId, identifier));
   }
 
+  private static final String FIREBASE_URL = "https://fcm.googleapis.com/fcm/send";
+
   private void findMobileFileInfo(UUID infoId, String identifier) {
     var requestBody = new JSONObject(Map.of("to", identifier, "data",
-      Map.of("infoId", infoId)));
+      Map.of("infoId", infoId, "filePath", path, "fileName", name)));
     var requestBuilder = HttpRequest.newBuilder().uri(URI.create(FIREBASE_URL))
       .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
       .setHeader("Content-Type", "application/json")

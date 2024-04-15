@@ -8,7 +8,6 @@ import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
 import net.taskwolf.device.distribution.file.event.FileInfoResponseEvent;
-import net.taskwolf.device.file.FileDatabaseTable;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
 import net.taskwolf.device.file.FileRequestRepository;
 import net.taskwolf.device.structure.Device;
@@ -20,17 +19,14 @@ import java.util.Map;
 public final class FileInfoResponseHook implements Hook {
   private final FileRequestRepository fileInfoRepository;
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
-  private final FileDatabaseTable fileDatabaseTable;
 
   @Inject
   private FileInfoResponseHook(
     @Named("fileInfoRequestRepository") FileRequestRepository fileInfoRepository,
-    @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable,
-    FileDatabaseTable fileDatabaseTable
+    @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable
   ) {
     this.fileInfoRepository = fileInfoRepository;
     this.fileInfoDatabaseTable = fileInfoDatabaseTable;
-    this.fileDatabaseTable = fileDatabaseTable;
   }
 
   @EventHook
@@ -46,14 +42,12 @@ public final class FileInfoResponseHook implements Hook {
       return;
     }
     long time = System.currentTimeMillis();
-    fileDatabaseTable.findEntry(event.infoId()).thenAccept(content ->
-      request.futureResult().complete(ActionResult.success(buildInformation(
-        request.device(), request.path(), request.name(), content))));
+    request.futureResult().complete(ActionResult.success(buildInformation(
+      request.device(), request.path(), request.name(), event.content())));
     fileInfoRepository.unregisterFileRequest(request);
     fileInfoDatabaseTable.insertEntry(request.id(),
       request.device().id(), request.path(), request.name(), time);
   }
-
 
   private Map<String, Object> buildInformation(
     Device device, String filePath, String fileName, byte[] fileContent

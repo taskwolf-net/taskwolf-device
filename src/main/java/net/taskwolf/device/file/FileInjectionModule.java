@@ -12,17 +12,6 @@ import net.taskwolf.core.database.DatabaseKeyspace;
 public final class FileInjectionModule extends AbstractModule {
   @Provides
   @Singleton
-  FileDatabaseTable provideFileDatabaseTable(
-    DatabaseConnection connection, DatabaseKeyspace keyspace
-  ) {
-    var fileDatabaseTable = FileDatabaseTable.create(
-      connection, keyspace, "device_file");
-    fileDatabaseTable.createIfNotExists();
-    return fileDatabaseTable;
-  }
-
-  @Provides
-  @Singleton
   @Named("fileStorageDatabaseTable")
   FileHistoryDatabaseTable provideFileStorageDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
