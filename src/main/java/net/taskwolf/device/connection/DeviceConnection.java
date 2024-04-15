@@ -28,7 +28,7 @@ public final class DeviceConnection {
     socket.send(String.format(COMMAND_FORMAT, commandId.toString(), command));
   }
 
-  private static final String FILE_STORE_FORMAT = "File Store %s %s %s";
+  private static final String FILE_STORE_FORMAT = "File Storage %s %s %s";
 
   public void storeFile(UUID storeId, String path, String name) {
     socket.send(String.format(FILE_STORE_FORMAT, storeId.toString(), path, name));
