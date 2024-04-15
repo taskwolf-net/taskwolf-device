@@ -1,7 +1,7 @@
 package net.taskwolf.device.structure;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import net.taskwolf.core.database.DatabaseRow;
 
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Getter
 @Accessors(fluent = true)
-@RequiredArgsConstructor(staticName = "create")
+@AllArgsConstructor(staticName = "create")
 public final class Device {
   public static Device of(DatabaseRow row) {
     return create(row.findCell(0).stringValue(), row.findCell(1).stringValue(),
@@ -17,17 +17,46 @@ public final class Device {
       DevicePlatform.valueOf(row.findCell(4).stringValue().toUpperCase()),
       row.findCell(5).stringValue(), row.findCell(6).booleanValue(),
       row.findCell(7).booleanValue(), row.findCell(8).booleanValue(),
-      row.findCell(9).booleanValue());
+      row.findCell(9).booleanValue(), row.findCell(10).booleanValue(),
+      row.findCell(11).booleanValue());
   }
 
   private final String id;
   private final String machineId;
-  private final UUID ownerId;
+  private UUID ownerId;
   private final String information;
   private final DevicePlatform platform;
-  private final String language;
-  private final boolean workflowNotifications;
-  private final boolean errorNotifications;
-  private final boolean newsNotifications;
-  private final boolean commandExecution;
+  private String language;
+  private boolean workflowNotifications;
+  private boolean errorNotifications;
+  private boolean newsNotifications;
+  private boolean commandExecution;
+  private boolean fileStorage;
+  private boolean fileInfo;
+
+  public void updateOwner(UUID ownerId) {
+    this.ownerId = ownerId;
+  }
+
+  public void updateLanguage(String language) {
+    this.language = language;
+  }
+
+  public void updateNotificationSettings(
+    boolean workflowNotifications, boolean errorNotifications,
+    boolean newsNotifications
+  ) {
+    this.workflowNotifications = workflowNotifications;
+    this.errorNotifications = errorNotifications;
+    this.newsNotifications = newsNotifications;
+  }
+
+  public void updateCommandSettings(boolean commandExecution) {
+    this.commandExecution = commandExecution;
+  }
+
+  public void updateFileSettings(boolean fileStorage, boolean fileInfo) {
+    this.fileStorage = fileStorage;
+    this.fileInfo = fileInfo;
+  }
 }

@@ -30,6 +30,8 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       DatabaseDataType.BOOLEAN));
     columns.add(DatabaseColumn.create("commandExecution",
       DatabaseDataType.BOOLEAN));
+    columns.add(DatabaseColumn.create("fileStorage", DatabaseDataType.BOOLEAN));
+    columns.add(DatabaseColumn.create("fileInfo", DatabaseDataType.BOOLEAN));
     return new DeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
   }
 
@@ -46,54 +48,61 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     insertDevice(device.id(), device.machineId(), device.ownerId(),
       device.information(), device.platform().toString(), device.language(),
       device.workflowNotifications(), device.errorNotifications(),
-      device.newsNotifications(), device.commandExecution());
+      device.newsNotifications(), device.commandExecution(),
+      device.fileStorage(), device.fileInfo());
   }
 
   public void insertDevice(
     String id, String machineId, UUID ownerId, String information,
     String platform, String language, boolean workflowNotifications,
     boolean errorNotifications, boolean newsNotifications,
-    boolean commandExecution
+    boolean commandExecution, boolean fileStorage, boolean fileInfo
   ) {
     insert(DatabaseRow.of(id, machineId, ownerId, information, platform,
       language, workflowNotifications, errorNotifications, newsNotifications,
-      commandExecution));
+      commandExecution, fileStorage, fileInfo));
   }
 
   public void changeDeviceOwner(Device device, UUID owner) {
-    update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
-      device.machineId(), owner, device.information(), device.platform().toString(),
-      device.language(), device.workflowNotifications(),
-      device.errorNotifications(), device.newsNotifications(),
-      device.commandExecution()));
+    device.updateOwner(owner);
+    updateDevice(device);
   }
 
   public void updateDeviceLanguage(Device device, String language) {
-    update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
-      device.machineId(), device.ownerId(), device.information(),
-      device.platform().toString(), language, device.workflowNotifications(),
-      device.errorNotifications(), device.newsNotifications(),
-      device.commandExecution()));
+    device.updateLanguage(language);
+    updateDevice(device);
   }
 
   public void updateDeviceNotificationSettings(
     Device device, boolean workflowNotifications, boolean errorNotifications,
     boolean newsNotifications
   ) {
-    update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
-      device.machineId(), device.ownerId(), device.information(),
-      device.platform().toString(), device.language(), workflowNotifications,
-      errorNotifications, newsNotifications, device.commandExecution()));
+    device.updateNotificationSettings(workflowNotifications, errorNotifications,
+      newsNotifications);
+    updateDevice(device);
   }
 
   public void updateDeviceCommandSettings(
     Device device, boolean commandExecution
   ) {
+    device.updateCommandSettings(commandExecution);
+    updateDevice(device);
+  }
+
+  public void updateDeviceFileSettings(
+    Device device, boolean fileStorage, boolean fileInfo
+  ) {
+    device.updateFileSettings(fileStorage, fileInfo);
+    updateDevice(device);
+  }
+
+  private void updateDevice(Device device) {
     update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
       device.machineId(), device.ownerId(), device.information(),
       device.platform().toString(), device.language(),
       device.workflowNotifications(), device.errorNotifications(),
-      device.newsNotifications(), commandExecution));
+      device.newsNotifications(), device.commandExecution(),
+      device.fileStorage(), device.fileInfo()));
   }
 
   public void deleteDevice(String deviceId) {
