@@ -28,16 +28,16 @@ public final class DeviceConnection {
     socket.send(String.format(COMMAND_FORMAT, commandId.toString(), command));
   }
 
-  private static final String FILE_STORE_FORMAT = "File Store %s %s";
+  private static final String FILE_STORE_FORMAT = "File Store %s %s %s";
 
-  public void storeFile(UUID storeId, String path) {
-    socket.send(String.format(FILE_STORE_FORMAT, storeId.toString(), path));
+  public void storeFile(UUID storeId, String path, String name) {
+    socket.send(String.format(FILE_STORE_FORMAT, storeId.toString(), path, name));
   }
 
-  private static final String FILE_INFO_FORMAT = "File Info %s %s";
+  private static final String FILE_INFO_FORMAT = "File Info %s %s %s";
 
-  public void fileInfo(UUID infoId, String path) {
-    socket.send(String.format(FILE_INFO_FORMAT, infoId.toString(), path));
+  public void fileInfo(UUID infoId, String path, String name) {
+    socket.send(String.format(FILE_INFO_FORMAT, infoId.toString(), path, name));
   }
 
   public void close() {

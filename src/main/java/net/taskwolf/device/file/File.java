@@ -31,6 +31,7 @@ public final class File {
   private final DistributionClientRegistry clientRegistry;
   private final Device device;
   private final String path;
+  private final String name;
 
   public void store(byte[] content, CompletableFuture<ActionResult> futureResponse) {
     generateAvailableRequestId().thenAccept(id -> store(content, futureResponse, id));
@@ -42,7 +43,7 @@ public final class File {
   ) {
     fileDatabaseTable.insertEntry(storeId, content);
     fileStorageRepository.registerFileRequest(FileRequest.create(storeId,
-      device, path, futureResponse));
+      device, path, name, futureResponse));
     if (device.platform().isMobile()) {
       storeMobileFile(storeId);
     } else {
@@ -71,7 +72,8 @@ public final class File {
 
   private void storeDesktopFile(UUID storeId) {
     clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingFileStorageRequest(storeId, device.id(), path));
+      .sendPacket(new PacketOutgoingFileStorageRequest(storeId, device.id(),
+        path, name));
   }
 
   public void info(CompletableFuture<ActionResult> futureResponse) {
@@ -82,7 +84,7 @@ public final class File {
     CompletableFuture<ActionResult> futureResponse, UUID infoId
   ) {
     fileInfoRepository.registerFileRequest(FileRequest.create(infoId,
-      device, path, futureResponse));
+      device, path, name, futureResponse));
     if (device.platform().isMobile()) {
       findMobileFileInfo(infoId);
     } else {
@@ -109,7 +111,8 @@ public final class File {
 
   private void findDesktopFileInfo(UUID infoId) {
     clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingFileInfoRequest(infoId, device.id(), path));
+      .sendPacket(new PacketOutgoingFileInfoRequest(infoId, device.id(),
+        path, name));
   }
 
   public CompletableFuture<UUID> generateAvailableRequestId() {

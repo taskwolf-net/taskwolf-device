@@ -16,6 +16,7 @@ public final class FileHistoryDatabaseTable extends DatabaseTable {
       DatabaseColumn.Type.PRIMARY_KEY));
     columns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("path", DatabaseDataType.TEXT));
+    columns.add(DatabaseColumn.create("name", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("executed", DatabaseDataType.BIGINT));
     return new FileHistoryDatabaseTable(connection, keyspace, tableName, columns);
   }
@@ -28,13 +29,14 @@ public final class FileHistoryDatabaseTable extends DatabaseTable {
   }
 
   public void insertEntry(FileHistoryEntry entry) {
-    insertEntry(entry.id(), entry.device(), entry.path(), entry.executed());
+    insertEntry(entry.id(), entry.device(), entry.path(), entry.name(),
+      entry.executed());
   }
 
   public void insertEntry(
-    UUID id, String device, String path, long executed
+    UUID id, String device, String path, String name, long executed
   ) {
-    insert(DatabaseRow.of(id, device, path, executed));
+    insert(DatabaseRow.of(id, device, path, name, executed));
   }
 
   public void deleteEntry(UUID entryId) {

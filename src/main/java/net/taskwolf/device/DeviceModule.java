@@ -147,13 +147,13 @@ public final class DeviceModule extends Module {
   private void registerFilePacketEvents(PacketEventRepository repository) {
     repository.registerEvent(PacketIncomingFileStorageRequest.class,
       (client, packet) -> FileStorageRequestEvent.create(packet.storageId(),
-        packet.deviceId(), packet.path(), client));
+        packet.deviceId(), packet.filePath(), packet.fileName(), client));
     repository.registerEvent(PacketIncomingFileStorageResponse.class,
       (client, packet) -> FileStorageResponseEvent.create(packet.storageId(),
         packet.success()));
     repository.registerEvent(PacketIncomingFileInfoRequest.class,
       (client, packet) -> FileInfoRequestEvent.create(packet.infoId(),
-        packet.deviceId(), packet.path(), client));
+        packet.deviceId(), packet.filePath(), packet.fileName(), client));
     repository.registerEvent(PacketIncomingFileInfoResponse.class,
       (client, packet) -> FileInfoResponseEvent.create(packet.infoId(),
         packet.success()));

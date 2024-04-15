@@ -20,7 +20,7 @@ public final class FileStorageRequestHook implements Hook {
     if (connection.isEmpty()) {
       return;
     }
-    connection.get().storeFile(event.storeId(), event.path());
+    connection.get().storeFile(event.storeId(), event.filePath(), event.fileName());
   }
 }
 

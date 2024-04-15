@@ -20,6 +20,6 @@ public final class FileInfoRequestHook implements Hook {
     if (connection.isEmpty()) {
       return;
     }
-    connection.get().fileInfo(event.infoId(), event.path());
+    connection.get().fileInfo(event.infoId(), event.filePath(), event.fileName());
   }
 }

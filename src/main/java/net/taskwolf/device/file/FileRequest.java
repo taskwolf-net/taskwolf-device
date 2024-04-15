@@ -16,5 +16,6 @@ public final class FileRequest {
   private final UUID id;
   private final Device device;
   private final String path;
+  private final String name;
   private final CompletableFuture<ActionResult> futureResult;
 }

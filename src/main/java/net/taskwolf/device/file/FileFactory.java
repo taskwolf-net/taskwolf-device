@@ -40,10 +40,10 @@ public final class FileFactory {
     this.clientRegistry = clientRegistry;
   }
 
-  public File createFile(Device device, String path) {
+  public File createFile(Device device, String path, String name) {
     return File.create(fileStorageRepository, fileInfoRepository,
       fileStorageDatabaseTable, fileInfoDatabaseTable, fileDatabaseTable,
       firebaseDeviceDatabaseTable, deviceConfiguration, clientRegistry,
-      device, path);
+      device, path, name);
   }
 }

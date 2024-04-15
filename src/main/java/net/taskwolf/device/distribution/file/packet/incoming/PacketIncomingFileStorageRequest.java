@@ -12,7 +12,8 @@ import java.util.UUID;
 public final class PacketIncomingFileStorageRequest extends PacketIncoming {
   private UUID storageId;
   private String deviceId;
-  private String path;
+  private String filePath;
+  private String fileName;
 
   public PacketIncomingFileStorageRequest() {
     super(0x26);
@@ -22,6 +23,7 @@ public final class PacketIncomingFileStorageRequest extends PacketIncoming {
   public void read(PacketBuffer buffer) throws Exception {
     storageId = buffer.readUUID();
     deviceId = buffer.readString();
-    path = buffer.readString();
+    filePath = buffer.readString();
+    fileName = buffer.readString();
   }
 }

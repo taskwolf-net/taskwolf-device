@@ -8,21 +8,24 @@ import java.util.UUID;
 public final class PacketOutgoingFileInfoRequest extends PacketOutgoing {
   private final UUID infoId;
   private final String deviceId;
-  private final String path;
+  private final String filePath;
+  private final String fileName;
 
   public PacketOutgoingFileInfoRequest(
-    UUID infoId, String deviceId, String path
+    UUID infoId, String deviceId, String filePath, String fileName
   ) {
     super(0x28);
     this.infoId = infoId;
     this.deviceId = deviceId;
-    this.path = path;
+    this.filePath = filePath;
+    this.fileName = fileName;
   }
 
   @Override
   public void write(PacketBuffer buffer) throws Exception {
     buffer.writeUUID(infoId);
     buffer.writeString(deviceId);
-    buffer.writeString(path);
+    buffer.writeString(filePath);
+    buffer.writeString(fileName);
   }
 }

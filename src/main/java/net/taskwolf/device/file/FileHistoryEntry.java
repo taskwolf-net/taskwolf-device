@@ -13,12 +13,14 @@ import java.util.UUID;
 public final class FileHistoryEntry {
   public static FileHistoryEntry of(DatabaseRow row) {
     return create(row.findCell(0).uuidValue(), row.findCell(1).stringValue(),
-      row.findCell(2).stringValue(), row.findCell(3).longValue());
+      row.findCell(2).stringValue(), row.findCell(3).stringValue(),
+      row.findCell(4).longValue());
   }
 
   private final UUID id;
   private final String device;
   private final String path;
+  private final String name;
   private final long executed;
 }
 

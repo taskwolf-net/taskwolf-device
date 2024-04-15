@@ -14,6 +14,7 @@ import java.util.UUID;
 public final class FileStorageRequestEvent extends Event {
   private final UUID storeId;
   private final String deviceId;
-  private final String path;
+  private final String filePath;
+  private final String fileName;
   private final DistributionClient client;
 }
