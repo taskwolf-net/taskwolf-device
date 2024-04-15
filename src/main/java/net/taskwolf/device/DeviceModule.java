@@ -53,6 +53,7 @@ import net.taskwolf.device.distribution.file.packet.incoming.PacketIncomingFileS
 import net.taskwolf.device.distribution.notification.packet.incoming.PacketIncomingNotificationRequest;
 import net.taskwolf.device.distribution.notification.packet.incoming.PacketIncomingNotificationResponse;
 import net.taskwolf.device.distribution.device.packet.outgoing.PacketOutgoingDeviceLogout;
+import net.taskwolf.device.file.FileFactory;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
@@ -86,7 +87,8 @@ public final class DeviceModule extends Module {
     var clientRegistry = injector().getInstance(DistributionClientRegistry.class);
     actionFactory = DeviceActionFactory.create(deviceDatabaseTable,
       injector().getInstance(NotificationFactory.class),
-      injector().getInstance(CommandFactory.class));
+      injector().getInstance(CommandFactory.class),
+      injector().getInstance(FileFactory.class));
     accountLink = DeviceAccountLink.create();
     deviceComponentSelect = DeviceComponentSelect.create(deviceDatabaseTable,
       injector().getInstance(UserDeviceDatabaseTable.class));
@@ -147,7 +149,8 @@ public final class DeviceModule extends Module {
   private void registerFilePacketEvents(PacketEventRepository repository) {
     repository.registerEvent(PacketIncomingFileStorageRequest.class,
       (client, packet) -> FileStorageRequestEvent.create(packet.storageId(),
-        packet.deviceId(), packet.filePath(), packet.fileName(), client));
+        packet.deviceId(), packet.filePath(), packet.fileName(),
+        packet.content(), client));
     repository.registerEvent(PacketIncomingFileStorageResponse.class,
       (client, packet) -> FileStorageResponseEvent.create(packet.storageId(),
         packet.success()));
@@ -156,7 +159,7 @@ public final class DeviceModule extends Module {
         packet.deviceId(), packet.filePath(), packet.fileName(), client));
     repository.registerEvent(PacketIncomingFileInfoResponse.class,
       (client, packet) -> FileInfoResponseEvent.create(packet.infoId(),
-        packet.success()));
+        packet.content(), packet.success()));
   }
 
   private void registerHooks() {
