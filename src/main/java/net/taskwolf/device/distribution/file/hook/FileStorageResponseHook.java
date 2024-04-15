@@ -1,18 +1,64 @@
 package net.taskwolf.device.distribution.file.hook;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
+import com.google.inject.name.Named;
+import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
 import net.taskwolf.device.distribution.file.event.FileStorageResponseEvent;
+import net.taskwolf.device.file.FileHistoryDatabaseTable;
+import net.taskwolf.device.file.FileRequestRepository;
+import net.taskwolf.device.structure.Device;
+
+import java.util.Map;
 
 @Singleton
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({@Inject}))
 public final class FileStorageResponseHook implements Hook {
+  private final FileRequestRepository fileStorageRepository;
+  private final FileHistoryDatabaseTable fileStorageDatabaseTable;
+
+  @Inject
+  private FileStorageResponseHook(
+    @Named("fileStorageRequestRepository") FileRequestRepository fileStorageRepository,
+    @Named("fileStorageDatabaseTable") FileHistoryDatabaseTable fileStorageDatabaseTable
+  ) {
+    this.fileStorageRepository = fileStorageRepository;
+    this.fileStorageDatabaseTable = fileStorageDatabaseTable;
+  }
+
   @EventHook
   private void fileStorageResponse(FileStorageResponseEvent event) {
+    var optionalRequest = fileStorageRepository
+      .findFileRequest(event.storageId());
+    if (optionalRequest.isEmpty()) {
+      return;
+    }
+    var request = optionalRequest.get();
+    if (!event.success()) {
+      request.futureResult().complete(ActionResult.failure(
+        "device.action.file.store.failure.device.offline"));
+      return;
+    }
+    long time = System.currentTimeMillis();
+    request.futureResult().complete(ActionResult.success(buildInformation(
+      request.device(), request.path(), request.name())));
+    fileStorageRepository.unregisterFileRequest(request);
+    fileStorageDatabaseTable.insertEntry(request.id(),
+      request.device().id(), request.path(), request.name(), time);
+  }
 
+
+  private Map<String, Object> buildInformation(
+    Device device, String filePath, String fileName
+  ) {
+    var information = Maps.<String, Object>newHashMap();
+    information.put("deviceId", device.id());
+    information.put("deviceName", device.information());
+    information.put("devicePlatform", device.platform());
+    information.put("filePath", filePath);
+    information.put("fileName", fileName);
+    return information;
   }
 }
