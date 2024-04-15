@@ -4,8 +4,11 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.distribution.NodeType;
+import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.device.access.DeviceController;
+import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileStorageResponse;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,19 +22,26 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
 public final class FileStoreController extends DeviceController {
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
+  private final DistributionClientRegistry clientRegistry;
+  private final FileStorageRepository fileStorageRepository;
 
   private FileStoreController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable, @Qualifier("fileStorageDatabaseTable")
-    FileHistoryDatabaseTable fileStorageDatabaseTable
+    FileHistoryDatabaseTable fileStorageDatabaseTable,
+    DistributionClientRegistry clientRegistry,
+    FileStorageRepository fileStorageRepository
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.fileStorageDatabaseTable = fileStorageDatabaseTable;
+    this.clientRegistry = clientRegistry;
+    this.fileStorageRepository = fileStorageRepository;
   }
 
   @RequestMapping(path = "/device/file/storage/history/", method = RequestMethod.POST)
@@ -84,6 +94,34 @@ public final class FileStoreController extends DeviceController {
     fileStorageDatabaseTable.findEntriesOfDevice(device.id())
       .thenAccept(entries -> entries.forEach(entry ->
         fileStorageDatabaseTable.deleteEntry(entry.id())));
+  }
+
+  @RequestMapping(path = "/device/file/storage/response/", method = RequestMethod.POST)
+  public CompletableFuture<Map<String, Object>> deviceFileStorageResponse(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    var futureResponse = new CompletableFuture<Map<String, Object>>();
+    performDeviceOperation(findUserId(request), body.getString("device"),
+      device -> futureResponse.complete(deviceFileStorageResponse(
+        body.getUUID("storage"))),
+      () -> futureResponse.complete(Maps.newHashMap()));
+    return futureResponse;
+  }
+
+  private Map<String, Object> deviceFileStorageResponse(
+    UUID storageId
+  ) {
+    var content = fileStorageRepository.findFileContent(storageId);
+    if (content.isEmpty()) {
+      return Maps.newHashMap();
+    }
+    var result = Map.<String, Object>of("content", content.get());
+    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
+      .sendPacket(new PacketOutgoingFileStorageResponse(storageId, true));
+    fileStorageRepository.unregisterFileContent(storageId);
+    return result;
   }
 
   private String formatTime(long time) {
