@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequestRepository;
+import net.taskwolf.device.file.FileDatabaseTable;
+import net.taskwolf.device.file.FileHistoryDatabaseTable;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
@@ -22,6 +24,9 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
   private final NotificationFactory notificationFactory;
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
   private final CommandRequestRepository commandRequestRepository;
+  private final FileDatabaseTable fileDatabaseTable;
+  private final FileHistoryDatabaseTable fileStorageDatabaseTable;
+  private final FileHistoryDatabaseTable fileInfoDatabaseTable;
 
   @Override
   public void initialize(ConfigurableApplicationContext applicationContext) {
@@ -32,5 +37,8 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     beanFactory.registerSingleton("notificationFactory", notificationFactory);
     beanFactory.registerSingleton("commandExecutionDatabaseTable", commandExecutionDatabaseTable);
     beanFactory.registerSingleton("commandRequestRepository", commandRequestRepository);
+    beanFactory.registerSingleton("fileDatabaseTable", fileDatabaseTable);
+    beanFactory.registerSingleton("fileStorageDatabaseTable", fileStorageDatabaseTable);
+    beanFactory.registerSingleton("fileInfoDatabaseTable", fileInfoDatabaseTable);
   }
 }
