@@ -18,9 +18,7 @@ import net.taskwolf.core.module.ModuleLoadPriority;
 import net.taskwolf.core.trigger.TriggerFactory;
 import net.taskwolf.core.trigger.TriggerInformation;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
-import net.taskwolf.device.action.DeviceActionFactory;
-import net.taskwolf.device.action.DeviceCommandAction;
-import net.taskwolf.device.action.DeviceNotificationAction;
+import net.taskwolf.device.action.*;
 import net.taskwolf.device.command.CommandFactory;
 import net.taskwolf.device.connection.DeviceConnectionRepository;
 import net.taskwolf.device.connection.DeviceWebSocket;
@@ -217,6 +215,8 @@ public final class DeviceModule extends Module {
   public List<ActionInformation> actionInformation() {
     return Lists.newArrayList(
       DeviceNotificationAction.information(deviceComponentSelect),
-      DeviceCommandAction.information(deviceComponentSelect));
+      DeviceCommandAction.information(deviceComponentSelect),
+      DeviceFileStoreAction.information(deviceComponentSelect),
+      DeviceFileInfoAction.information(deviceComponentSelect));
   }
 }
