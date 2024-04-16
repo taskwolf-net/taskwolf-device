@@ -3,6 +3,7 @@ package net.taskwolf.device.connection;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
+import net.taskwolf.device.file.FilePath;
 import net.taskwolf.device.structure.Device;
 import org.java_websocket.WebSocket;
 
@@ -28,16 +29,18 @@ public final class DeviceConnection {
     socket.send(String.format(COMMAND_FORMAT, commandId.toString(), command));
   }
 
-  private static final String FILE_STORE_FORMAT = "File Storage %s %s %s";
+  private static final String FILE_STORE_FORMAT = "File Storage %s %s";
 
   public void storeFile(UUID storeId, String path, String name) {
-    socket.send(String.format(FILE_STORE_FORMAT, storeId.toString(), path, name));
+    socket.send(String.format(FILE_STORE_FORMAT, storeId.toString(),
+      FilePath.of(path, name).compound()));
   }
 
-  private static final String FILE_INFO_FORMAT = "File Info %s %s %s";
+  private static final String FILE_INFO_FORMAT = "File Info %s %s";
 
   public void fileInfo(UUID infoId, String path, String name) {
-    socket.send(String.format(FILE_INFO_FORMAT, infoId.toString(), path, name));
+    socket.send(String.format(FILE_INFO_FORMAT, infoId.toString(),
+      FilePath.of(path, name).compound()));
   }
 
   public void close() {

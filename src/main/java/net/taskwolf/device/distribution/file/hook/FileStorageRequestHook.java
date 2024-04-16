@@ -10,6 +10,7 @@ import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.connection.DeviceConnection;
 import net.taskwolf.device.connection.DeviceConnectionRepository;
 import net.taskwolf.device.distribution.file.event.FileStorageRequestEvent;
+import net.taskwolf.device.file.FilePath;
 import net.taskwolf.device.file.FileStorageRepository;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
@@ -50,7 +51,7 @@ public final class FileStorageRequestHook implements Hook {
       return;
     }
     storeMobileFile(event.deviceId(), Map.of("storeId", event.storeId(),
-      "filePath", event.filePath(), "fileName", event.fileName()));
+      "filePath", FilePath.of(event.filePath(), event.fileName()).compound()));
   }
 
   private void storeMobileFile(String deviceId, Map<String, Object> data) {

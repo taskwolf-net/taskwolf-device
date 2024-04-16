@@ -72,6 +72,7 @@ public final class FileInfoController extends DeviceController {
     var information = Maps.<String, Object>newHashMap();
     information.put("path", entry.path());
     information.put("name", entry.name());
+    information.put("compoundPath", FilePath.of(entry.path(), entry.name()).compound());
     information.put("executed", formatTime(entry.executed()));
     return information;
   }

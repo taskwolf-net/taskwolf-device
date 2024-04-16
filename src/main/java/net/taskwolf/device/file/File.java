@@ -72,7 +72,7 @@ public final class File {
 
   private void findMobileFileInfo(UUID infoId, String identifier) {
     var requestBody = new JSONObject(Map.of("to", identifier, "data",
-      Map.of("infoId", infoId, "filePath", path, "fileName", name)));
+      Map.of("infoId", infoId, "filePath", FilePath.of(path, name).compound())));
     var requestBuilder = HttpRequest.newBuilder().uri(URI.create(FIREBASE_URL))
       .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
       .setHeader("Content-Type", "application/json")
