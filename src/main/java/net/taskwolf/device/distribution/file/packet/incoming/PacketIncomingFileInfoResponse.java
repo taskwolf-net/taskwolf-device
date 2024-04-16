@@ -21,8 +21,8 @@ public final class PacketIncomingFileInfoResponse extends PacketIncoming {
   @Override
   public void read(PacketBuffer buffer) throws Exception {
     infoId = buffer.readUUID();
-    var length = buffer.readVarInt();
-    content = buffer.raw().readBytes(length).array();
+    content = new byte[buffer.readVarInt()];
+    buffer.raw().readBytes(content);
     success = buffer.raw().readBoolean();
   }
 }

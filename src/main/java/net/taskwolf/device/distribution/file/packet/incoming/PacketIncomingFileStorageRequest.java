@@ -26,7 +26,7 @@ public final class PacketIncomingFileStorageRequest extends PacketIncoming {
     deviceId = buffer.readString();
     filePath = buffer.readString();
     fileName = buffer.readString();
-    var length = buffer.readVarInt();
-    content = buffer.raw().readBytes(length).array();
+    content = new byte[buffer.readVarInt()];
+    buffer.raw().readBytes(content);
   }
 }
