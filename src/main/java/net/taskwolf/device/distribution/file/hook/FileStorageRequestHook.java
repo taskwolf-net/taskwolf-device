@@ -11,7 +11,7 @@ import net.taskwolf.device.connection.DeviceConnection;
 import net.taskwolf.device.connection.DeviceConnectionRepository;
 import net.taskwolf.device.distribution.file.event.FileStorageRequestEvent;
 import net.taskwolf.device.file.FilePath;
-import net.taskwolf.device.file.FileStorageRepository;
+import net.taskwolf.device.file.storage.FileStorageRepository;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;

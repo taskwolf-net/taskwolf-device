@@ -7,7 +7,7 @@ import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequestRepository;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
-import net.taskwolf.device.file.FileStorageRepository;
+import net.taskwolf.device.file.storage.FileStorageRepository;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;

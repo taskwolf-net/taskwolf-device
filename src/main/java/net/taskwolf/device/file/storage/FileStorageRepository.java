@@ -1,4 +1,4 @@
-package net.taskwolf.device.file;
+package net.taskwolf.device.file.storage;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;

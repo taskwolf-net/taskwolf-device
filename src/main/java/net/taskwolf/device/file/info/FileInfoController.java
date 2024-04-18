@@ -1,4 +1,4 @@
-package net.taskwolf.device.file;
+package net.taskwolf.device.file.info;
 
 import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +9,9 @@ import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileInfoResponse;
+import net.taskwolf.device.file.FileHistoryDatabaseTable;
+import net.taskwolf.device.file.FileHistoryEntry;
+import net.taskwolf.device.file.FilePath;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.apache.tomcat.util.codec.binary.Base64;
