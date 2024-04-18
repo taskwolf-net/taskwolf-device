@@ -1,6 +1,5 @@
 package net.taskwolf.device.action;
 
-import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import net.taskwolf.core.action.Action;
 import net.taskwolf.core.action.ActionInformation;
@@ -83,10 +82,7 @@ public final class DeviceNotificationAction implements Action {
   }
 
   private Map<String, Object> buildInformation(Device device) {
-    var information = Maps.<String, Object>newHashMap();
-    information.put("deviceId", device.id());
-    information.put("deviceName", device.information());
-    information.put("devicePlatform", device.platform());
+    var information = device.composition();
     information.put("notificationTitle", notificationTitle);
     information.put("notificationBody", notificationBody);
     return information;

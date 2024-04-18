@@ -1,6 +1,5 @@
 package net.taskwolf.device.distribution.file.hook;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -53,10 +52,7 @@ public final class FileStorageResponseHook implements Hook {
   private Map<String, Object> buildInformation(
     Device device, String filePath, String fileName
   ) {
-    var information = Maps.<String, Object>newHashMap();
-    information.put("deviceId", device.id());
-    information.put("deviceName", device.information());
-    information.put("devicePlatform", device.platform());
+    var information = device.composition();
     information.put("filePath", filePath);
     information.put("fileName", fileName);
     return information;

@@ -1,10 +1,12 @@
 package net.taskwolf.device.structure;
 
+import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.taskwolf.core.database.DatabaseRow;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
@@ -58,5 +60,13 @@ public final class Device {
   public void updateFileSettings(boolean fileStorage, boolean fileInfo) {
     this.fileStorage = fileStorage;
     this.fileInfo = fileInfo;
+  }
+
+  public Map<String, Object> composition() {
+    var information = Maps.<String, Object>newHashMap();
+    information.put("deviceId", id);
+    information.put("deviceName", this.information);
+    information.put("devicePlatform", platform);
+    return information;
   }
 }
