@@ -1,12 +1,16 @@
 package net.taskwolf.device.notification;
 
 import lombok.RequiredArgsConstructor;
+import net.taskwolf.core.CoreModule;
 import net.taskwolf.core.distribution.NodeType;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
+import net.taskwolf.core.trigger.TriggerEntry;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.distribution.notification.packet.outgoing.PacketOutgoingNotificationRequest;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
+import net.taskwolf.device.trigger.DeviceNotificationTrigger;
+import net.taskwolf.device.trigger.DeviceTriggerFactory;
 import org.json.JSONObject;
 
 import java.net.URI;
@@ -21,6 +25,8 @@ public final class Notification {
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
   private final DistributionClientRegistry clientRegistry;
+  private final CoreModule coreModule;
+  private final DeviceTriggerFactory triggerFactory;
   private final Device device;
   private final String title;
   private final String body;
@@ -31,6 +37,7 @@ public final class Notification {
     } else {
       publishDesktopNotification();
     }
+    triggerWorkflows();
   }
 
   private void publishMobileNotification() {
@@ -61,5 +68,23 @@ public final class Notification {
     clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
       .sendPacket(new PacketOutgoingNotificationRequest(notificationId,
         device.id(), title, body));
+  }
+
+  private void triggerWorkflows() {
+    coreModule.triggerWorkflows("device", "device-notification-trigger",
+      this::isTriggerSuitable, triggerInformation());
+  }
+
+  private boolean isTriggerSuitable(TriggerEntry entry) {
+    var trigger = (DeviceNotificationTrigger) triggerFactory.create(entry.type(),
+      entry.content());
+    return trigger.deviceId().equals(device.id());
+  }
+
+  private Map<String, Object> triggerInformation() {
+    var information = device.composition();
+    information.put("notificationTitle", title);
+    information.put("notificationBody", body);
+    return information;
   }
 }
