@@ -1,17 +1,20 @@
 package net.taskwolf.device.distribution.command.hook;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import net.taskwolf.core.CoreModule;
 import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
+import net.taskwolf.core.trigger.TriggerEntry;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequestRepository;
 import net.taskwolf.device.distribution.command.event.CommandResponseEvent;
 import net.taskwolf.device.structure.Device;
+import net.taskwolf.device.trigger.DeviceCommandTrigger;
+import net.taskwolf.device.trigger.DeviceTriggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -22,6 +25,8 @@ import java.util.Map;
 public final class CommandResponseHook implements Hook {
   private final CommandRequestRepository commandRequestRepository;
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
+  private final CoreModule coreModule;
+  private final DeviceTriggerFactory triggerFactory;
 
   @EventHook
   private void commandResponse(CommandResponseEvent event) {
@@ -37,29 +42,38 @@ public final class CommandResponseHook implements Hook {
       return;
     }
     long time = System.currentTimeMillis();
-    request.futureResult().complete(ActionResult.success(buildInformation(
-      request.device(), request.command(), event.output(), event.errorMessage(),
-      event.exitCode(), formatTime(time))));
+    var information = buildInformation(request.device(), request.command(),
+      event.output(), event.errorMessage(), event.exitCode(), formatTime(time));
+    request.futureResult().complete(ActionResult.success(information));
     commandRequestRepository.unregisterCommandRequest(request);
     commandExecutionDatabaseTable.insertCommandExecution(request.id(),
       request.device().id(), time, request.command(),
       event.output(), event.errorMessage(), event.exitCode());
+    triggerWorkflows(request.device(), information);
   }
 
   private Map<String, Object> buildInformation(
     Device device, String command, String commandOutput,
     String commandErrorMessage, int commandExitCode, String commandExecutionTime
   ) {
-    var information = Maps.<String, Object>newHashMap();
-    information.put("deviceId", device.id());
-    information.put("deviceName", device.information());
-    information.put("devicePlatform", device.platform());
+    var information = device.composition();
     information.put("command", command);
     information.put("commandOutput", commandOutput);
     information.put("commandErrorMessage", commandErrorMessage);
     information.put("commandExitCode", commandExitCode);
     information.put("commandExecutionTime", commandExecutionTime);
     return information;
+  }
+
+  private void triggerWorkflows(Device device, Map<String, Object> information) {
+    coreModule.triggerWorkflows("device", "device-command-trigger",
+      trigger -> isTriggerSuitable(device, trigger), information);
+  }
+
+  private boolean isTriggerSuitable(Device device, TriggerEntry entry) {
+    var trigger = (DeviceCommandTrigger) triggerFactory.create(entry.type(),
+      entry.content());
+    return trigger.deviceId().equals(device.id());
   }
 
   private String formatTime(long time) {

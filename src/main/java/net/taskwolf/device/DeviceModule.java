@@ -55,6 +55,8 @@ import net.taskwolf.device.file.FileFactory;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
+import net.taskwolf.device.trigger.DeviceCommandTrigger;
+import net.taskwolf.device.trigger.DeviceNotificationTrigger;
 import net.taskwolf.device.trigger.DeviceTriggerFactory;
 import org.springframework.boot.SpringApplication;
 
@@ -80,7 +82,7 @@ public final class DeviceModule extends Module {
     log = injector().getInstance(Log.class).subLog("Device");
     injector().getInstance(SpringApplication.class).addInitializers(
       injector().getInstance(DeviceContextInitializer.class));
-    triggerFactory = DeviceTriggerFactory.create();
+    triggerFactory = injector().getInstance(DeviceTriggerFactory.class);
     var deviceDatabaseTable = injector().getInstance(DeviceDatabaseTable.class);
     var clientRegistry = injector().getInstance(DistributionClientRegistry.class);
     actionFactory = DeviceActionFactory.create(deviceDatabaseTable,
@@ -208,7 +210,9 @@ public final class DeviceModule extends Module {
 
   @Override
   public List<TriggerInformation> triggerInformation() {
-    return Lists.newArrayList();
+    return Lists.newArrayList(
+      DeviceNotificationTrigger.information(deviceComponentSelect),
+      DeviceCommandTrigger.information(deviceComponentSelect));
   }
 
   @Override
