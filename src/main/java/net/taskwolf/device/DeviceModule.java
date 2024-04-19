@@ -52,6 +52,8 @@ import net.taskwolf.device.distribution.notification.packet.incoming.PacketIncom
 import net.taskwolf.device.distribution.notification.packet.incoming.PacketIncomingNotificationResponse;
 import net.taskwolf.device.distribution.device.packet.outgoing.PacketOutgoingDeviceLogout;
 import net.taskwolf.device.file.FileFactory;
+import net.taskwolf.device.file.workspace.FileWorkspaceComponentSelect;
+import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
@@ -71,6 +73,7 @@ public final class DeviceModule extends Module {
   private ActionFactory actionFactory;
   private AccountLink accountLink;
   private InputComponentSelect deviceComponentSelect;
+  private InputComponentSelect fileWorkspaceComponentSelect;
   private DeviceWebSocket socket;
 
   public DeviceModule(Injector injector) {
@@ -92,6 +95,8 @@ public final class DeviceModule extends Module {
     accountLink = DeviceAccountLink.create();
     deviceComponentSelect = DeviceComponentSelect.create(deviceDatabaseTable,
       injector().getInstance(UserDeviceDatabaseTable.class));
+    fileWorkspaceComponentSelect = FileWorkspaceComponentSelect.create(
+      injector().getInstance(FileWorkspaceDatabaseTable.class));
     registerPackets();
     registerPacketEvents();
     registerHooks();
