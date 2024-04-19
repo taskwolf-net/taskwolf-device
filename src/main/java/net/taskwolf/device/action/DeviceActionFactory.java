@@ -32,6 +32,9 @@ public final class DeviceActionFactory implements ActionFactory {
     if (type.equals("device-file-info-action")) {
       return DeviceFileInfoAction.of(deviceDatabaseTable, fileFactory, json);
     }
+    if (type.equals("device-file-delete-action")) {
+      return DeviceFileDeleteAction.of(deviceDatabaseTable, fileFactory, json);
+    }
     return null;
   }
 }
