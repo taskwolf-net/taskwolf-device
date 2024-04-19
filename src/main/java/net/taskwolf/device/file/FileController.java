@@ -49,6 +49,8 @@ public final class FileController extends DeviceController {
     var deviceId = body.getString("device");
     performDeviceOperation(findUserId(request), deviceId, device ->
       deviceDatabaseTable().updateDeviceFileSettings(device,
-        body.getBoolean("fileStorage"), body.getBoolean("fileInfo")), () -> {});
+        body.getBoolean("fileStorage"), body.getBoolean("fileInfo"),
+        body.getBoolean("fileDelete"), body.getBoolean("folderCreate"),
+        body.getBoolean("folderDelete")), () -> {});
   }
 }

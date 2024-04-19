@@ -84,7 +84,8 @@ public final class DeviceModificationController extends DeviceController {
     String firebaseToken, String id
   ) {
     deviceDatabaseTable().insertDevice(id, deviceId, user.id(), information,
-      platform.toString(), user.language(), true, true, false, true, true, true);
+      platform.toString(), user.language(), true, true, true, true, true, true,
+      true, true, true);
     userDeviceDatabaseTable.addDevice(user.id(), id);
     if (platform.isMobile()) {
       firebaseDeviceDatabaseTable.storeDeviceIdentifier(id, firebaseToken);

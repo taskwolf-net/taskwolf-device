@@ -20,7 +20,8 @@ public final class Device {
       row.findCell(5).stringValue(), row.findCell(6).booleanValue(),
       row.findCell(7).booleanValue(), row.findCell(8).booleanValue(),
       row.findCell(9).booleanValue(), row.findCell(10).booleanValue(),
-      row.findCell(11).booleanValue());
+      row.findCell(11).booleanValue(), row.findCell(12).booleanValue(),
+      row.findCell(13).booleanValue(), row.findCell(14).booleanValue());
   }
 
   private final String id;
@@ -35,6 +36,9 @@ public final class Device {
   private boolean commandExecution;
   private boolean fileStorage;
   private boolean fileInfo;
+  private boolean fileDelete;
+  private boolean folderCreate;
+  private boolean folderDelete;
 
   public void updateOwner(UUID ownerId) {
     this.ownerId = ownerId;
@@ -57,9 +61,15 @@ public final class Device {
     this.commandExecution = commandExecution;
   }
 
-  public void updateFileSettings(boolean fileStorage, boolean fileInfo) {
+  public void updateFileSettings(
+    boolean fileStorage, boolean fileInfo, boolean fileDelete,
+    boolean folderCreate, boolean folderDelete
+  ) {
     this.fileStorage = fileStorage;
     this.fileInfo = fileInfo;
+    this.fileDelete = fileDelete;
+    this.folderCreate = folderCreate;
+    this.folderDelete = folderDelete;
   }
 
   public Map<String, Object> composition() {

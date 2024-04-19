@@ -32,6 +32,9 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       DatabaseDataType.BOOLEAN));
     columns.add(DatabaseColumn.create("fileStorage", DatabaseDataType.BOOLEAN));
     columns.add(DatabaseColumn.create("fileInfo", DatabaseDataType.BOOLEAN));
+    columns.add(DatabaseColumn.create("fileDelete", DatabaseDataType.BOOLEAN));
+    columns.add(DatabaseColumn.create("folderCreate", DatabaseDataType.BOOLEAN));
+    columns.add(DatabaseColumn.create("folderDelete", DatabaseDataType.BOOLEAN));
     return new DeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
   }
 
@@ -49,18 +52,21 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       device.information(), device.platform().toString(), device.language(),
       device.workflowNotifications(), device.errorNotifications(),
       device.newsNotifications(), device.commandExecution(),
-      device.fileStorage(), device.fileInfo());
+      device.fileStorage(), device.fileInfo(), device.fileDelete(),
+      device.folderCreate(), device.folderDelete());
   }
 
   public void insertDevice(
     String id, String machineId, UUID ownerId, String information,
     String platform, String language, boolean workflowNotifications,
     boolean errorNotifications, boolean newsNotifications,
-    boolean commandExecution, boolean fileStorage, boolean fileInfo
+    boolean commandExecution, boolean fileStorage, boolean fileInfo,
+    boolean fileDelete, boolean folderCreate, boolean folderDelete
   ) {
     insert(DatabaseRow.of(id, machineId, ownerId, information, platform,
       language, workflowNotifications, errorNotifications, newsNotifications,
-      commandExecution, fileStorage, fileInfo));
+      commandExecution, fileStorage, fileInfo, fileDelete, folderCreate,
+      folderDelete));
   }
 
   public void changeDeviceOwner(Device device, UUID owner) {
@@ -90,9 +96,11 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   }
 
   public void updateDeviceFileSettings(
-    Device device, boolean fileStorage, boolean fileInfo
+    Device device, boolean fileStorage, boolean fileInfo, boolean fileDelete,
+    boolean folderCreate, boolean folderDelete
   ) {
-    device.updateFileSettings(fileStorage, fileInfo);
+    device.updateFileSettings(fileStorage, fileInfo, fileDelete,
+      folderCreate, folderDelete);
     updateDevice(device);
   }
 
@@ -102,7 +110,8 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       device.platform().toString(), device.language(),
       device.workflowNotifications(), device.errorNotifications(),
       device.newsNotifications(), device.commandExecution(),
-      device.fileStorage(), device.fileInfo()));
+      device.fileStorage(), device.fileInfo(), device.fileDelete(),
+      device.folderCreate(), device.folderDelete()));
   }
 
   public void deleteDevice(String deviceId) {
