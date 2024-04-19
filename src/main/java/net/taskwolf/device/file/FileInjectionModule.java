@@ -7,6 +7,7 @@ import com.google.inject.name.Named;
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.database.DatabaseConnection;
 import net.taskwolf.core.database.DatabaseKeyspace;
+import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
 
 @RequiredArgsConstructor(staticName = "create")
 public final class FileInjectionModule extends AbstractModule {
@@ -46,5 +47,16 @@ public final class FileInjectionModule extends AbstractModule {
   @Named("fileInfoRequestRepository")
   FileRequestRepository provideFileInfoRequestRepository() {
     return FileRequestRepository.create();
+  }
+
+  @Provides
+  @Singleton
+  FileWorkspaceDatabaseTable provideFileWorkspaceDatabaseTable(
+    DatabaseConnection connection, DatabaseKeyspace keyspace
+  ) {
+    var workspaceDatabaseTable = FileWorkspaceDatabaseTable.create(
+      connection, keyspace);
+    workspaceDatabaseTable.createIfNotExists();
+    return workspaceDatabaseTable;
   }
 }

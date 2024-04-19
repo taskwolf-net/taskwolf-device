@@ -8,6 +8,7 @@ import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequestRepository;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
 import net.taskwolf.device.file.storage.FileStorageRepository;
+import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
@@ -27,6 +28,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
   private final FileStorageRepository fileStorageRepository;
+  private final FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable;
 
   @Inject
   private DeviceContextInitializer(
@@ -39,7 +41,8 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     CommandRequestRepository commandRequestRepository,
     @Named("fileStorageDatabaseTable") FileHistoryDatabaseTable fileStorageDatabaseTable,
     @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable,
-    FileStorageRepository fileStorageRepository
+    FileStorageRepository fileStorageRepository,
+    FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable
   ) {
     this.clientRegistry = clientRegistry;
     this.deviceDatabaseTable = deviceDatabaseTable;
@@ -51,6 +54,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     this.fileStorageDatabaseTable = fileStorageDatabaseTable;
     this.fileInfoDatabaseTable = fileInfoDatabaseTable;
     this.fileStorageRepository = fileStorageRepository;
+    this.fileWorkspaceDatabaseTable = fileWorkspaceDatabaseTable;
   }
 
   @Override
@@ -66,5 +70,6 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     beanFactory.registerSingleton("fileStorageDatabaseTable", fileStorageDatabaseTable);
     beanFactory.registerSingleton("fileInfoDatabaseTable", fileInfoDatabaseTable);
     beanFactory.registerSingleton("fileStorageRepository", fileStorageRepository);
+    beanFactory.registerSingleton("fileWorkspaceDatabaseTable", fileWorkspaceDatabaseTable);
   }
 }
