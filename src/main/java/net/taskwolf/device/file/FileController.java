@@ -35,7 +35,9 @@ public final class FileController extends DeviceController {
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     performDeviceOperation(findUserId(request), deviceId,
       device -> futureResponse.complete(Map.of("fileStorage",
-        device.fileStorage(), "fileInfo", device.fileInfo())),
+        device.fileStorage(), "fileInfo", device.fileInfo(), "fileDelete",
+        device.fileDelete(), "folderCreate", device.folderCreate(), "folderDelete",
+        device.folderDelete())),
       () -> futureResponse.complete(Maps.newHashMap()));
     return futureResponse;
   }
