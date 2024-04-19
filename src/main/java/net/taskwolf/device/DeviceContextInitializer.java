@@ -27,6 +27,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
   private final CommandRequestRepository commandRequestRepository;
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
+  private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FileStorageRepository fileStorageRepository;
   private final FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable;
 
@@ -41,6 +42,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     CommandRequestRepository commandRequestRepository,
     @Named("fileStorageDatabaseTable") FileHistoryDatabaseTable fileStorageDatabaseTable,
     @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable,
+    @Named("fileDeleteDatabaseTable") FileHistoryDatabaseTable fileDeleteDatabaseTable,
     FileStorageRepository fileStorageRepository,
     FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable
   ) {
@@ -53,6 +55,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     this.commandRequestRepository = commandRequestRepository;
     this.fileStorageDatabaseTable = fileStorageDatabaseTable;
     this.fileInfoDatabaseTable = fileInfoDatabaseTable;
+    this.fileDeleteDatabaseTable = fileDeleteDatabaseTable;
     this.fileStorageRepository = fileStorageRepository;
     this.fileWorkspaceDatabaseTable = fileWorkspaceDatabaseTable;
   }
@@ -70,6 +73,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     beanFactory.registerSingleton("fileStorageDatabaseTable", fileStorageDatabaseTable);
     beanFactory.registerSingleton("fileInfoDatabaseTable", fileInfoDatabaseTable);
     beanFactory.registerSingleton("fileStorageRepository", fileStorageRepository);
+    beanFactory.registerSingleton("fileDeleteDatabaseTable", fileDeleteDatabaseTable);
     beanFactory.registerSingleton("fileWorkspaceDatabaseTable", fileWorkspaceDatabaseTable);
   }
 }

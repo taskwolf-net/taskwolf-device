@@ -37,6 +37,18 @@ public final class FileInjectionModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("fileDeleteDatabaseTable")
+  FileHistoryDatabaseTable provideFileDeleteDatabaseTable(
+    DatabaseConnection connection, DatabaseKeyspace keyspace
+  ) {
+    var fileDatabaseTable = FileHistoryDatabaseTable.create(
+      connection, keyspace, "device_file_delete");
+    fileDatabaseTable.createIfNotExists();
+    return fileDatabaseTable;
+  }
+
+  @Provides
+  @Singleton
   @Named("fileStorageRequestRepository")
   FileRequestRepository provideFileStorageRequestRepository() {
     return FileRequestRepository.create();
@@ -46,6 +58,13 @@ public final class FileInjectionModule extends AbstractModule {
   @Singleton
   @Named("fileInfoRequestRepository")
   FileRequestRepository provideFileInfoRequestRepository() {
+    return FileRequestRepository.create();
+  }
+
+  @Provides
+  @Singleton
+  @Named("fileDeleteRequestRepository")
+  FileRequestRepository provideFileDeleteRequestRepository() {
     return FileRequestRepository.create();
   }
 
