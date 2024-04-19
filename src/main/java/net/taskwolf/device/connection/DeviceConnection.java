@@ -43,6 +43,13 @@ public final class DeviceConnection {
       FilePath.of(path, name).compound()));
   }
 
+  private static final String FILE_DELETE_FORMAT = "File Delete %s %s";
+
+  public void deleteFile(UUID deleteId, String path, String name) {
+    socket.send(String.format(FILE_DELETE_FORMAT, deleteId.toString(),
+      FilePath.of(path, name).compound()));
+  }
+
   public void close() {
     socket.close();
   }
