@@ -5,6 +5,7 @@ import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.distribution.NodeType;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.device.DeviceConfiguration;
+import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileDeleteRequest;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileInfoRequest;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileStorageRequest;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
@@ -23,8 +24,10 @@ import java.util.concurrent.CompletableFuture;
 public final class File {
   private final FileRequestRepository fileStorageRepository;
   private final FileRequestRepository fileInfoRepository;
+  private final FileRequestRepository fileDeleteRepository;
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
+  private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
   private final DistributionClientRegistry clientRegistry;
@@ -88,6 +91,45 @@ public final class File {
         path, name));
   }
 
+  public void delete(CompletableFuture<ActionResult> futureResponse) {
+    generateAvailableRequestId().thenAccept(id -> delete(futureResponse, id));
+  }
+
+  private void delete(
+    CompletableFuture<ActionResult> futureResponse, UUID deleteId
+  ) {
+    fileDeleteRepository.registerFileRequest(FileRequest.create(deleteId,
+      device, path, name, futureResponse));
+    if (device.platform().isMobile()) {
+      deleteMobileFile(deleteId);
+    } else {
+      deleteDesktopFile(deleteId);
+    }
+  }
+
+  private void deleteMobileFile(UUID deleteId) {
+    firebaseDeviceDatabaseTable.findDeviceIdentifier(device.id())
+      .thenAccept(identifier -> deleteMobileFile(deleteId, identifier));
+  }
+
+  private void deleteMobileFile(UUID deleteId, String identifier) {
+    var requestBody = new JSONObject(Map.of("to", identifier, "data",
+      Map.of("deleteId", deleteId, "filePath", FilePath.of(path, name).compound())));
+    var requestBuilder = HttpRequest.newBuilder().uri(URI.create(FIREBASE_URL))
+      .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
+      .setHeader("Content-Type", "application/json")
+      .setHeader("Authorization", "key=" + deviceConfiguration.firebaseToken())
+      .build();
+    HttpClient.newHttpClient().sendAsync(requestBuilder,
+      HttpResponse.BodyHandlers.ofByteArray());
+  }
+
+  private void deleteDesktopFile(UUID deleteId) {
+    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
+      .sendPacket(new PacketOutgoingFileDeleteRequest(deleteId, device.id(),
+        path, name));
+  }
+
   public CompletableFuture<UUID> generateAvailableRequestId() {
     var futureResponse = new CompletableFuture<UUID>();
     var id = UUID.randomUUID();
@@ -95,7 +137,9 @@ public final class File {
       storageExists ? generateAvailableRequestId().thenAccept(futureResponse::complete) :
         fileInfoDatabaseTable.entryExists(id).thenApply(infoExists ->
           infoExists ? generateAvailableRequestId().thenAccept(futureResponse::complete) :
-            CompletableFuture.completedFuture(futureResponse.complete(id))));
+            fileDeleteDatabaseTable.entryExists(id).thenApply(deleteExists ->
+              deleteExists ? generateAvailableRequestId().thenAccept(futureResponse::complete) :
+                CompletableFuture.completedFuture(futureResponse.complete(id)))));
     return futureResponse;
   }
 }

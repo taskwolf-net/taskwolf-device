@@ -12,8 +12,10 @@ import net.taskwolf.device.structure.Device;
 public final class FileFactory {
   private final FileRequestRepository fileStorageRepository;
   private final FileRequestRepository fileInfoRepository;
+  private final FileRequestRepository fileDeleteRepository;
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
+  private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
   private final DistributionClientRegistry clientRegistry;
@@ -22,16 +24,20 @@ public final class FileFactory {
   private FileFactory(
     @Named("fileStorageRequestRepository") FileRequestRepository fileStorageRepository,
     @Named("fileInfoRequestRepository") FileRequestRepository fileInfoRepository,
+    @Named("fileDeleteRequestRepository") FileRequestRepository fileDeleteRepository,
     @Named("fileStorageDatabaseTable") FileHistoryDatabaseTable fileStorageDatabaseTable,
     @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable,
+    @Named("fileDeleteDatabaseTable") FileHistoryDatabaseTable fileDeleteDatabaseTable,
     FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable,
     DeviceConfiguration deviceConfiguration,
     DistributionClientRegistry clientRegistry
   ) {
     this.fileStorageRepository = fileStorageRepository;
     this.fileInfoRepository = fileInfoRepository;
+    this.fileDeleteRepository = fileDeleteRepository;
     this.fileStorageDatabaseTable = fileStorageDatabaseTable;
     this.fileInfoDatabaseTable = fileInfoDatabaseTable;
+    this.fileDeleteDatabaseTable = fileDeleteDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
     this.deviceConfiguration = deviceConfiguration;
     this.clientRegistry = clientRegistry;
@@ -39,7 +45,8 @@ public final class FileFactory {
 
   public File createFile(Device device, String path, String name) {
     return File.create(fileStorageRepository, fileInfoRepository,
-      fileStorageDatabaseTable, fileInfoDatabaseTable, firebaseDeviceDatabaseTable,
-      deviceConfiguration, clientRegistry, device, path, name);
+      fileDeleteRepository, fileStorageDatabaseTable, fileInfoDatabaseTable,
+      fileDeleteDatabaseTable, firebaseDeviceDatabaseTable, deviceConfiguration,
+      clientRegistry, device, path, name);
   }
 }
