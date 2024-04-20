@@ -13,6 +13,7 @@ import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
+import net.taskwolf.device.trigger.DeviceTriggerFactory;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -30,6 +31,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
   private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FileStorageRepository fileStorageRepository;
   private final FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable;
+  private final DeviceTriggerFactory deviceTriggerFactory;
 
   @Inject
   private DeviceContextInitializer(
@@ -44,7 +46,8 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable,
     @Named("fileDeleteDatabaseTable") FileHistoryDatabaseTable fileDeleteDatabaseTable,
     FileStorageRepository fileStorageRepository,
-    FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable
+    FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable,
+    DeviceTriggerFactory deviceTriggerFactory
   ) {
     this.clientRegistry = clientRegistry;
     this.deviceDatabaseTable = deviceDatabaseTable;
@@ -58,6 +61,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     this.fileDeleteDatabaseTable = fileDeleteDatabaseTable;
     this.fileStorageRepository = fileStorageRepository;
     this.fileWorkspaceDatabaseTable = fileWorkspaceDatabaseTable;
+    this.deviceTriggerFactory = deviceTriggerFactory;
   }
 
   @Override
@@ -75,5 +79,6 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     beanFactory.registerSingleton("fileStorageRepository", fileStorageRepository);
     beanFactory.registerSingleton("fileDeleteDatabaseTable", fileDeleteDatabaseTable);
     beanFactory.registerSingleton("fileWorkspaceDatabaseTable", fileWorkspaceDatabaseTable);
+    beanFactory.registerSingleton("deviceTriggerFactory", deviceTriggerFactory);
   }
 }
