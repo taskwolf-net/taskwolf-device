@@ -48,9 +48,7 @@ import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
-import net.taskwolf.device.trigger.DeviceCommandTrigger;
-import net.taskwolf.device.trigger.DeviceNotificationTrigger;
-import net.taskwolf.device.trigger.DeviceTriggerFactory;
+import net.taskwolf.device.trigger.*;
 import org.springframework.boot.SpringApplication;
 
 import java.security.Key;
@@ -218,7 +216,11 @@ public final class DeviceModule extends Module {
   public List<TriggerInformation> triggerInformation() {
     return Lists.newArrayList(
       DeviceNotificationTrigger.information(deviceComponentSelect),
-      DeviceCommandTrigger.information(deviceComponentSelect));
+      DeviceCommandTrigger.information(deviceComponentSelect),
+      DeviceFileCreateTrigger.information(deviceComponentSelect,
+        fileWorkspaceComponentSelect),
+      DeviceFileDeleteTrigger.information(deviceComponentSelect,
+        fileWorkspaceComponentSelect));
   }
 
   @Override

@@ -20,6 +20,12 @@ public class DeviceTriggerFactory implements TriggerFactory {
     if (type.equals("device-command-trigger")) {
       return DeviceCommandTrigger.of(json);
     }
+    if (type.equals("device-file-create-trigger")) {
+      return DeviceFileCreateTrigger.of(json);
+    }
+    if (type.equals("device-file-delete-trigger")) {
+      return DeviceFileDeleteTrigger.of(json);
+    }
     return null;
   }
 }
