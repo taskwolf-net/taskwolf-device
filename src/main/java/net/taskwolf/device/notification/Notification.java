@@ -8,15 +8,11 @@ import net.taskwolf.core.trigger.TriggerEntry;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.distribution.notification.packet.outgoing.PacketOutgoingNotificationRequest;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
+import net.taskwolf.device.firebase.FirebaseRequest;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.trigger.DeviceNotificationTrigger;
 import net.taskwolf.device.trigger.DeviceTriggerFactory;
-import org.json.JSONObject;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,18 +41,9 @@ public final class Notification {
       .thenAccept(this::publishMobileNotification);
   }
 
-  private static final String FIREBASE_URL = "https://fcm.googleapis.com/fcm/send";
-
   private void publishMobileNotification(String identifier) {
-    var requestBody = new JSONObject(Map.of("to", identifier, "notification",
-      Map.of("title", title, "body", body)));
-    var requestBuilder = HttpRequest.newBuilder().uri(URI.create(FIREBASE_URL))
-      .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
-      .setHeader("Content-Type", "application/json")
-      .setHeader("Authorization", "key=" + deviceConfiguration.firebaseToken())
-      .build();
-    HttpClient.newHttpClient().sendAsync(requestBuilder,
-      HttpResponse.BodyHandlers.ofByteArray());
+    FirebaseRequest.create(deviceConfiguration, identifier).send("notification",
+      Map.of("title", title, "body", body));
   }
 
   private void publishDesktopNotification() {

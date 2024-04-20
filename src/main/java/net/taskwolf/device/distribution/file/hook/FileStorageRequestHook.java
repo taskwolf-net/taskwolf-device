@@ -13,14 +13,10 @@ import net.taskwolf.device.distribution.file.event.FileStorageRequestEvent;
 import net.taskwolf.device.file.FilePath;
 import net.taskwolf.device.file.storage.FileStorageRepository;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
+import net.taskwolf.device.firebase.FirebaseRequest;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
-import org.json.JSONObject;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.Map;
 
 @Singleton
@@ -56,20 +52,8 @@ public final class FileStorageRequestHook implements Hook {
 
   private void storeMobileFile(String deviceId, Map<String, Object> data) {
     firebaseDeviceDatabaseTable.findDeviceIdentifier(deviceId)
-      .thenAccept(identifier -> storeMobileFile(data, identifier));
-  }
-
-  private static final String FIREBASE_URL = "https://fcm.googleapis.com/fcm/send";
-
-  private void storeMobileFile(Map<String, Object> data, String identifier) {
-    var requestBody = new JSONObject(Map.of("to", identifier, "data", data));
-    var requestBuilder = HttpRequest.newBuilder().uri(URI.create(FIREBASE_URL))
-      .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
-      .setHeader("Content-Type", "application/json")
-      .setHeader("Authorization", "key=" + deviceConfiguration.firebaseToken())
-      .build();
-    HttpClient.newHttpClient().sendAsync(requestBuilder,
-      HttpResponse.BodyHandlers.ofByteArray());
+      .thenAccept(identifier -> FirebaseRequest.create(deviceConfiguration,
+        identifier).send("data", data));
   }
 }
 
