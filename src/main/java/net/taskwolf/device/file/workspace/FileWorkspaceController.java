@@ -181,13 +181,14 @@ public final class FileWorkspaceController extends DeviceController {
     }
     coreModule.triggerWorkflows("device", identifier, entry ->
         isWorkspaceTriggerSuitable(entry, device.id(), workspace.id()),
-      fileTriggerInformation(device, filePath, fileName));
+      fileTriggerInformation(device, workspace.path(), filePath, fileName));
   }
 
   private Map<String, Object> fileTriggerInformation(
-    Device device, String filePath, String fileName
+    Device device, String workspace, String filePath, String fileName
   ) {
     var information = device.composition();
+    information.put("workspace", workspace);
     information.put("filePath", filePath);
     information.put("fileName", fileName);
     return information;
