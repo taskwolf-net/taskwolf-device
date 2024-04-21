@@ -8,16 +8,13 @@ public final class FilePath {
   private final String name;
 
   public String compound() {
-    var link = "";
-    if (path.contains("/")) {
-      link = "/";
-    } else if (path.contains("//")) {
-      link = "//";
-    } else if (path.contains("\\")) {
-      link = "\\";
-    } else if (path.contains("\\\\")) {
-      link = "\\\\";
+    var correctedPath = path.replace("//", "/").replace("\\\\", "/")
+      .replace("\\", "/");
+    if (path.charAt(path.length() - 1) != '/') {
+      correctedPath += "/";
     }
-    return path + link + name;
+    var correctedName = name.replace("//", "").replace("\\\\", "")
+      .replace("\\", "");
+    return correctedPath + correctedName;
   }
 }
