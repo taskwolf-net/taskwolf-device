@@ -61,18 +61,18 @@ public final class DeviceFileDeleteAction implements Action {
     filePath = dissolve.dissolve(filePath);
     fileName = dissolve.dissolve(fileName);
     return deviceDatabaseTable.deviceExists(deviceId)
-      .thenCompose(this::storeFile);
+      .thenCompose(this::deleteFile);
   }
 
-  private CompletableFuture<ActionResult> storeFile(boolean deviceExists) {
+  private CompletableFuture<ActionResult> deleteFile(boolean deviceExists) {
     if (!deviceExists) {
       return ActionResult.futureFailure("device.action.file.delete.failure.device.not.found");
     }
     return deviceDatabaseTable.findDevice(deviceId)
-      .thenCompose(this::storeFile);
+      .thenCompose(this::deleteFile);
   }
 
-  private CompletableFuture<ActionResult> storeFile(Device device) {
+  private CompletableFuture<ActionResult> deleteFile(Device device) {
     if (!device.fileDelete()) {
       return ActionResult.futureFailure("device.action.file.delete.failure.device.permission");
     }

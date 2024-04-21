@@ -62,18 +62,18 @@ public final class DeviceFileInfoAction implements Action {
     filePath = dissolve.dissolve(filePath);
     fileName = dissolve.dissolve(fileName);
     return deviceDatabaseTable.deviceExists(deviceId)
-      .thenCompose(this::storeFile);
+      .thenCompose(this::fileInfo);
   }
 
-  private CompletableFuture<ActionResult> storeFile(boolean deviceExists) {
+  private CompletableFuture<ActionResult> fileInfo(boolean deviceExists) {
     if (!deviceExists) {
       return ActionResult.futureFailure("device.action.file.info.failure.device.not.found");
     }
     return deviceDatabaseTable.findDevice(deviceId)
-      .thenCompose(this::storeFile);
+      .thenCompose(this::fileInfo);
   }
 
-  private CompletableFuture<ActionResult> storeFile(Device device) {
+  private CompletableFuture<ActionResult> fileInfo(Device device) {
     if (!device.fileInfo()) {
       return ActionResult.futureFailure("device.action.file.info.failure.device.permission");
     }
