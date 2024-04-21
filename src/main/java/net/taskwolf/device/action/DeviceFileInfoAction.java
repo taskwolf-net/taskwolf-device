@@ -10,17 +10,21 @@ import net.taskwolf.core.workflow.component.input.InputComponentVariable;
 import net.taskwolf.core.workflow.component.output.OutputComponentVariable;
 import net.taskwolf.core.workflow.placeholder.PlaceholderDissolve;
 import net.taskwolf.device.file.FileFactory;
+import net.taskwolf.device.file.workspace.FileWorkspace;
+import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.json.JSONObject;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor(staticName = "create")
 public final class DeviceFileInfoAction implements Action {
   public static ActionInformation information(
-    InputComponentSelect deviceComponentSelect
+    InputComponentSelect deviceComponentSelect,
+    InputComponentSelect workspaceComponentSelect
   ) {
     return ActionInformation.builder()
       .withName("device.action.file.info.name")
@@ -28,7 +32,9 @@ public final class DeviceFileInfoAction implements Action {
       .withIdentifier("device-file-info-action")
       .withInputVariable(InputComponentVariable.createSelect("device.action.file.info.input.device.name",
         "device", "device.action.file.info.input.device.description", deviceComponentSelect))
-      .withInputVariable(InputComponentVariable.createRequired("device.action.file.info.input.file.path.name",
+      .withInputVariable(InputComponentVariable.createSelect("device.action.file.info.input.workspace.name",
+        "workspace", "device.action.file.info.input.workspace.description", workspaceComponentSelect))
+      .withInputVariable(InputComponentVariable.createOptional("device.action.file.info.input.file.path.name",
         "filePath", "device.action.file.info.input.file.path.description", InputComponentDataType.TEXT))
       .withInputVariable(InputComponentVariable.createRequired("device.action.file.info.input.file.name.name",
         "fileName", "device.action.file.info.input.file.name.description", InputComponentDataType.TEXT))
@@ -42,17 +48,21 @@ public final class DeviceFileInfoAction implements Action {
   }
 
   public static DeviceFileInfoAction of(
-    DeviceDatabaseTable deviceDatabaseTable, FileFactory fileFactory,
+    DeviceDatabaseTable deviceDatabaseTable,
+    FileWorkspaceDatabaseTable workspaceDatabaseTable, FileFactory fileFactory,
     JSONObject content
   ) {
-    return create(deviceDatabaseTable, fileFactory,
-      content.getString("device"), content.getString("filePath"),
+    return create(deviceDatabaseTable, workspaceDatabaseTable, fileFactory,
+      content.getString("device"), UUID.fromString(content.getString("workspace")),
+      content.has("filePath") ? content.getString("filePath") : "",
       content.getString("fileName"));
   }
 
   private final DeviceDatabaseTable deviceDatabaseTable;
+  private final FileWorkspaceDatabaseTable workspaceDatabaseTable;
   private final FileFactory fileFactory;
   private final String deviceId;
+  private final UUID workspaceId;
   private String filePath;
   private String fileName;
 
@@ -77,8 +87,26 @@ public final class DeviceFileInfoAction implements Action {
     if (!device.fileInfo()) {
       return ActionResult.futureFailure("device.action.file.info.failure.device.permission");
     }
+    return workspaceDatabaseTable.workspaceExists(workspaceId)
+      .thenCompose(exists -> fileInfo(device, exists));
+  }
+
+  private CompletableFuture<ActionResult> fileInfo(
+    Device device, boolean workspaceExists
+  ) {
+    if (!workspaceExists) {
+      return ActionResult.futureFailure("device.action.file.info.failure.workspace.not.found");
+    }
+    return workspaceDatabaseTable.findWorkspace(workspaceId)
+      .thenCompose(workspace -> fileInfo(device, workspace));
+  }
+
+  private CompletableFuture<ActionResult> fileInfo(
+    Device device, FileWorkspace workspace
+  ) {
     var futureResponse = new CompletableFuture<ActionResult>();
-    fileFactory.createFile(device, filePath, fileName).info(futureResponse);
+    fileFactory.createFile(device, workspace.path() + filePath, fileName)
+      .info(futureResponse);
     return futureResponse;
   }
 }

@@ -29,13 +29,16 @@ public final class DeviceActionFactory implements ActionFactory {
       return DeviceCommandAction.of(deviceDatabaseTable, commandFactory, json);
     }
     if (type.equals("device-file-store-action")) {
-      return DeviceFileStoreAction.of(deviceDatabaseTable, fileFactory, json);
+      return DeviceFileStoreAction.of(deviceDatabaseTable,
+        workspaceDatabaseTable, fileFactory, json);
     }
     if (type.equals("device-file-info-action")) {
-      return DeviceFileInfoAction.of(deviceDatabaseTable, fileFactory, json);
+      return DeviceFileInfoAction.of(deviceDatabaseTable,
+        workspaceDatabaseTable, fileFactory, json);
     }
     if (type.equals("device-file-delete-action")) {
-      return DeviceFileDeleteAction.of(deviceDatabaseTable, fileFactory, json);
+      return DeviceFileDeleteAction.of(deviceDatabaseTable,
+        workspaceDatabaseTable, fileFactory, json);
     }
     if (type.equals("device-folder-create-action")) {
       return DeviceFolderCreateAction.of(deviceDatabaseTable,

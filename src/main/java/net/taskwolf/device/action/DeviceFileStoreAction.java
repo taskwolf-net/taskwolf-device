@@ -10,18 +10,22 @@ import net.taskwolf.core.workflow.component.input.InputComponentVariable;
 import net.taskwolf.core.workflow.component.output.OutputComponentVariable;
 import net.taskwolf.core.workflow.placeholder.PlaceholderDissolve;
 import net.taskwolf.device.file.FileFactory;
+import net.taskwolf.device.file.workspace.FileWorkspace;
+import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.json.JSONObject;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor(staticName = "create")
 public final class DeviceFileStoreAction implements Action {
   public static ActionInformation information(
-    InputComponentSelect deviceComponentSelect
+    InputComponentSelect deviceComponentSelect,
+    InputComponentSelect workspaceComponentSelect
   ) {
     return ActionInformation.builder()
       .withName("device.action.file.store.name")
@@ -29,7 +33,9 @@ public final class DeviceFileStoreAction implements Action {
       .withIdentifier("device-file-store-action")
       .withInputVariable(InputComponentVariable.createSelect("device.action.file.store.input.device.name",
         "device", "device.action.file.store.input.device.description", deviceComponentSelect))
-      .withInputVariable(InputComponentVariable.createRequired("device.action.file.store.input.file.path.name",
+      .withInputVariable(InputComponentVariable.createSelect("device.action.file.store.input.workspace.name",
+        "workspace", "device.action.file.store.input.workspace.description", workspaceComponentSelect))
+      .withInputVariable(InputComponentVariable.createOptional("device.action.file.store.input.file.path.name",
         "filePath", "device.action.file.store.input.file.path.description", InputComponentDataType.TEXT))
       .withInputVariable(InputComponentVariable.createRequired("device.action.file.store.input.file.name.name",
         "fileName", "device.action.file.store.input.file.name.description", InputComponentDataType.TEXT))
@@ -44,17 +50,21 @@ public final class DeviceFileStoreAction implements Action {
   }
 
   public static DeviceFileStoreAction of(
-    DeviceDatabaseTable deviceDatabaseTable, FileFactory fileFactory,
+    DeviceDatabaseTable deviceDatabaseTable,
+    FileWorkspaceDatabaseTable workspaceDatabaseTable, FileFactory fileFactory,
     JSONObject content
   ) {
-    return create(deviceDatabaseTable, fileFactory,
-      content.getString("device"), content.getString("filePath"),
+    return create(deviceDatabaseTable, workspaceDatabaseTable, fileFactory,
+      content.getString("device"), UUID.fromString(content.getString("workspace")),
+      content.has("filePath") ? content.getString("filePath") : "",
       content.getString("fileName"), content.getString("fileContent"));
   }
 
   private final DeviceDatabaseTable deviceDatabaseTable;
+  private final FileWorkspaceDatabaseTable workspaceDatabaseTable;
   private final FileFactory fileFactory;
   private final String deviceId;
+  private final UUID workspaceId;
   private String filePath;
   private String fileName;
   private String fileContent;
@@ -81,9 +91,26 @@ public final class DeviceFileStoreAction implements Action {
     if (!device.fileStorage()) {
       return ActionResult.futureFailure("device.action.file.store.failure.device.permission");
     }
+    return workspaceDatabaseTable.workspaceExists(workspaceId)
+      .thenCompose(exists -> storeFile(device, exists));
+  }
+
+  private CompletableFuture<ActionResult> storeFile(
+    Device device, boolean workspaceExists
+  ) {
+    if (!workspaceExists) {
+      return ActionResult.futureFailure("device.action.file.store.failure.workspace.not.found");
+    }
+    return workspaceDatabaseTable.findWorkspace(workspaceId)
+      .thenCompose(workspace -> storeFile(device, workspace));
+  }
+
+  private CompletableFuture<ActionResult> storeFile(
+    Device device, FileWorkspace workspace
+  ) {
     var futureResponse = new CompletableFuture<ActionResult>();
-    fileFactory.createFile(device, filePath, fileName).store(
-      Base64.decodeBase64(fileContent), futureResponse);
+    fileFactory.createFile(device, workspace.path() + filePath, fileName)
+      .store(Base64.decodeBase64(fileContent), futureResponse);
     return futureResponse;
   }
 }
