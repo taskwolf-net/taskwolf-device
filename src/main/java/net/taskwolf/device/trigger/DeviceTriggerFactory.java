@@ -26,6 +26,12 @@ public class DeviceTriggerFactory implements TriggerFactory {
     if (type.equals("device-file-delete-trigger")) {
       return DeviceFileDeleteTrigger.of(json);
     }
+    if (type.equals("device-folder-create-trigger")) {
+      return DeviceFolderCreateTrigger.of(json);
+    }
+    if (type.equals("device-folder-delete-trigger")) {
+      return DeviceFolderDeleteTrigger.of(json);
+    }
     return null;
   }
 }

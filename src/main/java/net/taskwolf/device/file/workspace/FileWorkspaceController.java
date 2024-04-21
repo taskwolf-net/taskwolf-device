@@ -194,6 +194,66 @@ public final class FileWorkspaceController extends DeviceController {
     return information;
   }
 
+  @RequestMapping(path = "/device/file/workspace/folder/create/", method = RequestMethod.POST)
+  public void workspaceFolderCreation(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    performDeviceOperation(findUserId(request), body.getString("device"),
+      device -> folderTrigger("device-folder-create-trigger", device,
+        body.getUUID("workspace"), body.getString("folderPath")), () -> {});
+  }
+
+  @RequestMapping(path = "/device/file/workspace/folder/delete/", method = RequestMethod.POST)
+  public void workspaceFolderDeletion(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = TaskwolfRequestBody.of(payload, response);
+    performDeviceOperation(findUserId(request), body.getString("device"),
+      device -> folderTrigger("device-folder-delete-trigger", device,
+        body.getUUID("workspace"), body.getString("folderPath")), () -> {});
+  }
+
+  private void folderTrigger(
+    String identifier, Device device, UUID workspaceId, String folderPath
+  ) {
+    workspaceDatabaseTable.workspaceExists(workspaceId).thenAccept(exists ->
+      folderTrigger(identifier, device, workspaceId, folderPath, exists));
+  }
+
+  private void folderTrigger(
+    String identifier, Device device, UUID workspaceId, String folderPath,
+    boolean workspaceExists
+  ) {
+    if (!workspaceExists) {
+      return;
+    }
+    workspaceDatabaseTable.findWorkspace(workspaceId).thenAccept(workspace ->
+      folderTrigger(identifier, device, workspace, folderPath));
+  }
+
+  private void folderTrigger(
+    String identifier, Device device, FileWorkspace workspace, String folderPath
+  ) {
+    if (!workspace.device().equals(device.id())) {
+      return;
+    }
+    coreModule.triggerWorkflows("device", identifier, entry ->
+        isWorkspaceTriggerSuitable(entry, device.id(), workspace.id()),
+      folderTriggerInformation(device, workspace.path(), folderPath));
+  }
+
+  private Map<String, Object> folderTriggerInformation(
+    Device device, String workspace, String folderPath
+  ) {
+    var information = device.composition();
+    information.put("workspace", workspace);
+    information.put("folderPath", folderPath);
+    return information;
+  }
+
   private boolean isWorkspaceTriggerSuitable(
     TriggerEntry entry, String deviceId, UUID workspaceId
   ) {

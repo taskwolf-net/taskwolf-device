@@ -220,6 +220,10 @@ public final class DeviceModule extends Module {
       DeviceFileCreateTrigger.information(deviceComponentSelect,
         fileWorkspaceComponentSelect),
       DeviceFileDeleteTrigger.information(deviceComponentSelect,
+        fileWorkspaceComponentSelect),
+      DeviceFolderCreateTrigger.information(deviceComponentSelect,
+        fileWorkspaceComponentSelect),
+      DeviceFolderDeleteTrigger.information(deviceComponentSelect,
         fileWorkspaceComponentSelect));
   }
 
