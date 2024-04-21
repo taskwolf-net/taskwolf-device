@@ -40,7 +40,7 @@ public final class DeviceFileStoreAction implements Action {
       .withInputVariable(InputComponentVariable.createRequired("device.action.file.store.input.file.name.name",
         "fileName", "device.action.file.store.input.file.name.description", InputComponentDataType.TEXT))
       .withInputVariable(InputComponentVariable.createRequired("device.action.file.store.input.file.content.name",
-        "fileContent", "device.action.file.store.input.file.content.description", InputComponentDataType.TEXT))
+        "fileContent", "device.action.file.store.input.file.content.description", InputComponentDataType.FILE))
       .withOutputVariable(OutputComponentVariable.create("device.action.file.store.output.device.id", "deviceId"))
       .withOutputVariable(OutputComponentVariable.create("device.action.file.store.output.device.name", "deviceName"))
       .withOutputVariable(OutputComponentVariable.create("device.action.file.store.output.device.platform", "devicePlatform"))
