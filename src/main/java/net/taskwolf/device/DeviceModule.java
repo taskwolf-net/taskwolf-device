@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import net.taskwolf.core.account.AccountLink;
 import net.taskwolf.core.action.ActionFactory;
 import net.taskwolf.core.action.ActionInformation;
+import net.taskwolf.core.distribution.Distribution;
 import net.taskwolf.core.distribution.NodeType;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.distribution.packet.PacketEventRepository;
@@ -45,6 +46,8 @@ import net.taskwolf.device.distribution.device.packet.outgoing.PacketOutgoingDev
 import net.taskwolf.device.file.FileFactory;
 import net.taskwolf.device.file.workspace.FileWorkspaceComponentSelect;
 import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
+import net.taskwolf.device.file.workspace.FileWorkspaceSchedule;
+import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
@@ -94,6 +97,9 @@ public final class DeviceModule extends Module {
       deviceDatabaseTable, injector().getInstance(DeviceConnectionRepository.class),
       clientRegistry, injector().getInstance(Key.class));
     socket.start();
+    FileWorkspaceSchedule.create(injector().getInstance(Distribution.class),
+      deviceDatabaseTable, injector().getInstance(FirebaseDeviceDatabaseTable.class),
+      injector().getInstance(DeviceConfiguration.class)).start();
   }
 
   private void registerPackets() throws Exception {
