@@ -83,7 +83,8 @@ public final class DeviceModule extends Module {
     actionFactory = DeviceActionFactory.create(deviceDatabaseTable,
       injector().getInstance(NotificationFactory.class),
       injector().getInstance(CommandFactory.class),
-      injector().getInstance(FileFactory.class));
+      injector().getInstance(FileFactory.class),
+      injector().getInstance(FileWorkspaceDatabaseTable.class));
     accountLink = DeviceAccountLink.create();
     deviceComponentSelect = DeviceComponentSelect.create(deviceDatabaseTable,
       injector().getInstance(UserDeviceDatabaseTable.class));
@@ -240,6 +241,10 @@ public final class DeviceModule extends Module {
       DeviceCommandAction.information(deviceComponentSelect),
       DeviceFileStoreAction.information(deviceComponentSelect),
       DeviceFileInfoAction.information(deviceComponentSelect),
-      DeviceFileDeleteAction.information(deviceComponentSelect));
+      DeviceFileDeleteAction.information(deviceComponentSelect),
+      DeviceFolderCreateAction.information(deviceComponentSelect,
+        fileWorkspaceComponentSelect),
+      DeviceFolderDeleteAction.information(deviceComponentSelect,
+        fileWorkspaceComponentSelect));
   }
 }

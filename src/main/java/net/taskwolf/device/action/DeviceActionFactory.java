@@ -5,6 +5,7 @@ import net.taskwolf.core.action.Action;
 import net.taskwolf.core.action.ActionFactory;
 import net.taskwolf.device.command.CommandFactory;
 import net.taskwolf.device.file.FileFactory;
+import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.json.JSONObject;
@@ -15,6 +16,7 @@ public final class DeviceActionFactory implements ActionFactory {
   private final NotificationFactory notificationFactory;
   private final CommandFactory commandFactory;
   private final FileFactory fileFactory;
+  private final FileWorkspaceDatabaseTable workspaceDatabaseTable;
 
   @Override
   public Action create(String type, String content) {
@@ -34,6 +36,14 @@ public final class DeviceActionFactory implements ActionFactory {
     }
     if (type.equals("device-file-delete-action")) {
       return DeviceFileDeleteAction.of(deviceDatabaseTable, fileFactory, json);
+    }
+    if (type.equals("device-folder-create-action")) {
+      return DeviceFolderCreateAction.of(deviceDatabaseTable,
+        workspaceDatabaseTable, fileFactory, json);
+    }
+    if (type.equals("device-folder-delete-action")) {
+      return DeviceFolderDeleteAction.of(deviceDatabaseTable,
+        workspaceDatabaseTable, fileFactory, json);
     }
     return null;
   }
