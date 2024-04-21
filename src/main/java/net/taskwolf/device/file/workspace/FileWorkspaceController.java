@@ -77,14 +77,19 @@ public final class FileWorkspaceController extends DeviceController {
   ) {
     var body = TaskwolfRequestBody.of(payload, response);
     var deviceId = body.getString("device");
-    var path = body.getString("path");
+    var path = body.getString("path").replace("//", "/").replace("\\\\", "/")
+      .replace("\\", "/");
+    if (!path.isEmpty() && path.charAt(path.length() - 1) != '/') {
+      path += "/";
+    }
     if (path.isEmpty()) {
       return;
     }
+    var finalPath = path;
     performDeviceOperation(findUserId(request), deviceId,
       device -> workspaceDatabaseTable.generateAvailableWorkspaceId()
-        .thenAccept(id -> workspaceDatabaseTable.workspaceExists(deviceId, path)
-          .thenAccept(exists -> createFileWorkspace(id, deviceId, path, exists))),
+        .thenAccept(id -> workspaceDatabaseTable.workspaceExists(deviceId, finalPath)
+          .thenAccept(exists -> createFileWorkspace(id, deviceId, finalPath, exists))),
       () -> {});
   }
 
