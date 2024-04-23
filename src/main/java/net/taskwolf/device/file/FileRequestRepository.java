@@ -1,26 +1,35 @@
 package net.taskwolf.device.file;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.*;
 
 @RequiredArgsConstructor(staticName = "create")
 public final class FileRequestRepository {
-  private final List<FileRequest> requests = Lists.newArrayList();
+  private final Map<FileRequest, ScheduledFuture<?>> requests = Maps.newHashMap();
+  private final ScheduledExecutorService executorService =
+    Executors.newSingleThreadScheduledExecutor();
 
   public void registerFileRequest(FileRequest request) {
-    requests.add(request);
+    var schedule = executorService.schedule(() -> unregisterFileRequest(request),
+      10, TimeUnit.SECONDS);
+    requests.put(request, schedule);
   }
 
   public void unregisterFileRequest(FileRequest request) {
+    if (!requests.containsKey(request)) {
+      return;
+    }
+    requests.get(request).cancel(true);
     requests.remove(request);
   }
 
   public Optional<FileRequest> findFileRequest(UUID requestId) {
-    return requests.stream()
+    return requests.keySet().stream()
       .filter(request -> request.id().equals(requestId))
       .findFirst();
   }
