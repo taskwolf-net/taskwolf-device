@@ -46,8 +46,6 @@ import net.taskwolf.device.distribution.device.packet.outgoing.PacketOutgoingDev
 import net.taskwolf.device.file.FileFactory;
 import net.taskwolf.device.file.workspace.FileWorkspaceComponentSelect;
 import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
-import net.taskwolf.device.file.workspace.FileWorkspaceSchedule;
-import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
@@ -98,9 +96,6 @@ public final class DeviceModule extends Module {
       deviceDatabaseTable, injector().getInstance(DeviceConnectionRepository.class),
       clientRegistry, injector().getInstance(Key.class));
     socket.start();
-    FileWorkspaceSchedule.create(injector().getInstance(Distribution.class),
-      deviceDatabaseTable, injector().getInstance(FirebaseDeviceDatabaseTable.class),
-      injector().getInstance(DeviceConfiguration.class)).start();
   }
 
   private void registerPackets() throws Exception {
