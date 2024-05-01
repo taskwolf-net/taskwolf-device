@@ -6,7 +6,9 @@ import lombok.experimental.Accessors;
 import net.taskwolf.device.file.FilePath;
 import net.taskwolf.device.structure.Device;
 import org.java_websocket.WebSocket;
+import org.json.JSONObject;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Accessors(fluent = true)
@@ -17,37 +19,32 @@ public final class DeviceConnection {
   @Getter
   private final WebSocket socket;
 
-  private static final String NOTIFICATION_FORMAT = "Notification %s %s";
-
   public void sendNotification(String title, String body) {
-    socket.send(String.format(NOTIFICATION_FORMAT, title, body));
+    socket.send(new JSONObject(Map.of("type", "NOTIFICATION", "title", title,
+      "body", body)).toString());
   }
-
-  private static final String COMMAND_FORMAT = "Command %s %s";
 
   public void executeCommand(UUID commandId, String command) {
-    socket.send(String.format(COMMAND_FORMAT, commandId.toString(), command));
+    socket.send(new JSONObject(Map.of("type", "COMMAND",
+      "commandId", commandId, "command", command)).toString());
   }
-
-  private static final String FILE_STORE_FORMAT = "File Storage %s %s";
 
   public void storeFile(UUID storeId, String path, String name) {
-    socket.send(String.format(FILE_STORE_FORMAT, storeId.toString(),
-      FilePath.of(path, name).compound()));
+    socket.send(new JSONObject(Map.of("type", "FILE_STORAGE",
+      "storeId", storeId, "filePath", FilePath.of(path, name).compound()))
+      .toString());
   }
-
-  private static final String FILE_INFO_FORMAT = "File Info %s %s";
 
   public void fileInfo(UUID infoId, String path, String name) {
-    socket.send(String.format(FILE_INFO_FORMAT, infoId.toString(),
-      FilePath.of(path, name).compound()));
+    socket.send(new JSONObject(Map.of("type", "FILE_INFO",
+      "infoId", infoId, "filePath", FilePath.of(path, name).compound()))
+      .toString());
   }
 
-  private static final String FILE_DELETE_FORMAT = "File Delete %s %s";
-
   public void deleteFile(UUID deleteId, String path, String name) {
-    socket.send(String.format(FILE_DELETE_FORMAT, deleteId.toString(),
-      FilePath.of(path, name).compound()));
+    socket.send(new JSONObject(Map.of("type", "FILE_DELETE",
+      "deleteId", deleteId, "filePath", FilePath.of(path, name).compound()))
+      .toString());
   }
 
   public void close() {
