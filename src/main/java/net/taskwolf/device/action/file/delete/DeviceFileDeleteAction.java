@@ -10,8 +10,6 @@ import net.taskwolf.core.workflow.component.input.InputComponentDataType;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
 import net.taskwolf.core.workflow.component.input.InputComponentVariable;
 import net.taskwolf.core.workflow.component.output.OutputComponentVariable;
-import net.taskwolf.device.action.file.info.DeviceFileInfoAction;
-import net.taskwolf.device.action.file.info.DeviceFileInfoActionExecutor;
 import net.taskwolf.device.file.FileFactory;
 import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
