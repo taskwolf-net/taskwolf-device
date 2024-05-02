@@ -8,13 +8,10 @@ import net.taskwolf.core.CoreModule;
 import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
-import net.taskwolf.core.trigger.TriggerEntry;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequestRepository;
 import net.taskwolf.device.distribution.command.event.CommandResponseEvent;
 import net.taskwolf.device.structure.Device;
-import net.taskwolf.device.trigger.DeviceCommandTrigger;
-import net.taskwolf.device.trigger.DeviceTriggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -26,7 +23,6 @@ public final class CommandResponseHook implements Hook {
   private final CommandRequestRepository commandRequestRepository;
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
   private final CoreModule coreModule;
-  private final DeviceTriggerFactory triggerFactory;
 
   @EventHook
   private void commandResponse(CommandResponseEvent event) {
@@ -67,13 +63,7 @@ public final class CommandResponseHook implements Hook {
 
   private void triggerWorkflows(Device device, Map<String, Object> information) {
     coreModule.triggerWorkflows("device", "device-command-trigger",
-      trigger -> isTriggerSuitable(device, trigger), information);
-  }
-
-  private boolean isTriggerSuitable(Device device, TriggerEntry entry) {
-    var trigger = (DeviceCommandTrigger) triggerFactory.create(entry.type(),
-      entry.content());
-    return trigger.deviceId().equals(device.id());
+      "device='" + device.id() + "'", information);
   }
 
   private String formatTime(long time) {

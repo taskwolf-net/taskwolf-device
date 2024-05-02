@@ -1,11 +1,10 @@
 package net.taskwolf.device;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import net.taskwolf.core.account.AccountLink;
-import net.taskwolf.core.action.ActionFactory;
-import net.taskwolf.core.action.ActionInformation;
-import net.taskwolf.core.distribution.Distribution;
+import net.taskwolf.core.action.ActionRepository;
+import net.taskwolf.core.database.DatabaseConnection;
+import net.taskwolf.core.database.DatabaseKeyspace;
 import net.taskwolf.core.distribution.NodeType;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.distribution.packet.PacketEventRepository;
@@ -16,10 +15,15 @@ import net.taskwolf.core.module.Module;
 import net.taskwolf.core.module.ModuleDescription;
 import net.taskwolf.core.module.ModuleInformation;
 import net.taskwolf.core.module.ModuleLoadPriority;
-import net.taskwolf.core.trigger.TriggerFactory;
-import net.taskwolf.core.trigger.TriggerInformation;
+import net.taskwolf.core.trigger.TriggerRepository;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
-import net.taskwolf.device.action.*;
+import net.taskwolf.device.action.command.DeviceCommandAction;
+import net.taskwolf.device.action.file.delete.DeviceFileDeleteAction;
+import net.taskwolf.device.action.file.info.DeviceFileInfoAction;
+import net.taskwolf.device.action.file.store.DeviceFileStoreAction;
+import net.taskwolf.device.action.folder.create.DeviceFolderCreateAction;
+import net.taskwolf.device.action.folder.delete.DeviceFolderDeleteAction;
+import net.taskwolf.device.action.notification.DeviceNotificationAction;
 import net.taskwolf.device.command.CommandFactory;
 import net.taskwolf.device.connection.DeviceConnectionRepository;
 import net.taskwolf.device.connection.DeviceWebSocket;
@@ -27,10 +31,13 @@ import net.taskwolf.device.distribution.command.event.CommandRequestEvent;
 import net.taskwolf.device.distribution.command.event.CommandResponseEvent;
 import net.taskwolf.device.distribution.command.hook.CommandRequestHook;
 import net.taskwolf.device.distribution.command.hook.CommandResponseHook;
+import net.taskwolf.device.distribution.command.packet.incoming.PacketIncomingCommandRequest;
+import net.taskwolf.device.distribution.command.packet.incoming.PacketIncomingCommandResponse;
 import net.taskwolf.device.distribution.device.event.DeviceLoginEvent;
 import net.taskwolf.device.distribution.device.event.DeviceLogoutEvent;
 import net.taskwolf.device.distribution.device.packet.incoming.PacketIncomingDeviceLogin;
 import net.taskwolf.device.distribution.device.packet.incoming.PacketIncomingDeviceLogout;
+import net.taskwolf.device.distribution.device.packet.outgoing.PacketOutgoingDeviceLogout;
 import net.taskwolf.device.distribution.file.event.*;
 import net.taskwolf.device.distribution.file.hook.*;
 import net.taskwolf.device.distribution.file.packet.incoming.*;
@@ -38,29 +45,28 @@ import net.taskwolf.device.distribution.notification.event.NotificationRequestEv
 import net.taskwolf.device.distribution.notification.event.NotificationResponseEvent;
 import net.taskwolf.device.distribution.notification.hook.NotificationRequestHook;
 import net.taskwolf.device.distribution.notification.hook.NotificationResponseHook;
-import net.taskwolf.device.distribution.command.packet.incoming.PacketIncomingCommandRequest;
-import net.taskwolf.device.distribution.command.packet.incoming.PacketIncomingCommandResponse;
 import net.taskwolf.device.distribution.notification.packet.incoming.PacketIncomingNotificationRequest;
 import net.taskwolf.device.distribution.notification.packet.incoming.PacketIncomingNotificationResponse;
-import net.taskwolf.device.distribution.device.packet.outgoing.PacketOutgoingDeviceLogout;
 import net.taskwolf.device.file.FileFactory;
 import net.taskwolf.device.file.workspace.FileWorkspaceComponentSelect;
 import net.taskwolf.device.file.workspace.FileWorkspaceDatabaseTable;
 import net.taskwolf.device.notification.NotificationFactory;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
-import net.taskwolf.device.trigger.*;
+import net.taskwolf.device.trigger.command.DeviceCommandTrigger;
+import net.taskwolf.device.trigger.file.create.DeviceFileCreateTrigger;
+import net.taskwolf.device.trigger.file.delete.DeviceFileDeleteTrigger;
+import net.taskwolf.device.trigger.folder.create.DeviceFolderCreateTrigger;
+import net.taskwolf.device.trigger.folder.delete.DeviceFolderDeleteTrigger;
+import net.taskwolf.device.trigger.notification.DeviceNotificationTrigger;
 import org.springframework.boot.SpringApplication;
 
 import java.security.Key;
-import java.util.List;
 
 @ModuleDescription(name = "device", version = "1.0.0-SNAPSHOT",
   priority = ModuleLoadPriority.NEUTRAL)
 public final class DeviceModule extends Module {
   private Log log;
-  private TriggerFactory triggerFactory;
-  private ActionFactory actionFactory;
   private AccountLink accountLink;
   private InputComponentSelect deviceComponentSelect;
   private InputComponentSelect fileWorkspaceComponentSelect;
@@ -75,14 +81,8 @@ public final class DeviceModule extends Module {
     log = injector().getInstance(Log.class).subLog("Device");
     injector().getInstance(SpringApplication.class).addInitializers(
       injector().getInstance(DeviceContextInitializer.class));
-    triggerFactory = injector().getInstance(DeviceTriggerFactory.class);
     var deviceDatabaseTable = injector().getInstance(DeviceDatabaseTable.class);
     var clientRegistry = injector().getInstance(DistributionClientRegistry.class);
-    actionFactory = DeviceActionFactory.create(deviceDatabaseTable,
-      injector().getInstance(NotificationFactory.class),
-      injector().getInstance(CommandFactory.class),
-      injector().getInstance(FileFactory.class),
-      injector().getInstance(FileWorkspaceDatabaseTable.class));
     accountLink = DeviceAccountLink.create();
     deviceComponentSelect = DeviceComponentSelect.create(deviceDatabaseTable,
       injector().getInstance(UserDeviceDatabaseTable.class));
@@ -194,16 +194,6 @@ public final class DeviceModule extends Module {
   }
 
   @Override
-  public TriggerFactory triggerFactory() {
-    return triggerFactory;
-  }
-
-  @Override
-  public ActionFactory actionFactory() {
-    return actionFactory;
-  }
-
-  @Override
   public AccountLink accountLink() {
     return accountLink;
   }
@@ -215,34 +205,54 @@ public final class DeviceModule extends Module {
   }
 
   @Override
-  public List<TriggerInformation> triggerInformation() {
-    return Lists.newArrayList(
-      DeviceNotificationTrigger.information(deviceComponentSelect),
-      DeviceCommandTrigger.information(deviceComponentSelect),
-      DeviceFileCreateTrigger.information(deviceComponentSelect,
-        fileWorkspaceComponentSelect),
-      DeviceFileDeleteTrigger.information(deviceComponentSelect,
-        fileWorkspaceComponentSelect),
-      DeviceFolderCreateTrigger.information(deviceComponentSelect,
-        fileWorkspaceComponentSelect),
-      DeviceFolderDeleteTrigger.information(deviceComponentSelect,
-        fileWorkspaceComponentSelect));
+  public TriggerRepository triggerRepository() {
+    var databaseConnection = injector().getInstance(DatabaseConnection.class);
+    var databaseKeyspace = injector().getInstance(DatabaseKeyspace.class);
+    var repository = TriggerRepository.create();
+    repository.registerTrigger(DeviceNotificationTrigger.create(deviceComponentSelect,
+      databaseConnection, databaseKeyspace));
+    repository.registerTrigger(DeviceCommandTrigger.create(deviceComponentSelect,
+      databaseConnection, databaseKeyspace));
+    repository.registerTrigger(DeviceFileCreateTrigger.create(deviceComponentSelect,
+      fileWorkspaceComponentSelect, databaseConnection, databaseKeyspace));
+    repository.registerTrigger(DeviceFileDeleteTrigger.create(deviceComponentSelect,
+      fileWorkspaceComponentSelect, databaseConnection, databaseKeyspace));
+    repository.registerTrigger(DeviceFolderCreateTrigger.create(deviceComponentSelect,
+      fileWorkspaceComponentSelect, databaseConnection, databaseKeyspace));
+    repository.registerTrigger(DeviceFolderDeleteTrigger.create(deviceComponentSelect,
+      fileWorkspaceComponentSelect, databaseConnection, databaseKeyspace));
+    return repository;
   }
 
   @Override
-  public List<ActionInformation> actionInformation() {
-    return Lists.newArrayList(
-      DeviceNotificationAction.information(deviceComponentSelect),
-      DeviceCommandAction.information(deviceComponentSelect),
-      DeviceFileStoreAction.information(deviceComponentSelect,
-        fileWorkspaceComponentSelect),
-      DeviceFileInfoAction.information(deviceComponentSelect,
-        fileWorkspaceComponentSelect),
-      DeviceFileDeleteAction.information(deviceComponentSelect,
-        fileWorkspaceComponentSelect),
-      DeviceFolderCreateAction.information(deviceComponentSelect,
-        fileWorkspaceComponentSelect),
-      DeviceFolderDeleteAction.information(deviceComponentSelect,
-        fileWorkspaceComponentSelect));
+  public ActionRepository actionRepository() {
+    var databaseConnection = injector().getInstance(DatabaseConnection.class);
+    var databaseKeyspace = injector().getInstance(DatabaseKeyspace.class);
+    var deviceDatabaseTable = injector().getInstance(DeviceDatabaseTable.class);
+    var workspaceDatabaseTable = injector().getInstance(FileWorkspaceDatabaseTable.class);
+    var fileFactory = injector().getInstance(FileFactory.class);
+    var repository = ActionRepository.create();
+    repository.registerAction(DeviceNotificationAction.create(deviceComponentSelect,
+      deviceDatabaseTable, injector().getInstance(NotificationFactory.class),
+      databaseConnection, databaseKeyspace));
+    repository.registerAction(DeviceCommandAction.create(deviceComponentSelect,
+      deviceDatabaseTable, injector().getInstance(CommandFactory.class),
+      databaseConnection, databaseKeyspace));
+    repository.registerAction(DeviceFileStoreAction.create(deviceComponentSelect,
+      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
+      fileFactory, databaseConnection, databaseKeyspace));
+    repository.registerAction(DeviceFileInfoAction.create(deviceComponentSelect,
+      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
+      fileFactory, databaseConnection, databaseKeyspace));
+    repository.registerAction(DeviceFileDeleteAction.create(deviceComponentSelect,
+      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
+      fileFactory, databaseConnection, databaseKeyspace));
+    repository.registerAction(DeviceFolderCreateAction.create(deviceComponentSelect,
+      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
+      fileFactory, databaseConnection, databaseKeyspace));
+    repository.registerAction(DeviceFolderDeleteAction.create(deviceComponentSelect,
+      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
+      fileFactory, databaseConnection, databaseKeyspace));
+    return repository;
   }
 }

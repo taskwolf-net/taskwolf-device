@@ -4,7 +4,6 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
-import net.taskwolf.core.iterator.AsyncIterator;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.structure.Device;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Key;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 

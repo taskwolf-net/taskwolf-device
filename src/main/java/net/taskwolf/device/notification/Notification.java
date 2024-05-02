@@ -4,14 +4,11 @@ import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.CoreModule;
 import net.taskwolf.core.distribution.NodeType;
 import net.taskwolf.core.distribution.client.DistributionClientRegistry;
-import net.taskwolf.core.trigger.TriggerEntry;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.distribution.notification.packet.outgoing.PacketOutgoingNotificationRequest;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.firebase.FirebaseRequest;
 import net.taskwolf.device.structure.Device;
-import net.taskwolf.device.trigger.DeviceNotificationTrigger;
-import net.taskwolf.device.trigger.DeviceTriggerFactory;
 
 import java.util.Map;
 import java.util.UUID;
@@ -22,7 +19,6 @@ public final class Notification {
   private final DeviceConfiguration deviceConfiguration;
   private final DistributionClientRegistry clientRegistry;
   private final CoreModule coreModule;
-  private final DeviceTriggerFactory triggerFactory;
   private final Device device;
   private final String title;
   private final String body;
@@ -59,13 +55,7 @@ public final class Notification {
 
   private void triggerWorkflows() {
     coreModule.triggerWorkflows("device", "device-notification-trigger",
-      this::isTriggerSuitable, triggerInformation());
-  }
-
-  private boolean isTriggerSuitable(TriggerEntry entry) {
-    var trigger = (DeviceNotificationTrigger) triggerFactory.create(entry.type(),
-      entry.content());
-    return trigger.deviceId().equals(device.id());
+      "device='" + device.id() + "'", triggerInformation());
   }
 
   private Map<String, Object> triggerInformation() {

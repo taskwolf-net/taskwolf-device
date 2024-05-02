@@ -5,13 +5,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.CoreModule;
 import net.taskwolf.core.access.TaskwolfRequestBody;
-import net.taskwolf.core.trigger.TriggerEntry;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
-import net.taskwolf.device.trigger.DeviceTriggerFactory;
-import net.taskwolf.device.trigger.DeviceWorkspaceTrigger;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -25,18 +22,15 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public final class FileWorkspaceController extends DeviceController {
   private final FileWorkspaceDatabaseTable workspaceDatabaseTable;
-  private final DeviceTriggerFactory triggerFactory;
   private final CoreModule coreModule;
 
   private FileWorkspaceController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable,
-    FileWorkspaceDatabaseTable workspaceDatabaseTable,
-    DeviceTriggerFactory triggerEntry, CoreModule coreModule
+    FileWorkspaceDatabaseTable workspaceDatabaseTable, CoreModule coreModule
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.workspaceDatabaseTable = workspaceDatabaseTable;
-    this.triggerFactory = triggerEntry;
     this.coreModule = coreModule;
   }
 
@@ -184,8 +178,8 @@ public final class FileWorkspaceController extends DeviceController {
     if (!workspace.device().equals(device.id())) {
       return;
     }
-    coreModule.triggerWorkflows("device", identifier, entry ->
-        isWorkspaceTriggerSuitable(entry, device.id(), workspace.id()),
+    coreModule.triggerWorkflows("device", identifier,
+      "device='" + device.id() + "' AND workspace=" + workspace,
       fileTriggerInformation(device, workspace.path(), filePath, fileName));
   }
 
@@ -245,8 +239,8 @@ public final class FileWorkspaceController extends DeviceController {
     if (!workspace.device().equals(device.id())) {
       return;
     }
-    coreModule.triggerWorkflows("device", identifier, entry ->
-        isWorkspaceTriggerSuitable(entry, device.id(), workspace.id()),
+    coreModule.triggerWorkflows("device", identifier,
+      "device='" + device.id() + "' AND workspace=" + workspace,
       folderTriggerInformation(device, workspace.path(), folderPath));
   }
 
@@ -257,14 +251,5 @@ public final class FileWorkspaceController extends DeviceController {
     information.put("workspace", workspace);
     information.put("folderPath", folderPath);
     return information;
-  }
-
-  private boolean isWorkspaceTriggerSuitable(
-    TriggerEntry entry, String deviceId, UUID workspaceId
-  ) {
-    var trigger = (DeviceWorkspaceTrigger) triggerFactory.create(entry.type(),
-      entry.content());
-    return trigger.deviceId().equals(deviceId) &&
-      trigger.workspaceId().equals(workspaceId);
   }
 }
