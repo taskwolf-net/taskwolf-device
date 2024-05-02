@@ -58,6 +58,11 @@ public final class DeviceFileCreateTrigger implements Trigger {
   }
 
   @Override
+  public void initialize() {
+    contentDatabaseTable.createIfNotExists();
+  }
+
+  @Override
   public CompletableFuture<Void> insert(UUID triggerId, Map<String, Object> content) {
     return contentDatabaseTable.insertContent(triggerId, DatabaseRow.of(
       content.get("device"), content.get("workspace")));

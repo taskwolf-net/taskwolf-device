@@ -63,6 +63,11 @@ public final class DeviceNotificationAction implements Action<DeviceNotification
   }
 
   @Override
+  public void initialize() {
+    contentDatabaseTable.createIfNotExists();
+  }
+
+  @Override
   public CompletableFuture<Void> insert(UUID actionId, Map<String, Object> content) {
     return contentDatabaseTable.insertContent(actionId, DatabaseRow.of(
       content.get("device"), content.get("notificationTitle"),
