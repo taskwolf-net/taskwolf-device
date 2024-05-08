@@ -85,8 +85,8 @@ public final class DeviceInformationController extends DeviceController {
   ) {
     var futureResponse = new CompletableFuture<List<Device>>();
     userDeviceDatabaseTable.findDevicesIfExists(targetId).thenAccept(deviceIds ->
-      AsyncIterator.execute(deviceIds, deviceDatabaseTable()::findDevice,
-        deviceIds.size(), futureResponse::complete));
+      AsyncIterator.execute(deviceIds, deviceDatabaseTable()::findDevice)
+        .thenAccept(futureResponse::complete));
     return futureResponse;
   }
 
@@ -99,8 +99,8 @@ public final class DeviceInformationController extends DeviceController {
     }
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     AsyncIterator.execute(devices, device ->
-        gatherDeviceInformation(target, device), devices.size(),
-      information -> futureResponse.complete(Map.of("devices", information)));
+        gatherDeviceInformation(target, device)).thenAccept(
+          information -> futureResponse.complete(Map.of("devices", information)));
     return futureResponse;
   }
 
@@ -148,7 +148,7 @@ public final class DeviceInformationController extends DeviceController {
     userDeviceDatabaseTable.findUsersOfDevice(device.id()).thenApply(users ->
         users.stream().filter(entry -> !entry.equals(user.id())).toList())
       .thenAccept(users -> AsyncIterator.execute(users,
-        this::findOrganizationInformation, users.size(), organizations ->
+        this::findOrganizationInformation).thenAccept(organizations ->
           futureResponse.complete(Map.of("organizations", organizations))));
     return futureResponse;
   }

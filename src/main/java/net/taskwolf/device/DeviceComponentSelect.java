@@ -24,8 +24,8 @@ public class DeviceComponentSelect implements InputComponentSelect {
   ) {
     var futureResponse = new CompletableFuture<List<String>>();
     userDeviceDatabaseTable.findDevicesIfExists(id).thenAccept(deviceIds ->
-      AsyncIterator.execute(deviceIds, deviceDatabaseTable::findDevice,
-        deviceIds.size(), devices -> futureResponse.complete(
+      AsyncIterator.execute(deviceIds, deviceDatabaseTable::findDevice).thenAccept(
+        devices -> futureResponse.complete(
           devices.stream().map(device -> new JSONObject(Map.of("identifier",
               device.id(), "name", device.information())).toString())
             .collect(Collectors.toList()))));
