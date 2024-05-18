@@ -1,7 +1,7 @@
 package net.taskwolf.device.distribution.device.packet.outgoing;
 
-import net.taskwolf.core.distribution.client.packet.PacketOutgoing;
-import net.taskwolf.core.distribution.packet.PacketBuffer;
+import net.taskwolf.core.packet.PacketBuffer;
+import net.taskwolf.core.worker.packet.outgoing.PacketOutgoing;
 
 public final class PacketOutgoingDeviceLogin extends PacketOutgoing {
   private final String deviceId;

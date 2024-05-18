@@ -1,7 +1,7 @@
 package net.taskwolf.device.distribution.notification.packet.outgoing;
 
-import net.taskwolf.core.distribution.client.packet.PacketOutgoing;
-import net.taskwolf.core.distribution.packet.PacketBuffer;
+import net.taskwolf.core.packet.PacketBuffer;
+import net.taskwolf.core.worker.packet.outgoing.PacketOutgoing;
 
 import java.util.UUID;
 

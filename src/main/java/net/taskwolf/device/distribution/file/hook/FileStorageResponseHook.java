@@ -6,7 +6,7 @@ import com.google.inject.name.Named;
 import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
-import net.taskwolf.device.distribution.file.event.FileStorageResponseEvent;
+import net.taskwolf.device.distribution.file.event.WorkerFileStorageResponseEvent;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
 import net.taskwolf.device.file.FileRequestRepository;
 import net.taskwolf.device.structure.Device;
@@ -28,7 +28,7 @@ public final class FileStorageResponseHook implements Hook {
   }
 
   @EventHook
-  private void fileStorageResponse(FileStorageResponseEvent event) {
+  private void fileStorageResponse(WorkerFileStorageResponseEvent event) {
     var optionalRequest = fileStorageRepository
       .findFileRequest(event.storageId());
     if (optionalRequest.isEmpty()) {

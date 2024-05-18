@@ -10,7 +10,7 @@ import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequestRepository;
-import net.taskwolf.device.distribution.command.event.CommandResponseEvent;
+import net.taskwolf.device.distribution.command.event.WorkerCommandResponseEvent;
 import net.taskwolf.device.structure.Device;
 
 import java.text.SimpleDateFormat;
@@ -25,7 +25,7 @@ public final class CommandResponseHook implements Hook {
   private final CoreModule coreModule;
 
   @EventHook
-  private void commandResponse(CommandResponseEvent event) {
+  private void commandResponse(WorkerCommandResponseEvent event) {
     var optionalRequest = commandRequestRepository
       .findCommandRequest(event.commandId());
     if (optionalRequest.isEmpty()) {

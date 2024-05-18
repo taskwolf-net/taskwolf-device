@@ -3,7 +3,7 @@ package net.taskwolf.device.file;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
+import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
@@ -18,7 +18,7 @@ public final class FileFactory {
   private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
-  private final DistributionClientRegistry clientRegistry;
+  private final WorkerProxyClient workerProxyClient;
 
   @Inject
   private FileFactory(
@@ -29,8 +29,7 @@ public final class FileFactory {
     @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable,
     @Named("fileDeleteDatabaseTable") FileHistoryDatabaseTable fileDeleteDatabaseTable,
     FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable,
-    DeviceConfiguration deviceConfiguration,
-    DistributionClientRegistry clientRegistry
+    DeviceConfiguration deviceConfiguration, WorkerProxyClient workerProxyClient
   ) {
     this.fileStorageRepository = fileStorageRepository;
     this.fileInfoRepository = fileInfoRepository;
@@ -40,13 +39,13 @@ public final class FileFactory {
     this.fileDeleteDatabaseTable = fileDeleteDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
     this.deviceConfiguration = deviceConfiguration;
-    this.clientRegistry = clientRegistry;
+    this.workerProxyClient = workerProxyClient;
   }
 
   public File createFile(Device device, String path, String name) {
     return File.create(fileStorageRepository, fileInfoRepository,
       fileDeleteRepository, fileStorageDatabaseTable, fileInfoDatabaseTable,
       fileDeleteDatabaseTable, firebaseDeviceDatabaseTable, deviceConfiguration,
-      clientRegistry, device, path, name);
+      workerProxyClient, device, path, name);
   }
 }

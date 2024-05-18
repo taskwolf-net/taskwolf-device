@@ -4,9 +4,8 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
-import net.taskwolf.core.distribution.NodeType;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileInfoResponse;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
@@ -32,17 +31,17 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public final class FileInfoController extends DeviceController {
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
-  private final DistributionClientRegistry clientRegistry;
+  private final WorkerProxyClient workerProxyClient;
 
   private FileInfoController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable, @Qualifier("fileInfoDatabaseTable")
     FileHistoryDatabaseTable fileInfoDatabaseTable,
-    DistributionClientRegistry clientRegistry
+    WorkerProxyClient workerProxyClient
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.fileInfoDatabaseTable = fileInfoDatabaseTable;
-    this.clientRegistry = clientRegistry;
+    this.workerProxyClient = workerProxyClient;
   }
 
   @RequestMapping(path = "/device/file/info/history/", method = RequestMethod.POST)
@@ -112,8 +111,8 @@ public final class FileInfoController extends DeviceController {
   private void deviceFileInfoResponse(
     UUID infoId, byte[] content
   ) {
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingFileInfoResponse(infoId, content, true));
+    workerProxyClient.sendPacket(new PacketOutgoingFileInfoResponse(infoId,
+      content, true));
   }
 
   private String formatTime(long time) {

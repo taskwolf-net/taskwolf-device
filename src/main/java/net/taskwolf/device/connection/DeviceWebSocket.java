@@ -2,9 +2,7 @@ package net.taskwolf.device.connection;
 
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
-import net.taskwolf.core.distribution.NodeType;
-import net.taskwolf.core.distribution.client.DistributionClient;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
+import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.distribution.command.packet.outgoing.PacketOutgoingCommandResponse;
 import net.taskwolf.device.distribution.device.packet.outgoing.PacketOutgoingDeviceLogin;
 import net.taskwolf.device.distribution.device.packet.outgoing.PacketOutgoingDeviceLogout;
@@ -26,28 +24,28 @@ public final class DeviceWebSocket extends WebSocketServer {
   public static DeviceWebSocket of(
     int port, DeviceDatabaseTable deviceDatabaseTable,
     DeviceConnectionRepository connectionRepository,
-    DistributionClientRegistry clientRegistry, Key secretKey
+    WorkerProxyClient workerProxyClient, Key secretKey
   ) {
     var socket = new DeviceWebSocket(new InetSocketAddress(port),
-      deviceDatabaseTable, connectionRepository, clientRegistry, secretKey);
+      deviceDatabaseTable, connectionRepository, workerProxyClient, secretKey);
     socket.setReuseAddr(true);
     return socket;
   }
 
   private final DeviceDatabaseTable deviceDatabaseTable;
   private final DeviceConnectionRepository connectionRepository;
-  private final DistributionClientRegistry clientRegistry;
+  private final WorkerProxyClient workerProxyClient;
   private final Key secretKey;
 
   private DeviceWebSocket(
     InetSocketAddress address, DeviceDatabaseTable deviceDatabaseTable,
     DeviceConnectionRepository connectionRepository,
-    DistributionClientRegistry clientRegistry, Key secretKey
+    WorkerProxyClient workerProxyClient, Key secretKey
   ) {
     super(address);
     this.deviceDatabaseTable = deviceDatabaseTable;
     this.connectionRepository = connectionRepository;
-    this.clientRegistry = clientRegistry;
+    this.workerProxyClient = workerProxyClient;
     this.secretKey = secretKey;
   }
 
@@ -97,8 +95,7 @@ public final class DeviceWebSocket extends WebSocketServer {
     }
     connectionRepository.registerConnection(DeviceConnection.create(device,
       connection));
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingDeviceLogin(device.id()));
+    workerProxyClient.sendPacket(new PacketOutgoingDeviceLogin(device.id()));
   }
 
   private Optional<UUID> findUserId(String token) {
@@ -131,16 +128,15 @@ public final class DeviceWebSocket extends WebSocketServer {
   }
 
   private void processCommandResponse(Matcher matcher) throws Exception {
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingCommandResponse(UUID.fromString(matcher.group(1)),
-        true, matcher.group(2), matcher.group(3), Integer.valueOf(matcher.group(4))));
+    workerProxyClient.sendPacket(new PacketOutgoingCommandResponse(
+      UUID.fromString(matcher.group(1)), true, matcher.group(2), matcher.group(3),
+      Integer.valueOf(matcher.group(4))));
   }
 
   @Override
   public void onClose(
     WebSocket connection, int code, String reason, boolean remote
   ) {
-    var proxy = findProxyClient();
     var deviceConnectionOptional = connectionRepository
       .findConnectionBySocket(connection);
     if (deviceConnectionOptional.isEmpty()) {
@@ -148,12 +144,8 @@ public final class DeviceWebSocket extends WebSocketServer {
     }
     var deviceConnection = deviceConnectionOptional.get();
     connectionRepository.unregisterConnection(deviceConnection);
-    proxy.sendPacket(new PacketOutgoingDeviceLogout(deviceConnection.device().id()));
-  }
-
-  private DistributionClient findProxyClient() {
-    return clientRegistry.findClientsByType(NodeType.PROXY)
-      .stream().findFirst().get();
+    workerProxyClient.sendPacket(new PacketOutgoingDeviceLogout(
+      deviceConnection.device().id()));
   }
 
   @Override

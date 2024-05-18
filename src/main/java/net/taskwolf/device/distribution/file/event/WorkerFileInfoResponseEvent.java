@@ -10,7 +10,7 @@ import java.util.UUID;
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor(staticName = "create")
-public final class FileInfoResponseEvent extends Event {
+public final class WorkerFileInfoResponseEvent extends Event {
   private final UUID infoId;
   private final byte[] content;
   private final boolean success;

@@ -6,7 +6,7 @@ import com.google.inject.name.Named;
 import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
-import net.taskwolf.device.distribution.file.event.FileDeleteResponseEvent;
+import net.taskwolf.device.distribution.file.event.WorkerFileDeleteResponseEvent;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
 import net.taskwolf.device.file.FileRequestRepository;
 import net.taskwolf.device.structure.Device;
@@ -28,7 +28,7 @@ public final class FileDeleteResponseHook implements Hook {
   }
 
   @EventHook
-  private void fileDeleteResponse(FileDeleteResponseEvent event) {
+  private void fileDeleteResponse(WorkerFileDeleteResponseEvent event) {
     var optionalRequest = fileDeleteRepository
       .findFileRequest(event.deleteId());
     if (optionalRequest.isEmpty()) {

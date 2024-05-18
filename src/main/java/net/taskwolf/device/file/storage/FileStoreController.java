@@ -4,9 +4,8 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
-import net.taskwolf.core.distribution.NodeType;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileStorageResponse;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
@@ -32,19 +31,18 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public final class FileStoreController extends DeviceController {
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
-  private final DistributionClientRegistry clientRegistry;
+  private final WorkerProxyClient workerProxyClient;
   private final FileStorageRepository fileStorageRepository;
 
   private FileStoreController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable, @Qualifier("fileStorageDatabaseTable")
     FileHistoryDatabaseTable fileStorageDatabaseTable,
-    DistributionClientRegistry clientRegistry,
-    FileStorageRepository fileStorageRepository
+    WorkerProxyClient workerProxyClient, FileStorageRepository fileStorageRepository
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.fileStorageDatabaseTable = fileStorageDatabaseTable;
-    this.clientRegistry = clientRegistry;
+    this.workerProxyClient = workerProxyClient;
     this.fileStorageRepository = fileStorageRepository;
   }
 
@@ -124,8 +122,8 @@ public final class FileStoreController extends DeviceController {
     }
     var result = Map.<String, Object>of("content",
       Base64.encodeBase64String(content.get()));
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingFileStorageResponse(storageId, true));
+    workerProxyClient.sendPacket(new PacketOutgoingFileStorageResponse(storageId,
+      true));
     fileStorageRepository.unregisterFileContent(storageId);
     return result;
   }

@@ -2,8 +2,7 @@ package net.taskwolf.device.command;
 
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.action.ActionResult;
-import net.taskwolf.core.distribution.NodeType;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
+import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.distribution.command.packet.outgoing.PacketOutgoingCommandRequest;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
@@ -20,7 +19,7 @@ public final class Command {
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
-  private final DistributionClientRegistry clientRegistry;
+  private final WorkerProxyClient workerProxyClient;
   private final Device device;
   private final String command;
 
@@ -52,8 +51,7 @@ public final class Command {
   }
 
   private void executeDesktopCommand(UUID commandId) {
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst()
-      .get().sendPacket(new PacketOutgoingCommandRequest(commandId,
-        device.id(), command));
+    workerProxyClient.sendPacket(new PacketOutgoingCommandRequest(commandId,
+      device.id(), command));
   }
 }

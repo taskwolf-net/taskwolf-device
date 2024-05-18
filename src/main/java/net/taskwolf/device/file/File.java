@@ -2,8 +2,7 @@ package net.taskwolf.device.file;
 
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.action.ActionResult;
-import net.taskwolf.core.distribution.NodeType;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
+import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileDeleteRequest;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileInfoRequest;
@@ -26,7 +25,7 @@ public final class File {
   private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
-  private final DistributionClientRegistry clientRegistry;
+  private final WorkerProxyClient workerProxyClient;
   private final Device device;
   private final String path;
   private final String name;
@@ -41,9 +40,8 @@ public final class File {
   ) {
     fileStorageRepository.registerFileRequest(FileRequest.create(storeId,
       device, path, name, futureResponse));
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingFileStorageRequest(storeId, device.id(),
-        path, name, content));
+    workerProxyClient.sendPacket(new PacketOutgoingFileStorageRequest(storeId,
+      device.id(), path, name, content));
   }
 
   public void info(CompletableFuture<ActionResult> futureResponse) {
@@ -73,9 +71,8 @@ public final class File {
   }
 
   private void findDesktopFileInfo(UUID infoId) {
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingFileInfoRequest(infoId, device.id(),
-        path, name));
+    workerProxyClient.sendPacket(new PacketOutgoingFileInfoRequest(infoId,
+      device.id(), path, name));
   }
 
   public void delete(CompletableFuture<ActionResult> futureResponse) {
@@ -105,9 +102,8 @@ public final class File {
   }
 
   private void deleteDesktopFile(UUID deleteId) {
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingFileDeleteRequest(deleteId, device.id(),
-        path, name));
+    workerProxyClient.sendPacket(new PacketOutgoingFileDeleteRequest(deleteId,
+      device.id(), path, name));
   }
 
   public CompletableFuture<UUID> generateAvailableRequestId() {

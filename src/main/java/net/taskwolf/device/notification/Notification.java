@@ -2,8 +2,7 @@ package net.taskwolf.device.notification;
 
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.CoreModule;
-import net.taskwolf.core.distribution.NodeType;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
+import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.distribution.notification.packet.outgoing.PacketOutgoingNotificationRequest;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
@@ -17,7 +16,7 @@ import java.util.UUID;
 public final class Notification {
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
-  private final DistributionClientRegistry clientRegistry;
+  private final WorkerProxyClient workerProxyClient;
   private final CoreModule coreModule;
   private final Device device;
   private final String title;
@@ -48,9 +47,8 @@ public final class Notification {
   }
 
   private void publishDesktopNotification(UUID notificationId) {
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingNotificationRequest(notificationId,
-        device.id(), title, body));
+    workerProxyClient.sendPacket(new PacketOutgoingNotificationRequest(
+      notificationId, device.id(), title, body));
   }
 
   private void triggerWorkflows() {

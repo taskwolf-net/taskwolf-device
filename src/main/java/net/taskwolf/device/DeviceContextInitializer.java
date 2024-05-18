@@ -3,7 +3,6 @@ package net.taskwolf.device;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
 import net.taskwolf.device.command.CommandRequestRepository;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
@@ -18,7 +17,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 @Singleton
 public final class DeviceContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-  private final DistributionClientRegistry clientRegistry;
   private final DeviceDatabaseTable deviceDatabaseTable;
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
@@ -33,7 +31,6 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
 
   @Inject
   private DeviceContextInitializer(
-    DistributionClientRegistry clientRegistry,
     DeviceDatabaseTable deviceDatabaseTable,
     UserDeviceDatabaseTable userDeviceDatabaseTable,
     FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable,
@@ -46,7 +43,6 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     FileStorageRepository fileStorageRepository,
     FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable
   ) {
-    this.clientRegistry = clientRegistry;
     this.deviceDatabaseTable = deviceDatabaseTable;
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
@@ -63,7 +59,6 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
   @Override
   public void initialize(ConfigurableApplicationContext applicationContext) {
     var beanFactory = applicationContext.getBeanFactory();
-    beanFactory.registerSingleton("clientRegistry", clientRegistry);
     beanFactory.registerSingleton("deviceDatabaseTable", deviceDatabaseTable);
     beanFactory.registerSingleton("userDeviceDatabaseTable", userDeviceDatabaseTable);
     beanFactory.registerSingleton("firebaseDeviceDatabaseTable", firebaseDeviceDatabaseTable);

@@ -4,9 +4,8 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
-import net.taskwolf.core.distribution.NodeType;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.distribution.command.packet.outgoing.PacketOutgoingCommandResponse;
 import net.taskwolf.device.structure.Device;
@@ -27,17 +26,17 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public final class CommandController extends DeviceController {
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
-  private final DistributionClientRegistry clientRegistry;
+  private final WorkerProxyClient workerProxyClient;
 
   private CommandController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable,
     CommandExecutionDatabaseTable commandExecutionDatabaseTable,
-    DistributionClientRegistry clientRegistry
+    WorkerProxyClient workerProxyClient
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.commandExecutionDatabaseTable = commandExecutionDatabaseTable;
-    this.clientRegistry = clientRegistry;
+    this.workerProxyClient = workerProxyClient;
   }
 
   @RequestMapping(path = "/device/command/settings/", method = RequestMethod.POST)
@@ -135,9 +134,8 @@ public final class CommandController extends DeviceController {
   private void deviceCommandResponse(
     UUID command, String output, String errorMessage, int exitCode
   ) {
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingCommandResponse(command, true, output,
-        errorMessage, exitCode));
+    workerProxyClient.sendPacket(new PacketOutgoingCommandResponse(command,
+      true, output, errorMessage, exitCode));
   }
 
   private String formatTime(long time) {

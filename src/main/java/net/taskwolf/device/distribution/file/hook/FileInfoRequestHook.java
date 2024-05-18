@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
 import net.taskwolf.device.connection.DeviceConnectionRepository;
-import net.taskwolf.device.distribution.file.event.FileInfoRequestEvent;
+import net.taskwolf.device.distribution.file.event.WorkerFileInfoRequestEvent;
 
 @Singleton
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({@Inject}))
@@ -15,7 +15,7 @@ public final class FileInfoRequestHook implements Hook {
   private final DeviceConnectionRepository connectionRepository;
 
   @EventHook
-  private void fileInfoRequest(FileInfoRequestEvent event) {
+  private void fileInfoRequest(WorkerFileInfoRequestEvent event) {
     var connection = connectionRepository.findConnection(event.deviceId());
     if (connection.isEmpty()) {
       return;

@@ -2,8 +2,8 @@ package net.taskwolf.device.distribution.file.packet.incoming;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import net.taskwolf.core.distribution.packet.PacketBuffer;
-import net.taskwolf.core.distribution.server.packet.PacketIncoming;
+import net.taskwolf.core.packet.PacketBuffer;
+import net.taskwolf.core.worker.packet.incoming.PacketIncoming;
 
 import java.util.UUID;
 

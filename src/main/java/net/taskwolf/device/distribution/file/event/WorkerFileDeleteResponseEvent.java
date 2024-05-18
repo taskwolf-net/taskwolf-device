@@ -10,7 +10,7 @@ import java.util.UUID;
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor(staticName = "create")
-public final class FileDeleteResponseEvent extends Event {
+public final class WorkerFileDeleteResponseEvent extends Event {
   private final UUID deleteId;
   private final boolean success;
 }

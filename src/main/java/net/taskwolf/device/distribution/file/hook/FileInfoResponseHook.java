@@ -6,7 +6,7 @@ import com.google.inject.name.Named;
 import net.taskwolf.core.action.ActionResult;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
-import net.taskwolf.device.distribution.file.event.FileInfoResponseEvent;
+import net.taskwolf.device.distribution.file.event.WorkerFileInfoResponseEvent;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
 import net.taskwolf.device.file.FileRequestRepository;
 import net.taskwolf.device.structure.Device;
@@ -29,7 +29,7 @@ public final class FileInfoResponseHook implements Hook {
   }
 
   @EventHook
-  private void fileInfoResponse(FileInfoResponseEvent event) {
+  private void fileInfoResponse(WorkerFileInfoResponseEvent event) {
     var optionalRequest = fileInfoRepository.findFileRequest(event.infoId());
     if (optionalRequest.isEmpty()) {
       return;

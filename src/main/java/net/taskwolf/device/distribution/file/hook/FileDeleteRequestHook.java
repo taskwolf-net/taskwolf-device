@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
 import net.taskwolf.device.connection.DeviceConnectionRepository;
-import net.taskwolf.device.distribution.file.event.FileDeleteRequestEvent;
+import net.taskwolf.device.distribution.file.event.WorkerFileDeleteRequestEvent;
 
 @Singleton
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({@Inject}))
@@ -15,7 +15,7 @@ public final class FileDeleteRequestHook implements Hook {
   private final DeviceConnectionRepository connectionRepository;
 
   @EventHook
-  private void fileDeleteRequest(FileDeleteRequestEvent event) {
+  private void fileDeleteRequest(WorkerFileDeleteRequestEvent event) {
     var connection = connectionRepository.findConnection(event.deviceId());
     if (connection.isEmpty()) {
       return;

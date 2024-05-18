@@ -9,7 +9,7 @@ import net.taskwolf.core.event.Hook;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.connection.DeviceConnection;
 import net.taskwolf.device.connection.DeviceConnectionRepository;
-import net.taskwolf.device.distribution.file.event.FileStorageRequestEvent;
+import net.taskwolf.device.distribution.file.event.WorkerFileStorageRequestEvent;
 import net.taskwolf.device.file.FilePath;
 import net.taskwolf.device.file.storage.FileStorageRepository;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
@@ -29,7 +29,7 @@ public final class FileStorageRequestHook implements Hook {
   private final FileStorageRepository fileStorageRepository;
 
   @EventHook
-  private void fileStorageRequest(FileStorageRequestEvent event) {
+  private void fileStorageRequest(WorkerFileStorageRequestEvent event) {
     var connection = connectionRepository.findConnection(event.deviceId());
     if (connection.isEmpty()) {
       return;
@@ -39,7 +39,7 @@ public final class FileStorageRequestHook implements Hook {
   }
 
   private void fileStorageRequest(
-    FileStorageRequestEvent event, DeviceConnection connection, Device device
+    WorkerFileStorageRequestEvent event, DeviceConnection connection, Device device
   ) {
     fileStorageRepository.registerFileContent(event.storeId(), event.content());
     if (device.platform().isDesktop()) {

@@ -4,9 +4,8 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
-import net.taskwolf.core.distribution.NodeType;
-import net.taskwolf.core.distribution.client.DistributionClientRegistry;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileDeleteResponse;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
@@ -31,17 +30,17 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public final class FileDeleteController extends DeviceController {
   private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
-  private final DistributionClientRegistry clientRegistry;
+  private final WorkerProxyClient workerProxyClient;
 
   private FileDeleteController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable, @Qualifier("fileDeleteDatabaseTable")
     FileHistoryDatabaseTable fileDeleteDatabaseTable,
-    DistributionClientRegistry clientRegistry
+    WorkerProxyClient workerProxyClient
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.fileDeleteDatabaseTable = fileDeleteDatabaseTable;
-    this.clientRegistry = clientRegistry;
+    this.workerProxyClient = workerProxyClient;
   }
 
   @RequestMapping(path = "/device/file/delete/history/", method = RequestMethod.POST)
@@ -110,8 +109,8 @@ public final class FileDeleteController extends DeviceController {
   private void deviceFileDeleteResponse(
     UUID deleteId
   ) {
-    clientRegistry.findClientsByType(NodeType.PROXY).stream().findFirst().get()
-      .sendPacket(new PacketOutgoingFileDeleteResponse(deleteId, true));
+    workerProxyClient.sendPacket(new PacketOutgoingFileDeleteResponse(deleteId,
+      true));
   }
 
   private String formatTime(long time) {
