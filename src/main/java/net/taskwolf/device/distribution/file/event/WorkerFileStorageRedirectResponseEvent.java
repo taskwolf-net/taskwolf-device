@@ -1,15 +1,16 @@
-package net.taskwolf.device.file.storage;
+package net.taskwolf.device.distribution.file.event;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
+import net.taskwolf.core.event.Event;
 
 import java.util.UUID;
 
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor(staticName = "create")
-public final class FileStorageContent {
+public final class WorkerFileStorageRedirectResponseEvent extends Event {
   private final UUID storageId;
-  private final byte[] content;
+  private final String redirectUrl;
 }

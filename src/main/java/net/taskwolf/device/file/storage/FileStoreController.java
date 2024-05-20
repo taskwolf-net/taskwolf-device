@@ -7,6 +7,7 @@ import net.taskwolf.core.access.TaskwolfRequestBody;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.access.DeviceController;
+import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileStorageRedirectRequest;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileStorageResponse;
 import net.taskwolf.device.file.FileHistoryDatabaseTable;
 import net.taskwolf.device.file.FileHistoryEntry;
@@ -33,17 +34,20 @@ public final class FileStoreController extends DeviceController {
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
   private final WorkerProxyClient workerProxyClient;
   private final FileStorageRepository fileStorageRepository;
+  private final FileStorageRedirectRepository fileStorageRedirectRepository;
 
   private FileStoreController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable, @Qualifier("fileStorageDatabaseTable")
     FileHistoryDatabaseTable fileStorageDatabaseTable,
-    WorkerProxyClient workerProxyClient, FileStorageRepository fileStorageRepository
+    WorkerProxyClient workerProxyClient, FileStorageRepository fileStorageRepository,
+    FileStorageRedirectRepository fileStorageRedirectRepository
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.fileStorageDatabaseTable = fileStorageDatabaseTable;
     this.workerProxyClient = workerProxyClient;
     this.fileStorageRepository = fileStorageRepository;
+    this.fileStorageRedirectRepository = fileStorageRedirectRepository;
   }
 
   @RequestMapping(path = "/device/file/storage/history/", method = RequestMethod.POST)
@@ -106,26 +110,32 @@ public final class FileStoreController extends DeviceController {
   ) {
     var body = TaskwolfRequestBody.of(payload, response);
     var futureResponse = new CompletableFuture<Map<String, Object>>();
-    performDeviceOperation(findUserId(request), body.getString("device"),
-      device -> futureResponse.complete(deviceFileStorageResponse(
-        body.getUUID("storage"))),
+    var deviceId = body.getString("device");
+    performDeviceOperation(findUserId(request), deviceId,
+      device -> deviceFileStorageResponse(deviceId, body.getUUID("storage"),
+        findApiKey(request)).thenAccept(futureResponse::complete),
       () -> futureResponse.complete(Maps.newHashMap()));
     return futureResponse;
   }
 
-  private Map<String, Object> deviceFileStorageResponse(
-    UUID storageId
+  private CompletableFuture<Map<String, Object>> deviceFileStorageResponse(
+    String deviceId, UUID storageId, String apiKey
   ) {
     var content = fileStorageRepository.findFileContent(storageId);
     if (content.isEmpty()) {
-      return Maps.newHashMap();
+      var futureResponse = new CompletableFuture<Map<String, Object>>();
+      fileStorageRedirectRepository.registerStorageRedirect(deviceId, storageId,
+        apiKey, futureResponse);
+      workerProxyClient.sendPacket(
+        new PacketOutgoingFileStorageRedirectRequest(storageId));
+      return futureResponse;
     }
     var result = Map.<String, Object>of("content",
       Base64.encodeBase64String(content.get()));
     workerProxyClient.sendPacket(new PacketOutgoingFileStorageResponse(storageId,
       true));
     fileStorageRepository.unregisterFileContent(storageId);
-    return result;
+    return CompletableFuture.completedFuture(result);
   }
 
   private String formatTime(long time) {

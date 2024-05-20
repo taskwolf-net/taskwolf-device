@@ -79,14 +79,15 @@ public final class DeviceFileInfoAction implements Action<DeviceFileInfoActionEx
 
   @Override
   public CompletableFuture<Void> insert(UUID actionId, Map<String, Object> content) {
+    var filePath = content.get("filePath");
     return contentDatabaseTable.insertContent(actionId, DatabaseRow.of(
-      content.get("device"), content.get("workspace"), content.get("filePath"),
-      content.get("fileName")));
+      content.get("device"), UUID.fromString((String) content.get("workspace")),
+      filePath == null ? "" : content.get("filePath"), content.get("fileName")));
   }
 
   @Override
-  public CompletableFuture<Map<String, Object>> findContent(UUID triggerId) {
-    return contentDatabaseTable.findContent(triggerId).thenApply(row ->
+  public CompletableFuture<Map<String, Object>> findContent(UUID actionId) {
+    return contentDatabaseTable.findContent(actionId).thenApply(row ->
       Map.of("device", row.findCell(1).stringValue(),
         "workspace", row.findCell(2).uuidValue(),
         "filePath", row.findCell(3).stringValue(),

@@ -100,6 +100,7 @@ public final class DeviceModule extends Module {
     packetRegistry.registerPacket(PacketIncomingCommandResponse.class);
     packetRegistry.registerPacket(PacketIncomingFileStorageRequest.class);
     packetRegistry.registerPacket(PacketIncomingFileStorageResponse.class);
+    packetRegistry.registerPacket(PacketIncomingFileStorageRedirectResponse.class);
     packetRegistry.registerPacket(PacketIncomingFileInfoRequest.class);
     packetRegistry.registerPacket(PacketIncomingFileInfoResponse.class);
     packetRegistry.registerPacket(PacketIncomingFileDeleteRequest.class);
@@ -140,6 +141,9 @@ public final class DeviceModule extends Module {
     repository.registerEvent(PacketIncomingFileStorageResponse.class,
       (client, packet) -> WorkerFileStorageResponseEvent.create(packet.storageId(),
         packet.success()));
+    repository.registerEvent(PacketIncomingFileStorageRedirectResponse.class,
+      (client, packet) -> WorkerFileStorageRedirectResponseEvent.create(
+        packet.storageId(), packet.redirectUrl()));
     repository.registerEvent(PacketIncomingFileInfoRequest.class,
       (client, packet) -> WorkerFileInfoRequestEvent.create(packet.infoId(),
         packet.deviceId(), packet.filePath(), packet.fileName()));
@@ -162,6 +166,7 @@ public final class DeviceModule extends Module {
     hookRegistry.register(injector().getInstance(NotificationResponseHook.class));
     hookRegistry.register(injector().getInstance(FileStorageRequestHook.class));
     hookRegistry.register(injector().getInstance(FileStorageResponseHook.class));
+    hookRegistry.register(injector().getInstance(FileStorageRedirectResponseHook.class));
     hookRegistry.register(injector().getInstance(FileInfoRequestHook.class));
     hookRegistry.register(injector().getInstance(FileInfoResponseHook.class));
     hookRegistry.register(injector().getInstance(FileDeleteRequestHook.class));

@@ -76,12 +76,13 @@ public final class DeviceFolderCreateAction implements Action<DeviceFolderCreate
   @Override
   public CompletableFuture<Void> insert(UUID actionId, Map<String, Object> content) {
     return contentDatabaseTable.insertContent(actionId, DatabaseRow.of(
-      content.get("device"), content.get("workspace"), content.get("folderPath")));
+      content.get("device"), UUID.fromString((String) content.get("workspace")),
+      content.get("folderPath")));
   }
 
   @Override
-  public CompletableFuture<Map<String, Object>> findContent(UUID triggerId) {
-    return contentDatabaseTable.findContent(triggerId).thenApply(row ->
+  public CompletableFuture<Map<String, Object>> findContent(UUID actionId) {
+    return contentDatabaseTable.findContent(actionId).thenApply(row ->
       Map.of("device", row.findCell(1).stringValue(),
         "workspace", row.findCell(2).uuidValue(),
         "folderPath", row.findCell(3).stringValue()));

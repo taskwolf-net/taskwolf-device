@@ -4,7 +4,9 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.util.Map;
 import java.util.Optional;
@@ -17,14 +19,23 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({@Inject}))
 public final class FileStorageRepository {
-  private final Map<FileStorageContent, ScheduledFuture<?>> storage = Maps.newHashMap();
+  @Getter
+  @Accessors(fluent = true)
+  @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+  private final class FileStorageRequestContent {
+    private final UUID storageId;
+    private final byte[] content;
+  }
+
+  private final Map<FileStorageRequestContent, ScheduledFuture<?>> storage =
+    Maps.newHashMap();
   private final ScheduledExecutorService executorService =
     Executors.newSingleThreadScheduledExecutor();
 
   public void registerFileContent(UUID storageId, byte[] content) {
     var schedule = executorService.schedule(() -> unregisterFileContent(storageId),
       10, TimeUnit.SECONDS);
-    storage.put(FileStorageContent.create(storageId, content), schedule);
+    storage.put(new FileStorageRequestContent(storageId, content), schedule);
   }
 
   public void unregisterFileContent(UUID storageId) {
@@ -42,7 +53,7 @@ public final class FileStorageRepository {
   public Optional<byte[]> findFileContent(UUID storageId) {
     return storage.keySet().stream()
       .filter(request -> request.storageId().equals(storageId))
-      .map(FileStorageContent::content)
+      .map(FileStorageRequestContent::content)
       .findFirst();
   }
 }
