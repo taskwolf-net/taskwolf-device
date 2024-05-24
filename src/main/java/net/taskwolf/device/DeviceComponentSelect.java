@@ -2,6 +2,7 @@ package net.taskwolf.device;
 
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.iterator.AsyncIterator;
+import net.taskwolf.core.user.User;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
@@ -20,10 +21,10 @@ public class DeviceComponentSelect implements InputComponentSelect {
 
   @Override
   public CompletableFuture<List<String>> compile(
-    UUID id, Map<String, String> previousInputs
+    User user, UUID target, Map<String, String> previousInputs
   ) {
     var futureResponse = new CompletableFuture<List<String>>();
-    userDeviceDatabaseTable.findDevicesIfExists(id).thenAccept(deviceIds ->
+    userDeviceDatabaseTable.findDevicesIfExists(target).thenAccept(deviceIds ->
       AsyncIterator.execute(deviceIds, deviceDatabaseTable::findDevice).thenAccept(
         devices -> futureResponse.complete(
           devices.stream().map(device -> new JSONObject(Map.of("identifier",
