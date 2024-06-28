@@ -6,11 +6,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
 import net.taskwolf.core.user.User;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.user.activity.ActivityType;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import net.taskwolf.device.structure.DevicePlatform;
 import net.taskwolf.device.structure.UserDeviceDatabaseTable;
+import net.taskwolf.core.user.activity.UserActivityDatabaseTable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -25,16 +27,19 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public final class DeviceModificationController extends DeviceController {
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
+  private final UserActivityDatabaseTable activityDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
 
   private DeviceModificationController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable,
     UserDeviceDatabaseTable userDeviceDatabaseTable,
+    UserActivityDatabaseTable activityDatabaseTable,
     FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable);
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
+    this.activityDatabaseTable = activityDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
   }
 
@@ -90,6 +95,8 @@ public final class DeviceModificationController extends DeviceController {
     if (platform.isMobile()) {
       firebaseDeviceDatabaseTable.storeDeviceIdentifier(id, firebaseToken);
     }
+    activityDatabaseTable.insertActivity(user.id(), "activity.device.new.title",
+      "activity.device.new.description", ActivityType.DEVICE);
   }
 
   @RequestMapping(path = "/device/organization/add/", method = RequestMethod.POST)
@@ -119,6 +126,8 @@ public final class DeviceModificationController extends DeviceController {
     }
     deviceDatabaseTable().findDevice(deviceId).thenAccept(device ->
       userDeviceDatabaseTable.addDevice(organizationId, device.id()));
+    activityDatabaseTable.insertActivity(user.id(), "activity.device.organization.add.title",
+      "activity.device.organization.add.description", ActivityType.DEVICE);
   }
 
   @RequestMapping(path = "/device/organization/remove/", method = RequestMethod.POST)
@@ -148,6 +157,8 @@ public final class DeviceModificationController extends DeviceController {
     }
     deviceDatabaseTable().findDevice(deviceId).thenAccept(device ->
       userDeviceDatabaseTable.removeDevice(organizationId, device.id()));
+    activityDatabaseTable.insertActivity(user.id(), "activity.device.organization.remove.title",
+      "activity.device.organization.remove.description", ActivityType.DEVICE);
   }
 
   @RequestMapping(path = "/device/language/change/", method = RequestMethod.POST)
@@ -229,6 +240,8 @@ public final class DeviceModificationController extends DeviceController {
     }
     deviceDatabaseTable().deleteDevice(device.id());
     removeDeviceFromUsers(device);
+    activityDatabaseTable.insertActivity(user.id(), "activity.device.delete.title",
+      "activity.device.delete.description", ActivityType.DEVICE);
     return Map.of("success", true);
   }
 
