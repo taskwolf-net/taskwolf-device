@@ -1,6 +1,7 @@
 package net.taskwolf.device;
 
 import com.google.inject.Injector;
+import com.google.inject.name.Names;
 import net.taskwolf.core.account.AccountLink;
 import net.taskwolf.core.action.ActionRepository;
 import net.taskwolf.core.database.DatabaseConnection;
@@ -88,7 +89,9 @@ public final class DeviceModule extends Module {
     socket = DeviceWebSocket.of(
       injector().getInstance(DeviceConfiguration.class).webSocketPort(),
       deviceDatabaseTable, injector().getInstance(DeviceConnectionRepository.class),
-      injector().getInstance(WorkerProxyClient.class), injector().getInstance(Key.class));
+      injector().getInstance(WorkerProxyClient.class),
+      injector().getInstance(com.google.inject.Key.get(java.security.Key.class,
+        Names.named("productKey"))));
     socket.start();
   }
 
