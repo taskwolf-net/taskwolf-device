@@ -4,7 +4,10 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.organization.team.TeamDatabaseTable;
+import net.taskwolf.core.organization.team.TeamTargetDatabaseTable;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.user.UserTargetDatabaseTable;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.structure.Device;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
@@ -21,9 +24,13 @@ import java.util.concurrent.CompletableFuture;
 public final class NotificationController extends DeviceController {
   private NotificationController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
-    DeviceDatabaseTable deviceDatabaseTable
+    DeviceDatabaseTable deviceDatabaseTable,
+    UserTargetDatabaseTable userTargetDatabaseTable,
+    TeamTargetDatabaseTable teamTargetDatabaseTable,
+    TeamDatabaseTable teamDatabaseTable
   ) {
-    super(secretKey, userDatabaseTable, deviceDatabaseTable);
+    super(secretKey, userDatabaseTable, deviceDatabaseTable,
+      userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
   }
 
   @RequestMapping(path = "/device/notification/settings/", method = RequestMethod.POST)

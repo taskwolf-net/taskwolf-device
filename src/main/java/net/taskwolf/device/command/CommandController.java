@@ -4,7 +4,10 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.organization.team.TeamDatabaseTable;
+import net.taskwolf.core.organization.team.TeamTargetDatabaseTable;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.user.UserTargetDatabaseTable;
 import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.distribution.command.packet.outgoing.PacketOutgoingCommandResponse;
@@ -31,10 +34,14 @@ public final class CommandController extends DeviceController {
   private CommandController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable,
+    UserTargetDatabaseTable userTargetDatabaseTable,
+    TeamTargetDatabaseTable teamTargetDatabaseTable,
+    TeamDatabaseTable teamDatabaseTable,
     CommandExecutionDatabaseTable commandExecutionDatabaseTable,
     WorkerProxyClient workerProxyClient
   ) {
-    super(secretKey, userDatabaseTable, deviceDatabaseTable);
+    super(secretKey, userDatabaseTable, deviceDatabaseTable,
+      userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
     this.commandExecutionDatabaseTable = commandExecutionDatabaseTable;
     this.workerProxyClient = workerProxyClient;
   }

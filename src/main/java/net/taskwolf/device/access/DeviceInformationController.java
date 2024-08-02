@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
 import net.taskwolf.core.iterator.AsyncIterator;
 import net.taskwolf.core.organization.OrganizationDatabaseTable;
+import net.taskwolf.core.organization.team.TeamDatabaseTable;
+import net.taskwolf.core.organization.team.TeamTargetDatabaseTable;
 import net.taskwolf.core.user.User;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.core.user.UserTargetDatabaseTable;
@@ -27,19 +29,20 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public final class DeviceInformationController extends DeviceController {
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
-  private final UserTargetDatabaseTable userTargetDatabaseTable;
   private final OrganizationDatabaseTable organizationDatabaseTable;
 
   private DeviceInformationController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable,
-    UserDeviceDatabaseTable userDeviceDatabaseTable,
     UserTargetDatabaseTable userTargetDatabaseTable,
+    TeamTargetDatabaseTable teamTargetDatabaseTable,
+    TeamDatabaseTable teamDatabaseTable,
+    UserDeviceDatabaseTable userDeviceDatabaseTable,
     OrganizationDatabaseTable organizationDatabaseTable
   ) {
-    super(secretKey, userDatabaseTable, deviceDatabaseTable);
+    super(secretKey, userDatabaseTable, deviceDatabaseTable,
+      userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
-    this.userTargetDatabaseTable = userTargetDatabaseTable;
     this.organizationDatabaseTable = organizationDatabaseTable;
   }
 
@@ -51,7 +54,7 @@ public final class DeviceInformationController extends DeviceController {
     var body = TaskwolfRequestBody.of(payload, response);
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     findUser(request).thenApply(user ->
-      userTargetDatabaseTable.findTargetSecured(user.id()).thenAccept(target ->
+      findDeviceTarget(user.id()).thenAccept(target ->
         userDeviceDatabaseTable.findDevices(target).thenAccept(devices ->
           findDevice(target, body.getString("device"), devices)
             .thenAccept(futureResponse::complete))));
@@ -74,7 +77,7 @@ public final class DeviceInformationController extends DeviceController {
   ) {
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     findUser(request).thenApply(user ->
-      userTargetDatabaseTable.findTargetSecured(user.id()).thenAccept(target ->
+      findDeviceTarget(user.id()).thenAccept(target ->
         collectDevices(target).thenAccept(devices -> collectDevicesInformation(
           target, devices).thenApply(futureResponse::complete))));
     return futureResponse;

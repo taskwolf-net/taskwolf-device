@@ -4,7 +4,10 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.organization.team.TeamDatabaseTable;
+import net.taskwolf.core.organization.team.TeamTargetDatabaseTable;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.user.UserTargetDatabaseTable;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.structure.DeviceDatabaseTable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,9 +23,13 @@ import java.util.concurrent.CompletableFuture;
 public final class FileController extends DeviceController {
   private FileController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
-    DeviceDatabaseTable deviceDatabaseTable
+    DeviceDatabaseTable deviceDatabaseTable,
+    UserTargetDatabaseTable userTargetDatabaseTable,
+    TeamTargetDatabaseTable teamTargetDatabaseTable,
+    TeamDatabaseTable teamDatabaseTable
   ) {
-    super(secretKey, userDatabaseTable, deviceDatabaseTable);
+    super(secretKey, userDatabaseTable, deviceDatabaseTable,
+      userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
   }
 
   @RequestMapping(path = "/device/file/settings/", method = RequestMethod.POST)

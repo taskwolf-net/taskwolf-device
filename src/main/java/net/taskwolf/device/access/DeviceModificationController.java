@@ -4,8 +4,11 @@ import com.google.common.hash.Hashing;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.organization.team.TeamDatabaseTable;
+import net.taskwolf.core.organization.team.TeamTargetDatabaseTable;
 import net.taskwolf.core.user.User;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.user.UserTargetDatabaseTable;
 import net.taskwolf.core.user.activity.ActivityType;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
 import net.taskwolf.device.structure.Device;
@@ -33,11 +36,15 @@ public final class DeviceModificationController extends DeviceController {
   private DeviceModificationController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
     DeviceDatabaseTable deviceDatabaseTable,
+    UserTargetDatabaseTable userTargetDatabaseTable,
+    TeamTargetDatabaseTable teamTargetDatabaseTable,
+    TeamDatabaseTable teamDatabaseTable,
     UserDeviceDatabaseTable userDeviceDatabaseTable,
     UserActivityDatabaseTable activityDatabaseTable,
     FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable
   ) {
-    super(secretKey, userDatabaseTable, deviceDatabaseTable);
+    super(secretKey, userDatabaseTable, deviceDatabaseTable,
+      userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
     this.activityDatabaseTable = activityDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
@@ -105,28 +112,19 @@ public final class DeviceModificationController extends DeviceController {
     HttpServletResponse response
   ) {
     var body = TaskwolfRequestBody.of(payload, response);
+    var userId = findUserId(request);
     var deviceId = body.getString("device");
-    var organizationId = body.getUUID("organization");
-    findUser(request).thenAccept(user ->
-      deviceDatabaseTable().deviceExists(deviceId).thenAccept(exists ->
-        addDeviceToOrganization(user, deviceId, organizationId, exists)));
+    performDeviceOrganizationOperation(userId, deviceId,
+      body.getUUID("organization"), body.getUUID("team"), target ->
+      addDeviceToOrganization(userId, deviceId, target), () -> {});
   }
 
   private void addDeviceToOrganization(
-    User user, String deviceId, UUID organizationId, boolean deviceExists
+    UUID userId, String deviceId, UUID targetId
   ) {
-    if (!deviceExists) {
-      return;
-    }
-    if (!user.organizations().contains(organizationId)) {
-      return;
-    }
-    if (user.id().equals(organizationId)) {
-      return;
-    }
     deviceDatabaseTable().findDevice(deviceId).thenAccept(device ->
-      userDeviceDatabaseTable.addDevice(organizationId, device.id()));
-    activityDatabaseTable.insertActivity(user.id(), "activity.device.organization.add.title",
+      userDeviceDatabaseTable.addDevice(targetId, device.id()));
+    activityDatabaseTable.insertActivity(userId, "activity.device.organization.add.title",
       "activity.device.organization.add.description", ActivityType.DEVICE);
   }
 
@@ -136,28 +134,19 @@ public final class DeviceModificationController extends DeviceController {
     HttpServletResponse response
   ) {
     var body = TaskwolfRequestBody.of(payload, response);
+    var userId = findUserId(request);
     var deviceId = body.getString("device");
-    var organizationId = body.getUUID("organization");
-    findUser(request).thenAccept(user ->
-      deviceDatabaseTable().deviceExists(deviceId).thenAccept(exists ->
-        removeDeviceFromOrganization(user, deviceId, organizationId, exists)));
+    performDeviceOrganizationOperation(userId, deviceId,
+      body.getUUID("organization"), body.getUUID("team"), target ->
+        removeDeviceFromOrganization(userId, deviceId, target), () -> {});
   }
 
   private void removeDeviceFromOrganization(
-    User user, String deviceId, UUID organizationId, boolean deviceExists
+    UUID userId, String deviceId, UUID targetId
   ) {
-    if (!deviceExists) {
-      return;
-    }
-    if (!user.organizations().contains(organizationId)) {
-      return;
-    }
-    if (user.id().equals(organizationId)) {
-      return;
-    }
     deviceDatabaseTable().findDevice(deviceId).thenAccept(device ->
-      userDeviceDatabaseTable.removeDevice(organizationId, device.id()));
-    activityDatabaseTable.insertActivity(user.id(), "activity.device.organization.remove.title",
+      userDeviceDatabaseTable.removeDevice(targetId, device.id()));
+    activityDatabaseTable.insertActivity(userId, "activity.device.organization.remove.title",
       "activity.device.organization.remove.description", ActivityType.DEVICE);
   }
 

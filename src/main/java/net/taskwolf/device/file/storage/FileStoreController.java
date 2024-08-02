@@ -4,7 +4,10 @@ import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.organization.team.TeamDatabaseTable;
+import net.taskwolf.core.organization.team.TeamTargetDatabaseTable;
 import net.taskwolf.core.user.UserDatabaseTable;
+import net.taskwolf.core.user.UserTargetDatabaseTable;
 import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.access.DeviceController;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileStorageRedirectRequest;
@@ -38,12 +41,17 @@ public final class FileStoreController extends DeviceController {
 
   private FileStoreController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
-    DeviceDatabaseTable deviceDatabaseTable, @Qualifier("fileStorageDatabaseTable")
+    DeviceDatabaseTable deviceDatabaseTable,
+    UserTargetDatabaseTable userTargetDatabaseTable,
+    TeamTargetDatabaseTable teamTargetDatabaseTable,
+    TeamDatabaseTable teamDatabaseTable,
+    @Qualifier("fileStorageDatabaseTable")
     FileHistoryDatabaseTable fileStorageDatabaseTable,
     WorkerProxyClient workerProxyClient, FileStorageRepository fileStorageRepository,
     FileStorageRedirectRepository fileStorageRedirectRepository
   ) {
-    super(secretKey, userDatabaseTable, deviceDatabaseTable);
+    super(secretKey, userDatabaseTable, deviceDatabaseTable,
+      userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
     this.fileStorageDatabaseTable = fileStorageDatabaseTable;
     this.workerProxyClient = workerProxyClient;
     this.fileStorageRepository = fileStorageRepository;
