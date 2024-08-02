@@ -25,6 +25,7 @@ public class DeviceController extends TaskwolfRestController {
   private final DeviceDatabaseTable deviceDatabaseTable;
   private final UserTargetDatabaseTable userTargetDatabaseTable;
   private final TeamTargetDatabaseTable teamTargetDatabaseTable;
+  @Getter(AccessLevel.PROTECTED)
   private final TeamDatabaseTable teamDatabaseTable;
 
   protected DeviceController(

@@ -4,8 +4,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import net.taskwolf.core.CoreModule;
 import net.taskwolf.core.access.TaskwolfRequestBody;
 import net.taskwolf.core.iterator.AsyncIterator;
+import net.taskwolf.core.organization.Organization;
 import net.taskwolf.core.organization.OrganizationDatabaseTable;
 import net.taskwolf.core.organization.team.TeamDatabaseTable;
 import net.taskwolf.core.organization.team.TeamTargetDatabaseTable;
@@ -30,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 public final class DeviceInformationController extends DeviceController {
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final OrganizationDatabaseTable organizationDatabaseTable;
+  private final CoreModule coreModule;
 
   private DeviceInformationController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
@@ -38,12 +41,13 @@ public final class DeviceInformationController extends DeviceController {
     TeamTargetDatabaseTable teamTargetDatabaseTable,
     TeamDatabaseTable teamDatabaseTable,
     UserDeviceDatabaseTable userDeviceDatabaseTable,
-    OrganizationDatabaseTable organizationDatabaseTable
+    OrganizationDatabaseTable organizationDatabaseTable, CoreModule coreModule
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable,
       userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
     this.organizationDatabaseTable = organizationDatabaseTable;
+    this.coreModule = coreModule;
   }
 
   @RequestMapping(path = "/device/find/", method = RequestMethod.POST)
@@ -129,8 +133,8 @@ public final class DeviceInformationController extends DeviceController {
     return information;
   }
 
-  @RequestMapping(path = "/device/organizations/", method = RequestMethod.POST)
-  public CompletableFuture<Map<String, Object>> findDeviceOrganizations(
+  @RequestMapping(path = "/device/users/", method = RequestMethod.POST)
+  public CompletableFuture<Map<String, Object>> findDeviceUsers(
     HttpServletRequest request, @RequestBody String payload,
     HttpServletResponse response
   ) {
@@ -138,31 +142,55 @@ public final class DeviceInformationController extends DeviceController {
     var deviceId = body.getString("device");
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     findUser(request).thenAccept(user -> performDeviceOperation(user.id(),
-      deviceId, device -> findDeviceOrganizations(user, device)
+      deviceId, device -> findDeviceUsers(user, device)
         .thenAccept(futureResponse::complete),
       () -> futureResponse.complete(Maps.newHashMap())));
     return futureResponse;
   }
 
-  private CompletableFuture<Map<String, Object>> findDeviceOrganizations(
+  private CompletableFuture<Map<String, Object>> findDeviceUsers(
     User user, Device device
   ) {
     var futureResponse = new CompletableFuture<Map<String, Object>>();
     userDeviceDatabaseTable.findUsersOfDevice(device.id()).thenApply(users ->
         users.stream().filter(entry -> !entry.equals(user.id())).toList())
-      .thenAccept(users -> AsyncIterator.execute(users,
-        this::findOrganizationInformation).thenAccept(organizations ->
-          futureResponse.complete(Map.of("organizations", organizations))));
+      .thenAccept(users -> AsyncIterator.execute(users, target ->
+          findUserInformation(user, target))
+        .thenAccept(information -> futureResponse.complete(
+          Map.of("users", information))));
     return futureResponse;
   }
 
-  private CompletableFuture<Map<String, Object>> findOrganizationInformation(
-    UUID organizationId
+  private CompletableFuture<Map<String, Object>> findUserInformation(
+    User user, UUID targetId
+  ) {
+    return organizationDatabaseTable.organizationExists(targetId)
+      .thenCompose(exists -> exists ?
+        findUserInformation(targetId, targetId, coreModule.translate(user,
+          "organization.team.target.global")) :
+        teamDatabaseTable().findTeam(targetId).thenCompose(team ->
+          findUserInformation(team.organizationId(), team.id(), team.name())));
+  }
+
+  private CompletableFuture<Map<String, Object>> findUserInformation(
+    UUID organizationId, UUID teamId, String teamName
   ) {
     return organizationDatabaseTable.findOrganization(organizationId)
       .thenCompose(organization -> userDatabaseTable().findUser(organization.owner())
-        .thenApply(owner -> Map.of("id", organization.id(),
-          "name", organization.name(), "owner", owner.name())));
+        .thenApply(owner -> assemblyUserInformation(organization, owner,
+          teamId, teamName)));
+  }
+
+  private Map<String, Object> assemblyUserInformation(
+    Organization organization, User owner, UUID teamId, String teamName
+  ) {
+    var information = Maps.<String, Object>newHashMap();
+    information.put("organizationId", organization.id());
+    information.put("organizationName", organization.name());
+    information.put("organizationOwner", owner.name());
+    information.put("teamId", teamId);
+    information.put("teamName", teamName);
+    return information;
   }
 
   @RequestMapping(path = "/device/language/find/", method = RequestMethod.POST)
