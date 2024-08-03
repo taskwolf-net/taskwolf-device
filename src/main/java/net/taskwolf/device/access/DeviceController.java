@@ -94,7 +94,7 @@ public class DeviceController extends TaskwolfRestController {
       failResponse.run();
       return;
     }
-    if (organizationId == teamId) {
+    if (organizationId.equals(teamId)) {
       operation.accept(organizationId);
       return;
     }
