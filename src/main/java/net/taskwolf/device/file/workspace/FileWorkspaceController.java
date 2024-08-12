@@ -186,7 +186,7 @@ public final class FileWorkspaceController extends DeviceController {
       return;
     }
     coreModule.triggerWorkflows("device", identifier,
-      "device='" + device.id() + "' AND workspace=" + workspace,
+      "device='" + device.id() + "' AND workspace=" + workspace + " ALLOW FILTERING",
       fileTriggerInformation(device, workspace.path(), filePath, fileName));
   }
 
@@ -247,7 +247,7 @@ public final class FileWorkspaceController extends DeviceController {
       return;
     }
     coreModule.triggerWorkflows("device", identifier,
-      "device='" + device.id() + "' AND workspace=" + workspace,
+      "device='" + device.id() + "' AND workspace=" + workspace + " ALLOW FILTERING",
       folderTriggerInformation(device, workspace.path(), folderPath));
   }
 

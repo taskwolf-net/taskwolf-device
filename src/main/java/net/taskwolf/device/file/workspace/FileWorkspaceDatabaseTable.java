@@ -55,7 +55,8 @@ public final class FileWorkspaceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Boolean> workspaceExists(String deviceId, String path) {
-    return exists("device='" + deviceId + "' AND path='" + path + "'");
+    return exists("device='" + deviceId + "' AND path='" + path +
+      "' ALLOW FILTERING");
   }
 
   public CompletableFuture<FileWorkspace> findWorkspace(UUID workspaceId) {
