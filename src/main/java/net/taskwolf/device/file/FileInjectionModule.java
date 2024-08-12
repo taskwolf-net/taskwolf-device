@@ -17,10 +17,11 @@ public final class FileInjectionModule extends AbstractModule {
   FileHistoryDatabaseTable provideFileStorageDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
   ) {
-    var fileDatabaseTable = FileHistoryDatabaseTable.create(
+    var fileHistoryDatabaseTable = FileHistoryDatabaseTable.create(
       connection, keyspace, "device_file_storage");
-    fileDatabaseTable.createIfNotExists();
-    return fileDatabaseTable;
+    fileHistoryDatabaseTable.createIfNotExists();
+    fileHistoryDatabaseTable.createIndexIfNotExists("device");
+    return fileHistoryDatabaseTable;
   }
 
   @Provides
@@ -29,10 +30,11 @@ public final class FileInjectionModule extends AbstractModule {
   FileHistoryDatabaseTable provideFileInfoDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
   ) {
-    var fileDatabaseTable = FileHistoryDatabaseTable.create(
+    var fileHistoryDatabaseTable = FileHistoryDatabaseTable.create(
       connection, keyspace, "device_file_info");
-    fileDatabaseTable.createIfNotExists();
-    return fileDatabaseTable;
+    fileHistoryDatabaseTable.createIfNotExists();
+    fileHistoryDatabaseTable.createIndexIfNotExists("device");
+    return fileHistoryDatabaseTable;
   }
 
   @Provides
@@ -41,10 +43,11 @@ public final class FileInjectionModule extends AbstractModule {
   FileHistoryDatabaseTable provideFileDeleteDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
   ) {
-    var fileDatabaseTable = FileHistoryDatabaseTable.create(
+    var fileHistoryDatabaseTable = FileHistoryDatabaseTable.create(
       connection, keyspace, "device_file_delete");
-    fileDatabaseTable.createIfNotExists();
-    return fileDatabaseTable;
+    fileHistoryDatabaseTable.createIfNotExists();
+    fileHistoryDatabaseTable.createIndexIfNotExists("device");
+    return fileHistoryDatabaseTable;
   }
 
   @Provides
@@ -76,6 +79,8 @@ public final class FileInjectionModule extends AbstractModule {
     var workspaceDatabaseTable = FileWorkspaceDatabaseTable.create(
       connection, keyspace);
     workspaceDatabaseTable.createIfNotExists();
+    workspaceDatabaseTable.createIndexIfNotExists("device");
+    workspaceDatabaseTable.createIndexIfNotExists("path");
     return workspaceDatabaseTable;
   }
 }

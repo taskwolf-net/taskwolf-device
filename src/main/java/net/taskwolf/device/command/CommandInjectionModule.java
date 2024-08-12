@@ -17,6 +17,7 @@ public final class CommandInjectionModule extends AbstractModule {
     var commandExecutionDatabaseTable = CommandExecutionDatabaseTable.create(
       connection, keyspace);
     commandExecutionDatabaseTable.createIfNotExists();
+    commandExecutionDatabaseTable.createIndexIfNotExists("device");
     return commandExecutionDatabaseTable;
   }
 }

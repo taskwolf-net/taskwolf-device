@@ -54,6 +54,7 @@ public final class DeviceNotificationTrigger implements Trigger {
   @Override
   public void initialize() {
     contentDatabaseTable.createIfNotExists();
+    contentDatabaseTable.createIndexIfNotExists("device");
   }
 
   @Override

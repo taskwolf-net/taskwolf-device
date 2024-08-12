@@ -142,7 +142,7 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Boolean> deviceExists(String machineId, UUID ownerId) {
-    return exists("machine='" + machineId + "' AND owner=" + ownerId + " ALLOW FILTERING");
+    return exists("machine='" + machineId + "' AND owner=" + ownerId);
   }
 
   public CompletableFuture<Device> findDevice(String deviceId) {
@@ -150,12 +150,12 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Device> findDevice(String machineId, UUID ownerId) {
-    return selectRow("machine='" + machineId + "' AND owner=" + ownerId +
-      " ALLOW FILTERING").thenApply(Device::of);
+    return selectRow("machine='" + machineId + "' AND owner=" + ownerId)
+      .thenApply(Device::of);
   }
 
   public CompletableFuture<List<Device>> findDevicesOfOwner(UUID ownerId) {
-    return selectRows("owner=" + ownerId + " ALLOW FILTERING").thenApply(rows ->
-      rows.stream().map(Device::of).toList());
+    return selectRows("owner=" + ownerId)
+      .thenApply(rows -> rows.stream().map(Device::of).toList());
   }
 }

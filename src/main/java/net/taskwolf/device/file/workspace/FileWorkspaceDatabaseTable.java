@@ -55,8 +55,7 @@ public final class FileWorkspaceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Boolean> workspaceExists(String deviceId, String path) {
-    return exists("device='" + deviceId + "' AND path='" + path +
-      "' ALLOW FILTERING");
+    return exists("device='" + deviceId + "' AND path='" + path + "'");
   }
 
   public CompletableFuture<FileWorkspace> findWorkspace(UUID workspaceId) {
@@ -67,7 +66,7 @@ public final class FileWorkspaceDatabaseTable extends DatabaseTable {
   public CompletableFuture<List<FileWorkspace>> findWorkspacesOfDevice(
     String deviceId
   ) {
-    return selectRows("device='" + deviceId + "' ALLOW FILTERING")
+    return selectRows("device='" + deviceId + "'")
       .thenApply(rows -> rows.stream().map(FileWorkspace::of).toList());
   }
 }

@@ -57,6 +57,7 @@ public final class DeviceCommandTrigger implements Trigger {
   @Override
   public void initialize() {
     contentDatabaseTable.createIfNotExists();
+    contentDatabaseTable.createIndexIfNotExists("device");
   }
 
   @Override

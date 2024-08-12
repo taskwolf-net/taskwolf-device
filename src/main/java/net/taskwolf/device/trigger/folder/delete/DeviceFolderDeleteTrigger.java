@@ -59,6 +59,8 @@ public final class DeviceFolderDeleteTrigger implements Trigger {
   @Override
   public void initialize() {
     contentDatabaseTable.createIfNotExists();
+    contentDatabaseTable.createIndexIfNotExists("device");
+    contentDatabaseTable.createIndexIfNotExists("workspace");
   }
 
   @Override

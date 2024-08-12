@@ -55,7 +55,7 @@ public final class FileHistoryDatabaseTable extends DatabaseTable {
   public CompletableFuture<List<FileHistoryEntry>> findEntriesOfDevice(
     String deviceId
   ) {
-    return selectRows("device='" + deviceId + "' ALLOW FILTERING")
+    return selectRows("device='" + deviceId + "'")
       .thenApply(rows -> rows.stream().map(FileHistoryEntry::of).toList());
   }
 }
