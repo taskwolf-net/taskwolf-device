@@ -6,6 +6,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.CoreModule;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.database.DatabaseDirection;
+import net.taskwolf.core.database.DatabaseOrder;
+import net.taskwolf.core.database.DatabasePage;
 import net.taskwolf.core.iterator.AsyncIterator;
 import net.taskwolf.core.organization.Organization;
 import net.taskwolf.core.organization.OrganizationDatabaseTable;
@@ -14,9 +17,7 @@ import net.taskwolf.core.organization.team.TeamTargetDatabaseTable;
 import net.taskwolf.core.user.User;
 import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.core.user.UserTargetDatabaseTable;
-import net.taskwolf.device.structure.Device;
-import net.taskwolf.device.structure.DeviceDatabaseTable;
-import net.taskwolf.device.structure.UserDeviceDatabaseTable;
+import net.taskwolf.device.structure.*;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -56,81 +57,131 @@ public final class DeviceInformationController extends DeviceController {
     HttpServletResponse response
   ) {
     var body = TaskwolfRequestBody.of(payload, response);
+    var deviceId = body.getString("device");
     var futureResponse = new CompletableFuture<Map<String, Object>>();
-    findUser(request).thenApply(user ->
-      findDeviceTarget(user.id()).thenAccept(target ->
-        userDeviceDatabaseTable.findDevices(target).thenAccept(devices ->
-          findDevice(target, body.getString("device"), devices)
+    findUser(request)
+      .thenApply(user -> findDeviceTarget(user.id())
+        .thenAccept(target -> userDeviceDatabaseTable.userHasDevice(target, deviceId)
+          .thenAccept(devices -> findDevice(target, body.getString("device"), devices)
             .thenAccept(futureResponse::complete))));
     return futureResponse;
   }
 
   private CompletableFuture<Map<String, Object>> findDevice(
-    UUID target, String deviceId, List<String> targetDevices
+    UUID target, String deviceId, boolean hasAccess
   ) {
-    if (!targetDevices.contains(deviceId)) {
+    if (!hasAccess) {
       return CompletableFuture.completedFuture(Maps.newHashMap());
     }
     return deviceDatabaseTable().findDevice(deviceId).thenCompose(device ->
       gatherDeviceInformation(target, device));
   }
 
-  @RequestMapping(path = "/devices/selected/", method = RequestMethod.GET)
-  public CompletableFuture<Map<String, Object>> selectedDevices(
-    HttpServletRequest request
+  @RequestMapping(path = "/devices/page/", method = RequestMethod.POST)
+  public CompletableFuture<Map<String, Object>> findDevicePage(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
   ) {
-    var futureResponse = new CompletableFuture<Map<String, Object>>();
-    findUser(request).thenApply(user ->
-      findDeviceTarget(user.id()).thenAccept(target ->
-        collectDevices(target).thenAccept(devices -> collectDevicesInformation(
-          target, devices).thenApply(futureResponse::complete))));
-    return futureResponse;
+    var body = TaskwolfRequestBody.of(payload, response);
+    var targetPage = body.getInt("targetPage");
+    var sortingColumn = body.getString("sorting");
+    var sortingOrder = DatabaseOrder.valueOf(body.getString("order"));
+    var search = body.getString("search");
+    var ownerId = body.has("owner") ? body.getUUID("owner") : null;
+    var platform = body.has("platform") ? body.getString("platform") : null;
+    return findUser(request).thenCompose(user -> findDeviceTarget(user.id())
+      .thenCompose(target -> userDeviceDatabaseTable.findUserDevices(target,
+          targetPage, sortingColumn, sortingOrder, search, ownerId, platform)
+        .thenCompose(result -> collectDeviceInformation(user, result))));
   }
 
-  private CompletableFuture<List<Device>> collectDevices(
-    UUID targetId
+  @RequestMapping(path = "/devices/page/shift/", method = RequestMethod.POST)
+  public CompletableFuture<Map<String, Object>> findPreviousDevicePage(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
   ) {
-    var futureResponse = new CompletableFuture<List<Device>>();
-    userDeviceDatabaseTable.findDevicesIfExists(targetId).thenAccept(deviceIds ->
-      AsyncIterator.execute(deviceIds, deviceDatabaseTable()::findDevice)
-        .thenAccept(futureResponse::complete));
-    return futureResponse;
+    var body = TaskwolfRequestBody.of(payload, response);
+    var pageState = body.getString("pageState");
+    var startingPoint = DatabaseDirection.valueOf(body.getString("startingPoint"));
+    var direction = DatabaseDirection.valueOf(body.getString("direction"));
+    var sortingColumn = body.getString("sorting");
+    var sortingOrder = DatabaseOrder.valueOf(body.getString("order"));
+    var ownerId = body.has("owner") ? body.getUUID("owner") : null;
+    var platform = body.has("platform") ? body.getString("platform") : null;
+    return findUser(request).thenCompose(user -> findDeviceTarget(user.id())
+      .thenCompose(target -> userDeviceDatabaseTable.findUserDevices(target,
+        pageState, startingPoint, direction, sortingColumn, sortingOrder,
+        ownerId, platform))
+      .thenCompose(result -> collectDeviceInformation(user, result)));
   }
 
-  private CompletableFuture<Map<String, Object>> collectDevicesInformation(
-    UUID target, List<Device> devices
+  private CompletableFuture<Map<String, Object>> collectDeviceInformation(
+    User user, DatabasePage<UserDevice> page
   ) {
-    if (devices.isEmpty()) {
+    if (page.content().isEmpty()) {
       return CompletableFuture.completedFuture(Map.of("devices",
-        Lists.newArrayList()));
+        Lists.newArrayList(), "page", page.pageState(), "pageNumber", 0));
     }
     var futureResponse = new CompletableFuture<Map<String, Object>>();
-    AsyncIterator.execute(devices, device ->
-        gatherDeviceInformation(target, device)).thenAccept(
-          information -> futureResponse.complete(Map.of("devices", information)));
+    AsyncIterator.execute(page.content(),
+        device -> gatherDeviceInformation(user.id(), device))
+      .thenApply(information -> reconstructDeviceOrder(page, information))
+      .thenAccept(information -> futureResponse.complete(Map.of("devices",
+        information, "page", page.pageState(), "pageNumber", page.pageNumber())));
     return futureResponse;
+  }
+
+  private List<Map<String, Object>> reconstructDeviceOrder(
+    DatabasePage<UserDevice> page, List<Map<String, Object>> information
+  ) {
+    var result = Lists.<Map<String, Object>>newArrayList();
+    for (var device : page.content()) {
+      for (var entry : information) {
+        if (device.deviceId().toString().equals(entry.get("id").toString())) {
+          result.add(entry);
+          break;
+        }
+      }
+    }
+    return result;
   }
 
   private CompletableFuture<Map<String, Object>> gatherDeviceInformation(
     UUID target, Device device
   ) {
+    return gatherDeviceInformation(target, device.id(), device.ownerId(),
+      device.information(), device.platform());
+  }
+
+  private CompletableFuture<Map<String, Object>> gatherDeviceInformation(
+    UUID target, UserDevice device
+  ) {
+    return gatherDeviceInformation(target, device.deviceId(), device.ownerId(),
+      device.information(), device.platform());
+  }
+
+  private CompletableFuture<Map<String, Object>> gatherDeviceInformation(
+    UUID target, String deviceId, UUID ownerId, String information,
+    DevicePlatform platform
+  ) {
     var futureResponse = new CompletableFuture<Map<String, Object>>();
-    userDatabaseTable().findUserIfExists(device.ownerId())
+    userDatabaseTable().findUserIfExists(ownerId)
       .thenAccept(owner -> futureResponse.complete(
-        assemblyDeviceInformation(target, device, owner)));
+        assemblyDeviceInformation(target, deviceId, information, platform, owner)));
     return futureResponse;
   }
 
   private Map<String, Object> assemblyDeviceInformation(
-    UUID target, Device device, User owner
+    UUID target, String deviceId, String information, DevicePlatform platform,
+    User owner
   ) {
-    var information = Maps.<String, Object>newHashMap();
-    information.put("id", device.id());
-    information.put("information", device.information());
-    information.put("owner", owner.name());
-    information.put("ownDevice", target.equals(device.ownerId()));
-    information.put("platform", device.platform());
-    return information;
+    var result = Maps.<String, Object>newHashMap();
+    result.put("id", deviceId);
+    result.put("information", information);
+    result.put("owner", owner.name());
+    result.put("ownDevice", target.equals(owner.id()));
+    result.put("platform", platform.toString());
+    return result;
   }
 
   @RequestMapping(path = "/device/users/", method = RequestMethod.POST)

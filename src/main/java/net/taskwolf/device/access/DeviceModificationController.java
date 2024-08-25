@@ -11,10 +11,7 @@ import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.core.user.UserTargetDatabaseTable;
 import net.taskwolf.core.user.activity.ActivityType;
 import net.taskwolf.device.firebase.FirebaseDeviceDatabaseTable;
-import net.taskwolf.device.structure.Device;
-import net.taskwolf.device.structure.DeviceDatabaseTable;
-import net.taskwolf.device.structure.DevicePlatform;
-import net.taskwolf.device.structure.UserDeviceDatabaseTable;
+import net.taskwolf.device.structure.*;
 import net.taskwolf.core.user.activity.UserActivityDatabaseTable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -98,7 +95,8 @@ public final class DeviceModificationController extends DeviceController {
     deviceDatabaseTable().insertDevice(id, deviceId, user.id(), information,
       platform.toString(), user.language(), true, true, true, true, true, true,
       true, true, true);
-    userDeviceDatabaseTable.addDevice(user.id(), id);
+    userDeviceDatabaseTable.insertUserDevice(UserDevice.create(user.id(), id,
+      user.id(), information, platform));
     if (platform.isMobile()) {
       firebaseDeviceDatabaseTable.storeDeviceIdentifier(id, firebaseToken);
     }
@@ -123,7 +121,8 @@ public final class DeviceModificationController extends DeviceController {
     UUID userId, String deviceId, UUID targetId
   ) {
     deviceDatabaseTable().findDevice(deviceId).thenAccept(device ->
-      userDeviceDatabaseTable.addDevice(targetId, device.id()));
+      userDeviceDatabaseTable.insertUserDevice(targetId, device.id(),
+        device.ownerId(), device.information(), device.platform()));
     activityDatabaseTable.insertActivity(userId, "activity.device.organization.add.title",
       "activity.device.organization.add.description", ActivityType.DEVICE);
   }
@@ -145,7 +144,7 @@ public final class DeviceModificationController extends DeviceController {
     UUID userId, String deviceId, UUID targetId
   ) {
     deviceDatabaseTable().findDevice(deviceId).thenAccept(device ->
-      userDeviceDatabaseTable.removeDevice(targetId, device.id()));
+      userDeviceDatabaseTable.deleteUserDevice(targetId, device.id()));
     activityDatabaseTable.insertActivity(userId, "activity.device.organization.remove.title",
       "activity.device.organization.remove.description", ActivityType.DEVICE);
   }
@@ -201,8 +200,7 @@ public final class DeviceModificationController extends DeviceController {
     if (!target.passwordHash().equals(hashPassword(newAccountPassword))) {
       return Map.of("success", false, "errorCode", 1002);
     }
-    removeDeviceFromUsers(device).thenAccept(value ->
-      userDeviceDatabaseTable.addDevice(target.id(), device.id()));
+    removeDeviceFromUsers(device);
     deviceDatabaseTable().changeDeviceOwner(device, target.id());
     return Map.of("success", true);
   }
@@ -234,10 +232,10 @@ public final class DeviceModificationController extends DeviceController {
     return Map.of("success", true);
   }
 
-  private CompletableFuture<Void> removeDeviceFromUsers(Device device) {
-    return userDeviceDatabaseTable.findUsersOfDevice(device.id())
+  private void removeDeviceFromUsers(Device device) {
+    userDeviceDatabaseTable.findUsersOfDevice(device.id())
       .thenAccept(users -> users.forEach(target ->
-        userDeviceDatabaseTable.removeDevice(target, device.id())));
+        userDeviceDatabaseTable.deleteUserDevice(target, device.id())));
   }
 
   private String hashPassword(String password) {

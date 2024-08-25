@@ -79,7 +79,7 @@ public final class DeviceModule extends Module {
       injector().getInstance(DeviceContextInitializer.class));
     var deviceDatabaseTable = injector().getInstance(DeviceDatabaseTable.class);
     accountLink = DeviceAccountLink.create();
-    deviceComponentSelect = DeviceComponentSelect.create(deviceDatabaseTable,
+    deviceComponentSelect = DeviceComponentSelect.create(
       injector().getInstance(UserDeviceDatabaseTable.class));
     fileWorkspaceComponentSelect = FileWorkspaceComponentSelect.create(
       injector().getInstance(FileWorkspaceDatabaseTable.class));

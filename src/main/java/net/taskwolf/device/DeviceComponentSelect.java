@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor(staticName = "create")
 public class DeviceComponentSelect implements InputComponentSelect {
-  private final DeviceDatabaseTable deviceDatabaseTable;
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
 
   @Override
@@ -24,12 +23,10 @@ public class DeviceComponentSelect implements InputComponentSelect {
     User user, UUID target, Map<String, String> previousInputs
   ) {
     var futureResponse = new CompletableFuture<List<String>>();
-    userDeviceDatabaseTable.findDevicesIfExists(target).thenAccept(deviceIds ->
-      AsyncIterator.execute(deviceIds, deviceDatabaseTable::findDevice).thenAccept(
-        devices -> futureResponse.complete(
-          devices.stream().map(device -> new JSONObject(Map.of("identifier",
-              device.id(), "name", device.information())).toString())
-            .collect(Collectors.toList()))));
+    userDeviceDatabaseTable.findAllUserDevices(target).thenAccept(devices ->
+      devices.stream().map(device -> new JSONObject(Map.of("identifier",
+          device.deviceId(), "name", device.information())).toString())
+        .collect(Collectors.toList()));
     return futureResponse;
   }
 }
