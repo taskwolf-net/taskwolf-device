@@ -25,7 +25,7 @@ public final class UserDeviceDatabaseTable extends DatabaseTable {
     columns.add(DatabaseColumn.create("platform", DatabaseDataType.TEXT));
     var table = new UserDeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
     table.createIfNotExists();
-    table.createIndexIfNotExists("id");
+    table.createIndexIfNotExists("device");
     table.createIndexIfNotExists("information",
       "'org.apache.cassandra.index.sasi.SASIIndex' WITH OPTIONS = " +
         "{'mode': 'CONTAINS', 'analyzer_class': " +
