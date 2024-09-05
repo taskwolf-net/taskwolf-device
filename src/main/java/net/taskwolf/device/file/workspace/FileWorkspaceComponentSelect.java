@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.user.User;
 import net.taskwolf.core.workflow.component.input.InputComponentSelect;
-import org.json.JSONObject;
+import net.taskwolf.core.workflow.component.input.InputComponentSelectEntry;
 
 import java.util.List;
 import java.util.Map;
@@ -17,17 +17,16 @@ public class FileWorkspaceComponentSelect implements InputComponentSelect {
   private final FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable;
 
   @Override
-  public CompletableFuture<List<String>> compile(
+  public CompletableFuture<List<InputComponentSelectEntry>> compile(
     User user, UUID target, Map<String, String> previousInputs
   ) {
     if (!previousInputs.containsKey("device")) {
       return CompletableFuture.completedFuture(Lists.newArrayList());
     }
-    var futureResponse = new CompletableFuture<List<String>>();
-    fileWorkspaceDatabaseTable.findWorkspacesOfDevice(previousInputs.get("device"))
-      .thenAccept(workspaces -> futureResponse.complete(workspaces.stream()
-        .map(workspace -> new JSONObject(Map.of("identifier", workspace.id(),
-          "name", workspace.path())).toString()).collect(Collectors.toList())));
-    return futureResponse;
+    return fileWorkspaceDatabaseTable.findWorkspacesOfDevice(previousInputs.get("device"))
+      .thenApply(workspaces -> workspaces.stream()
+        .map(workspace -> InputComponentSelectEntry.create(workspace.id().toString(),
+          workspace.path()))
+        .collect(Collectors.toList()));
   }
 }
