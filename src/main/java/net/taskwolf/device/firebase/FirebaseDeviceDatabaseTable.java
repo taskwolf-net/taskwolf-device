@@ -27,7 +27,7 @@ public final class FirebaseDeviceDatabaseTable extends DatabaseTable {
   }
 
   public void storeDeviceIdentifier(String deviceId, String identifier) {
-    exists(DatabaseCell.create(deviceId)).thenAccept(exists ->
+    exists(deviceId).thenAccept(exists ->
       storeDeviceIdentifier(deviceId, identifier, exists));
   }
 
@@ -39,24 +39,27 @@ public final class FirebaseDeviceDatabaseTable extends DatabaseTable {
     }
   }
 
-  private CompletableFuture<Void> insertDeviceIdentifier(String deviceId, String identifier) {
+  private CompletableFuture<Void> insertDeviceIdentifier(
+    String deviceId, String identifier
+  ) {
     return insert(DatabaseRow.of(deviceId, identifier));
   }
 
-  private CompletableFuture<Void> updateDeviceIdentifier(String deviceId, String identifier) {
-    return update(DatabaseCell.create(deviceId), DatabaseRow.of(deviceId, identifier));
+  private CompletableFuture<Void> updateDeviceIdentifier(
+    String deviceId, String identifier
+  ) {
+    return update(deviceId, DatabaseRow.of(deviceId, identifier));
   }
 
   public void deleteDeviceIdentifier(String deviceId) {
-    delete(DatabaseCell.create(deviceId));
+    delete(deviceId);
   }
 
   public CompletableFuture<Boolean> deviceIdentifierExists(String deviceId) {
-    return exists(DatabaseCell.create(deviceId));
+    return exists(deviceId);
   }
 
   public CompletableFuture<String> findDeviceIdentifier(String deviceId) {
-    return selectRow(DatabaseCell.create(deviceId))
-      .thenApply(row -> row.findCell(1).stringValue());
+    return selectRow(deviceId).thenApply(row -> row.findCell(1).stringValue());
   }
 }

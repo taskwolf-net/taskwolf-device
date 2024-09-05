@@ -2,6 +2,7 @@ package net.taskwolf.device.command;
 
 import com.google.common.collect.Lists;
 import net.taskwolf.core.database.*;
+import net.taskwolf.core.database.condition.DatabaseCondition;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,7 +48,7 @@ public final class CommandExecutionDatabaseTable extends DatabaseTable {
   }
 
   public void deleteCommandExecution(UUID executionId) {
-    delete(DatabaseCell.create(executionId));
+    delete(executionId);
   }
 
   public CompletableFuture<UUID> generateAvailableExecutionId() {
@@ -60,18 +61,17 @@ public final class CommandExecutionDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Boolean> executionExists(UUID executionId) {
-    return exists(DatabaseCell.create(executionId));
+    return exists(executionId);
   }
 
   public CompletableFuture<CommandExecution> findExecution(UUID executionId) {
-    return selectRow(DatabaseCell.create(executionId))
-      .thenApply(CommandExecution::of);
+    return selectRow(executionId).thenApply(CommandExecution::of);
   }
 
   public CompletableFuture<List<CommandExecution>> findExecutionsOfDevice(
     String deviceId
   ) {
-    return selectRows("device='" + deviceId + "'")
+    return selectRows(DatabaseCondition.of("device", deviceId))
       .thenApply(rows -> rows.stream().map(CommandExecution::of).toList());
   }
 }

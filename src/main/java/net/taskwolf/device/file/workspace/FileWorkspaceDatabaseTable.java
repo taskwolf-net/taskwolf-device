@@ -2,6 +2,7 @@ package net.taskwolf.device.file.workspace;
 
 import com.google.common.collect.Lists;
 import net.taskwolf.core.database.*;
+import net.taskwolf.core.database.condition.DatabaseCondition;
 import net.taskwolf.device.file.FileHistoryEntry;
 
 import java.util.List;
@@ -38,7 +39,7 @@ public final class FileWorkspaceDatabaseTable extends DatabaseTable {
   }
 
   public void deleteWorkspace(UUID workspaceId) {
-    delete(DatabaseCell.create(workspaceId));
+    delete(workspaceId);
   }
 
   public CompletableFuture<UUID> generateAvailableWorkspaceId() {
@@ -51,23 +52,22 @@ public final class FileWorkspaceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Boolean> workspaceExists(UUID workspaceId) {
-    return exists(DatabaseCell.create(workspaceId));
+    return exists(workspaceId);
   }
 
   public CompletableFuture<Boolean> workspaceExists(String deviceId, String path) {
-    return exists("device='" + deviceId + "' AND path='" + path +
-      "' ALLOW FILTERING");
+    return exists(DatabaseCondition.of("device", deviceId, "path", path,
+      DatabaseCondition.Filtering.ALLOWED));
   }
 
   public CompletableFuture<FileWorkspace> findWorkspace(UUID workspaceId) {
-    return selectRow(DatabaseCell.create(workspaceId))
-      .thenApply(FileWorkspace::of);
+    return selectRow(workspaceId).thenApply(FileWorkspace::of);
   }
 
   public CompletableFuture<List<FileWorkspace>> findWorkspacesOfDevice(
     String deviceId
   ) {
-    return selectRows("device='" + deviceId + "'")
+    return selectRows(DatabaseCondition.of("device", deviceId))
       .thenApply(rows -> rows.stream().map(FileWorkspace::of).toList());
   }
 }

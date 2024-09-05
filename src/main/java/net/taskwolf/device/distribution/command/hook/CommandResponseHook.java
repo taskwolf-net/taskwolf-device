@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.CoreModule;
 import net.taskwolf.core.action.ActionResult;
+import net.taskwolf.core.database.condition.DatabaseCondition;
 import net.taskwolf.core.event.EventHook;
 import net.taskwolf.core.event.Hook;
 import net.taskwolf.device.command.CommandExecutionDatabaseTable;
@@ -63,7 +64,7 @@ public final class CommandResponseHook implements Hook {
 
   private void triggerWorkflows(Device device, Map<String, Object> information) {
     coreModule.triggerWorkflows("device", "device-command-trigger",
-      "device='" + device.id() + "'", information);
+      DatabaseCondition.of("device", device.id()), information);
   }
 
   private String formatTime(long time) {

@@ -2,8 +2,11 @@ package net.taskwolf.device.structure;
 
 import com.google.common.collect.Lists;
 import net.taskwolf.core.database.*;
-import net.taskwolf.core.workflow.WorkflowDatabaseTable;
-import net.taskwolf.core.workflow.WorkflowEntry;
+import net.taskwolf.core.database.condition.DatabaseComparison;
+import net.taskwolf.core.database.condition.DatabaseCondition;
+import net.taskwolf.core.database.paging.DatabaseDirection;
+import net.taskwolf.core.database.paging.DatabaseOrder;
+import net.taskwolf.core.database.paging.DatabasePage;
 
 import java.util.List;
 import java.util.UUID;
@@ -67,15 +70,15 @@ public final class UserDeviceDatabaseTable extends DatabaseTable {
   }
 
   public void deleteUserDevice(UUID targetId, String deviceId) {
-    delete("target=" + targetId + " AND device='" + deviceId + "'");
+    delete(DatabaseCondition.of("target", targetId, "device", deviceId));
   }
 
   public CompletableFuture<Boolean> userDeviceExists(UUID targetId) {
-    return exists("target=" + targetId);
+    return exists(DatabaseCondition.of("target", targetId));
   }
 
   public CompletableFuture<Boolean> userHasDevice(UUID targetId, String deviceId) {
-    return exists("target=" + targetId + " AND device='" + deviceId + "'");
+    return exists(DatabaseCondition.of("target", targetId, "device", deviceId));
   }
 
   private static final int PAGE_SIZE = 5;
@@ -85,13 +88,15 @@ public final class UserDeviceDatabaseTable extends DatabaseTable {
     String search, UUID ownerId, String platform
   ) {
     if (!search.isEmpty()) {
-      return selectRows("target=" + targetId + " AND information LIKE '%" + search +
-        "%' LIMIT " + PAGE_SIZE)
+      var condition = DatabaseCondition.of(
+        DatabaseComparison.create("target", targetId),
+        DatabaseComparison.create("information", "%" + search + "%",
+          DatabaseComparison.Type.LIKE));
+      return selectRows(condition, PAGE_SIZE)
         .thenApply(rows -> createDevicePage(DatabasePage.create(rows, "", 1), this));
     }
     var view = findTargetView(sortingColumn);
-    return view.selectPage(DatabaseCell.create(targetId),
-        createDevicesConditions(ownerId, platform),
+    return view.selectPage(targetId, createDevicesConditions(ownerId, platform),
         sortingOrder, PAGE_SIZE, targetPage)
       .thenApply(page -> createDevicePage(page, view));
   }
@@ -102,8 +107,7 @@ public final class UserDeviceDatabaseTable extends DatabaseTable {
     UUID ownerId, String platform
   ) {
     var view = findTargetView(sortingColumn);
-    return view.shiftPage(DatabaseCell.create(targetId),
-        createDevicesConditions(ownerId, platform),
+    return view.shiftPage(targetId, createDevicesConditions(ownerId, platform),
         sortingOrder, PAGE_SIZE, pageState, startingPoint, direction)
       .thenApply(page -> createDevicePage(page, view));
   }
@@ -119,17 +123,17 @@ public final class UserDeviceDatabaseTable extends DatabaseTable {
     return null;
   }
 
-  private List<String> createDevicesConditions(
+  private DatabaseCondition createDevicesConditions(
     UUID ownerId, String platform
   ) {
-    var conditions = Lists.<String>newArrayList();
+    var comparisons = Lists.<DatabaseComparison>newArrayList();
     if (ownerId != null) {
-      conditions.add("owner = " + ownerId);
+      comparisons.add(DatabaseComparison.create("owner", ownerId));
     }
     if (platform != null) {
-      conditions.add("platform = '" + platform + "'");
+      comparisons.add(DatabaseComparison.create("platform", platform));
     }
-    return conditions;
+    return DatabaseCondition.create(comparisons);
   }
 
   private DatabasePage<UserDevice> createDevicePage(
@@ -141,18 +145,18 @@ public final class UserDeviceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<List<UserDevice>> findAllUserDevices(UUID targetId) {
-    return selectRows("target=" + targetId).thenApply(rows ->
+    return selectRows(DatabaseCondition.of("target", targetId)).thenApply(rows ->
       rows.stream().map(row -> UserDevice.of(row, this)).toList());
   }
 
   public CompletableFuture<List<UUID>> findUsersOfDevice(String deviceId) {
-    return selectRows("device='" + deviceId + "'")
+    return selectRows(DatabaseCondition.of("device", deviceId))
       .thenApply(rows -> rows.stream().map(row ->
         row.findCell(0).uuidValue()).toList());
   }
 
   public CompletableFuture<List<UserDevice>> findUserDevicesById(String deviceId) {
-    return selectRows("device='" + deviceId + "'").thenApply(rows ->
+    return selectRows(DatabaseCondition.of("device", deviceId)).thenApply(rows ->
       rows.stream().map(row -> UserDevice.of(row, this)).toList());
   }
 }

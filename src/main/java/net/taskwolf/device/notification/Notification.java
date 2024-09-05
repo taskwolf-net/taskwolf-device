@@ -2,6 +2,7 @@ package net.taskwolf.device.notification;
 
 import lombok.RequiredArgsConstructor;
 import net.taskwolf.core.CoreModule;
+import net.taskwolf.core.database.condition.DatabaseCondition;
 import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.DeviceConfiguration;
 import net.taskwolf.device.distribution.notification.packet.outgoing.PacketOutgoingNotificationRequest;
@@ -53,7 +54,7 @@ public final class Notification {
 
   private void triggerWorkflows() {
     coreModule.triggerWorkflows("device", "device-notification-trigger",
-      "device='" + device.id() + "'", triggerInformation());
+      DatabaseCondition.of("device", device.id()), triggerInformation());
   }
 
   private Map<String, Object> triggerInformation() {

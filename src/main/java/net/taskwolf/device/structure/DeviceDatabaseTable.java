@@ -2,6 +2,7 @@ package net.taskwolf.device.structure;
 
 import com.google.common.collect.Lists;
 import net.taskwolf.core.database.*;
+import net.taskwolf.core.database.condition.DatabaseCondition;
 
 import java.util.List;
 import java.util.Random;
@@ -105,17 +106,16 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   }
 
   private void updateDevice(Device device) {
-    update(DatabaseCell.create(device.id()), DatabaseRow.of(device.id(),
-      device.machineId(), device.ownerId(), device.information(),
-      device.platform().toString(), device.language(),
-      device.workflowNotifications(), device.errorNotifications(),
-      device.newsNotifications(), device.commandExecution(),
-      device.fileStorage(), device.fileInfo(), device.fileDelete(),
-      device.folderCreate(), device.folderDelete()));
+    update(device.id(), DatabaseRow.of(device.id(), device.machineId(),
+      device.ownerId(), device.information(), device.platform().toString(),
+      device.language(), device.workflowNotifications(),
+      device.errorNotifications(), device.newsNotifications(),
+      device.commandExecution(), device.fileStorage(), device.fileInfo(),
+      device.fileDelete(), device.folderCreate(), device.folderDelete()));
   }
 
   public void deleteDevice(String deviceId) {
-    delete(DatabaseCell.create(deviceId));
+    delete(deviceId);
   }
 
   public CompletableFuture<String> generateAvailableDeviceId() {
@@ -138,25 +138,25 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Boolean> deviceExists(String deviceId) {
-    return exists(DatabaseCell.create(deviceId));
+    return exists(deviceId);
   }
 
   public CompletableFuture<Boolean> deviceExists(String machineId, UUID ownerId) {
-    return exists("owner=" + ownerId + " AND machine='" + machineId +
-      "' ALLOW FILTERING");
+    return exists(DatabaseCondition.of("owner", ownerId, "machine", machineId,
+      DatabaseCondition.Filtering.ALLOWED));
   }
 
   public CompletableFuture<Device> findDevice(String deviceId) {
-    return selectRow(DatabaseCell.create(deviceId)).thenApply(Device::of);
+    return selectRow(deviceId).thenApply(Device::of);
   }
 
   public CompletableFuture<Device> findDevice(String machineId, UUID ownerId) {
-    return selectRow("owner=" + ownerId + " AND machine='" + machineId +
-      "' ALLOW FILTERING").thenApply(Device::of);
+    return selectRow(DatabaseCondition.of("owner", ownerId, "machine", machineId,
+      DatabaseCondition.Filtering.ALLOWED)).thenApply(Device::of);
   }
 
   public CompletableFuture<List<Device>> findDevicesOfOwner(UUID ownerId) {
-    return selectRows("owner=" + ownerId)
+    return selectRows(DatabaseCondition.of("owner", ownerId))
       .thenApply(rows -> rows.stream().map(Device::of).toList());
   }
 }

@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import net.taskwolf.core.CoreModule;
 import net.taskwolf.core.access.TaskwolfRequestBody;
+import net.taskwolf.core.database.condition.DatabaseCondition;
 import net.taskwolf.core.organization.team.TeamDatabaseTable;
 import net.taskwolf.core.organization.team.TeamTargetDatabaseTable;
 import net.taskwolf.core.user.UserDatabaseTable;
@@ -186,7 +187,8 @@ public final class FileWorkspaceController extends DeviceController {
       return;
     }
     coreModule.triggerWorkflows("device", identifier,
-      "device='" + device.id() + "' AND workspace=" + workspace + " ALLOW FILTERING",
+      DatabaseCondition.of("device", device.id(), "workspace", workspace,
+        DatabaseCondition.Filtering.ALLOWED),
       fileTriggerInformation(device, workspace.path(), filePath, fileName));
   }
 
@@ -247,7 +249,8 @@ public final class FileWorkspaceController extends DeviceController {
       return;
     }
     coreModule.triggerWorkflows("device", identifier,
-      "device='" + device.id() + "' AND workspace=" + workspace + " ALLOW FILTERING",
+      DatabaseCondition.of("device", device.id(), "workspace", workspace,
+        DatabaseCondition.Filtering.ALLOWED),
       folderTriggerInformation(device, workspace.path(), folderPath));
   }
 

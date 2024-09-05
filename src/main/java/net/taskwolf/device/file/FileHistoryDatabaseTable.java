@@ -2,6 +2,7 @@ package net.taskwolf.device.file;
 
 import com.google.common.collect.Lists;
 import net.taskwolf.core.database.*;
+import net.taskwolf.core.database.condition.DatabaseCondition;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,22 +41,21 @@ public final class FileHistoryDatabaseTable extends DatabaseTable {
   }
 
   public void deleteEntry(UUID entryId) {
-    delete(DatabaseCell.create(entryId));
+    delete(entryId);
   }
 
   public CompletableFuture<Boolean> entryExists(UUID entryId) {
-    return exists(DatabaseCell.create(entryId));
+    return exists(entryId);
   }
 
   public CompletableFuture<FileHistoryEntry> findEntry(UUID entryId) {
-    return selectRow(DatabaseCell.create(entryId))
-      .thenApply(FileHistoryEntry::of);
+    return selectRow(entryId).thenApply(FileHistoryEntry::of);
   }
 
   public CompletableFuture<List<FileHistoryEntry>> findEntriesOfDevice(
     String deviceId
   ) {
-    return selectRows("device='" + deviceId + "'")
+    return selectRows(DatabaseCondition.of("device", deviceId))
       .thenApply(rows -> rows.stream().map(FileHistoryEntry::of).toList());
   }
 }
