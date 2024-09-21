@@ -4,6 +4,7 @@ import com.dulno.device.file.FilePath;
 import com.dulno.device.firebase.FirebaseRequest;
 import com.dulno.device.structure.Device;
 import com.dulno.device.structure.DeviceDatabaseTable;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.AccessLevel;
@@ -26,6 +27,7 @@ public final class FileStorageRequestHook implements Hook {
   private final DeviceDatabaseTable deviceDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
+  private final GoogleCredentials googleCredentials;
   private final FileStorageRepository fileStorageRepository;
 
   @EventHook
@@ -52,8 +54,8 @@ public final class FileStorageRequestHook implements Hook {
 
   private void storeMobileFile(String deviceId, Map<String, Object> data) {
     firebaseDeviceDatabaseTable.findDeviceIdentifier(deviceId)
-      .thenAccept(identifier -> FirebaseRequest.create(deviceConfiguration,
-        identifier).send("data", data));
+      .thenAcceptAsync(identifier -> FirebaseRequest.create(deviceConfiguration,
+        googleCredentials, identifier).send("data", data));
   }
 }
 

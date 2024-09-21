@@ -1,5 +1,6 @@
 package com.dulno.device.firebase;
 
+import com.google.auth.oauth2.GoogleCredentials;
 import lombok.RequiredArgsConstructor;
 import com.dulno.device.DeviceConfiguration;
 import org.json.JSONObject;
@@ -13,18 +14,28 @@ import java.util.Map;
 @RequiredArgsConstructor(staticName = "create")
 public final class FirebaseRequest {
   private final DeviceConfiguration deviceConfiguration;
+  private final GoogleCredentials googleCredentials;
   private final String receiver;
 
-  private static final String FIREBASE_URL = "https://fcm.googleapis.com/fcm/send";
+  private static final String FIREBASE_URL =
+    "https://fcm.googleapis.com/v1/projects/%s/messages:send";
 
   public void send(String key, Map<String, Object> payload) {
-    var requestBody = new JSONObject(Map.of("to", receiver, key, payload));
-    var requestBuilder = HttpRequest.newBuilder().uri(URI.create(FIREBASE_URL))
-      .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
-      .setHeader("Content-Type", "application/json")
-      .setHeader("Authorization", "key=" + deviceConfiguration.firebaseToken())
-      .build();
-    HttpClient.newHttpClient().sendAsync(requestBuilder,
-      HttpResponse.BodyHandlers.ofByteArray());
+    try {
+      googleCredentials.refreshIfExpired();
+      var token = googleCredentials.getAccessToken().getTokenValue();
+      var url = String.format(FIREBASE_URL, deviceConfiguration.firebaseProjectId());
+      var requestBody = new JSONObject(Map.of("message",
+        Map.of("token", receiver, key, payload)));
+      var requestBuilder = HttpRequest.newBuilder().uri(URI.create(url))
+        .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
+        .setHeader("Content-Type", "application/json")
+        .setHeader("Authorization", "Bearer " + token)
+        .build();
+      HttpClient.newHttpClient().sendAsync(requestBuilder,
+        HttpResponse.BodyHandlers.ofByteArray());
+    } catch (Exception exception) {
+      exception.printStackTrace();
+    }
   }
 }

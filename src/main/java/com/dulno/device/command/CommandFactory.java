@@ -1,6 +1,7 @@
 package com.dulno.device.command;
 
 import com.dulno.device.structure.Device;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.AccessLevel;
@@ -16,11 +17,12 @@ public final class CommandFactory {
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
+  private final GoogleCredentials googleCredentials;
   private final WorkerProxyClient workerProxyClient;
 
   public Command createCommand(Device device, String command) {
     return Command.create(commandRequestRepository, commandExecutionDatabaseTable,
-      firebaseDeviceDatabaseTable, deviceConfiguration, workerProxyClient, device,
-      command);
+      firebaseDeviceDatabaseTable, deviceConfiguration, googleCredentials,
+      workerProxyClient, device, command);
   }
 }

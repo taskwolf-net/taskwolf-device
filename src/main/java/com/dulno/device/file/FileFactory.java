@@ -1,6 +1,7 @@
 package com.dulno.device.file;
 
 import com.dulno.device.structure.Device;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -18,6 +19,7 @@ public final class FileFactory {
   private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
+  private final GoogleCredentials googleCredentials;
   private final WorkerProxyClient workerProxyClient;
 
   @Inject
@@ -29,7 +31,8 @@ public final class FileFactory {
     @Named("fileInfoDatabaseTable") FileHistoryDatabaseTable fileInfoDatabaseTable,
     @Named("fileDeleteDatabaseTable") FileHistoryDatabaseTable fileDeleteDatabaseTable,
     FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable,
-    DeviceConfiguration deviceConfiguration, WorkerProxyClient workerProxyClient
+    DeviceConfiguration deviceConfiguration, GoogleCredentials googleCredentials,
+    WorkerProxyClient workerProxyClient
   ) {
     this.fileStorageRepository = fileStorageRepository;
     this.fileInfoRepository = fileInfoRepository;
@@ -39,6 +42,7 @@ public final class FileFactory {
     this.fileDeleteDatabaseTable = fileDeleteDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
     this.deviceConfiguration = deviceConfiguration;
+    this.googleCredentials = googleCredentials;
     this.workerProxyClient = workerProxyClient;
   }
 
@@ -46,6 +50,6 @@ public final class FileFactory {
     return File.create(fileStorageRepository, fileInfoRepository,
       fileDeleteRepository, fileStorageDatabaseTable, fileInfoDatabaseTable,
       fileDeleteDatabaseTable, firebaseDeviceDatabaseTable, deviceConfiguration,
-      workerProxyClient, device, path, name);
+      googleCredentials, workerProxyClient, device, path, name);
   }
 }

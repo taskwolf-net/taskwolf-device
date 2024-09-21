@@ -2,6 +2,7 @@ package com.dulno.device.notification;
 
 import com.dulno.device.firebase.FirebaseRequest;
 import com.dulno.device.structure.Device;
+import com.google.auth.oauth2.GoogleCredentials;
 import lombok.RequiredArgsConstructor;
 import com.dulno.core.CoreModule;
 import com.dulno.core.database.condition.DatabaseCondition;
@@ -17,6 +18,7 @@ import java.util.UUID;
 public final class Notification {
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
+  private final GoogleCredentials googleCredentials;
   private final WorkerProxyClient workerProxyClient;
   private final CoreModule coreModule;
   private final Device device;
@@ -34,12 +36,12 @@ public final class Notification {
 
   private void publishMobileNotification() {
     firebaseDeviceDatabaseTable.findDeviceIdentifier(device.id())
-      .thenAccept(this::publishMobileNotification);
+      .thenAcceptAsync(this::publishMobileNotification);
   }
 
   private void publishMobileNotification(String identifier) {
-    FirebaseRequest.create(deviceConfiguration, identifier).send("notification",
-      Map.of("title", title, "body", body));
+    FirebaseRequest.create(deviceConfiguration, googleCredentials, identifier)
+      .send("notification", Map.of("title", title, "body", body));
   }
 
   private void publishDesktopNotification() {

@@ -2,6 +2,7 @@ package com.dulno.device.file;
 
 import com.dulno.device.firebase.FirebaseRequest;
 import com.dulno.device.structure.Device;
+import com.google.auth.oauth2.GoogleCredentials;
 import lombok.RequiredArgsConstructor;
 import com.dulno.core.action.ActionResult;
 import com.dulno.core.worker.client.WorkerProxyClient;
@@ -25,6 +26,7 @@ public final class File {
   private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final DeviceConfiguration deviceConfiguration;
+  private final GoogleCredentials googleCredentials;
   private final WorkerProxyClient workerProxyClient;
   private final Device device;
   private final String path;
@@ -62,12 +64,13 @@ public final class File {
 
   private void findMobileFileInfo(UUID infoId) {
     firebaseDeviceDatabaseTable.findDeviceIdentifier(device.id())
-      .thenAccept(identifier -> findMobileFileInfo(infoId, identifier));
+      .thenAcceptAsync(identifier -> findMobileFileInfo(infoId, identifier));
   }
 
   private void findMobileFileInfo(UUID infoId, String identifier) {
-    FirebaseRequest.create(deviceConfiguration, identifier).send("data",
-      Map.of("infoId", infoId, "filePath", FilePath.of(path, name).compound()));
+    FirebaseRequest.create(deviceConfiguration, googleCredentials, identifier)
+      .send("data", Map.of("infoId", infoId, "filePath",
+        FilePath.of(path, name).compound()));
   }
 
   private void findDesktopFileInfo(UUID infoId) {
@@ -93,12 +96,13 @@ public final class File {
 
   private void deleteMobileFile(UUID deleteId) {
     firebaseDeviceDatabaseTable.findDeviceIdentifier(device.id())
-      .thenAccept(identifier -> deleteMobileFile(deleteId, identifier));
+      .thenAcceptAsync(identifier -> deleteMobileFile(deleteId, identifier));
   }
 
   private void deleteMobileFile(UUID deleteId, String identifier) {
-    FirebaseRequest.create(deviceConfiguration, identifier).send("data",
-      Map.of("deleteId", deleteId, "filePath", FilePath.of(path, name).compound()));
+    FirebaseRequest.create(deviceConfiguration, googleCredentials, identifier)
+      .send("data", Map.of("deleteId", deleteId, "filePath",
+        FilePath.of(path, name).compound()));
   }
 
   private void deleteDesktopFile(UUID deleteId) {
