@@ -1,5 +1,8 @@
 package com.dulno.device.access;
 
+import com.dulno.device.command.CommandExecutionDatabaseTable;
+import com.dulno.device.file.FileHistoryDatabaseTable;
+import com.dulno.device.file.workspace.FileWorkspaceDatabaseTable;
 import com.dulno.device.structure.*;
 import com.google.common.hash.Hashing;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,8 +15,8 @@ import com.dulno.core.user.UserDatabaseTable;
 import com.dulno.core.user.UserTargetDatabaseTable;
 import com.dulno.core.user.activity.ActivityType;
 import com.dulno.device.firebase.FirebaseDeviceDatabaseTable;
-import com.dulno.device.structure.*;
 import com.dulno.core.user.activity.UserActivityDatabaseTable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -30,6 +33,11 @@ public final class DeviceModificationController extends DeviceController {
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final UserActivityDatabaseTable activityDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
+  private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
+  private final FileHistoryDatabaseTable fileStorageDatabaseTable;
+  private final FileHistoryDatabaseTable fileInfoDatabaseTable;
+  private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
+  private final FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable;
 
   private DeviceModificationController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
@@ -39,13 +47,26 @@ public final class DeviceModificationController extends DeviceController {
     TeamDatabaseTable teamDatabaseTable,
     UserDeviceDatabaseTable userDeviceDatabaseTable,
     UserActivityDatabaseTable activityDatabaseTable,
-    FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable
+    FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable,
+    CommandExecutionDatabaseTable commandExecutionDatabaseTable,
+    @Qualifier("fileStorageDatabaseTable")
+    FileHistoryDatabaseTable fileStorageDatabaseTable,
+    @Qualifier("fileInfoDatabaseTable")
+    FileHistoryDatabaseTable fileInfoDatabaseTable,
+    @Qualifier("fileDeleteDatabaseTable")
+    FileHistoryDatabaseTable fileDeleteDatabaseTable,
+    FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable,
       userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
     this.activityDatabaseTable = activityDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
+    this.commandExecutionDatabaseTable = commandExecutionDatabaseTable;
+    this.fileStorageDatabaseTable = fileStorageDatabaseTable;
+    this.fileInfoDatabaseTable = fileInfoDatabaseTable;
+    this.fileDeleteDatabaseTable = fileDeleteDatabaseTable;
+    this.fileWorkspaceDatabaseTable = fileWorkspaceDatabaseTable;
   }
 
   @RequestMapping(path = "/device/login/", method = RequestMethod.POST)
@@ -226,11 +247,30 @@ public final class DeviceModificationController extends DeviceController {
     if (!user.passwordHash().equals(hashPassword(password))) {
       return Map.of("success", false);
     }
-    deviceDatabaseTable().deleteDevice(device.id());
-    removeDeviceFromUsers(device);
+    deleteDevice(device);
     activityDatabaseTable.insertActivity(user.id(), "activity.device.delete.title",
       "activity.device.delete.description", ActivityType.DEVICE);
     return Map.of("success", true);
+  }
+
+  public void deleteDevice(Device device) {
+    deviceDatabaseTable().deleteDevice(device.id());
+    removeDeviceFromUsers(device);
+    firebaseDeviceDatabaseTable.deleteDeviceIdentifier(device.id());
+    commandExecutionDatabaseTable.findExecutionsOfDevice(device.id())
+      .thenAccept(executions -> executions.forEach(execution ->
+        commandExecutionDatabaseTable.deleteCommandExecution(execution.id())));
+    deleteFileHistory(fileStorageDatabaseTable, device.id());
+    deleteFileHistory(fileInfoDatabaseTable, device.id());
+    deleteFileHistory(fileDeleteDatabaseTable, device.id());
+    fileWorkspaceDatabaseTable.findWorkspacesOfDevice(device.id())
+      .thenAccept(workspaces -> workspaces.forEach(workspace ->
+        fileWorkspaceDatabaseTable.deleteWorkspace(workspace.id())));
+  }
+
+  private void deleteFileHistory(FileHistoryDatabaseTable table, String deviceId) {
+    table.findEntriesOfDevice(deviceId).thenAccept(entries ->
+      entries.forEach(entry -> table.deleteEntry(entry.id())));
   }
 
   private void removeDeviceFromUsers(Device device) {
