@@ -48,9 +48,8 @@ public final class FileDeleteResponseHook implements Hook {
       request.device().id(), request.path(), request.name(), time);
   }
 
-
   private Map<String, Object> buildInformation(
-          Device device, String filePath, String fileName
+    Device device, String filePath, String fileName
   ) {
     var information = device.composition();
     information.put("filePath", filePath);

@@ -35,10 +35,10 @@ public final class Command {
   ) {
     commandRequestRepository.registerCommandRequest(CommandRequest.create(
       commandId, device, command, futureResponse));
+    workerProxyClient.sendPacket(new PacketOutgoingCommandRequest(commandId,
+      device.id(), device.platform(), command));
     if (device.platform().isMobile()) {
       executeMobileCommand(commandId);
-    } else {
-      executeDesktopCommand(commandId);
     }
   }
 
@@ -50,10 +50,5 @@ public final class Command {
   private void executeMobileCommand(UUID commandId, String identifier) {
     FirebaseRequest.create(deviceConfiguration, googleCredentials, identifier)
       .send("data", Map.of("commandId", commandId, "command", command));
-  }
-
-  private void executeDesktopCommand(UUID commandId) {
-    workerProxyClient.sendPacket(new PacketOutgoingCommandRequest(commandId,
-      device.id(), command));
   }
 }

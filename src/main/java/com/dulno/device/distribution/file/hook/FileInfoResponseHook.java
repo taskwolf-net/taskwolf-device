@@ -49,7 +49,7 @@ public final class FileInfoResponseHook implements Hook {
   }
 
   private Map<String, Object> buildInformation(
-          Device device, String filePath, String fileName, byte[] fileContent
+    Device device, String filePath, String fileName, byte[] fileContent
   ) {
     var information = device.composition();
     information.put("filePath", filePath);

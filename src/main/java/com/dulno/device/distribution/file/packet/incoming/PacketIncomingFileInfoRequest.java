@@ -1,5 +1,6 @@
 package com.dulno.device.distribution.file.packet.incoming;
 
+import com.dulno.device.structure.DevicePlatform;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import com.dulno.core.packet.PacketBuffer;
@@ -12,6 +13,7 @@ import java.util.UUID;
 public final class PacketIncomingFileInfoRequest extends PacketIncoming {
   private UUID infoId;
   private String deviceId;
+  private DevicePlatform devicePlatform;
   private String filePath;
   private String fileName;
 
@@ -23,6 +25,7 @@ public final class PacketIncomingFileInfoRequest extends PacketIncoming {
   public void read(PacketBuffer buffer) throws Exception {
     infoId = buffer.readUUID();
     deviceId = buffer.readString();
+    devicePlatform = DevicePlatform.valueOf(buffer.readString());
     filePath = buffer.readString();
     fileName = buffer.readString();
   }

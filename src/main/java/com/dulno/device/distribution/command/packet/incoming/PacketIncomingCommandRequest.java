@@ -1,5 +1,6 @@
 package com.dulno.device.distribution.command.packet.incoming;
 
+import com.dulno.device.structure.DevicePlatform;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import com.dulno.core.packet.PacketBuffer;
@@ -12,6 +13,7 @@ import java.util.UUID;
 public final class PacketIncomingCommandRequest extends PacketIncoming {
   private UUID commandId;
   private String deviceId;
+  private DevicePlatform devicePlatform;
   private String command;
 
   public PacketIncomingCommandRequest() {
@@ -22,6 +24,7 @@ public final class PacketIncomingCommandRequest extends PacketIncoming {
   public void read(PacketBuffer buffer) throws Exception {
     commandId = buffer.readUUID();
     deviceId = buffer.readString();
+    devicePlatform = DevicePlatform.valueOf(buffer.readString());
     command = buffer.readString();
   }
 }

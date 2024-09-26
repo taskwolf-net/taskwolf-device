@@ -43,7 +43,21 @@ public final class File {
     fileStorageRepository.registerFileRequest(FileRequest.create(storeId,
       device, path, name, futureResponse));
     workerProxyClient.sendPacket(new PacketOutgoingFileStorageRequest(storeId,
-      device.id(), path, name, content));
+      device.id(), device.platform(), path, name, content));
+    if (device.platform().isMobile()) {
+      storeMobileFile(storeId);
+    }
+  }
+
+  private void storeMobileFile(UUID storeId) {
+    firebaseDeviceDatabaseTable.findDeviceIdentifier(device.id())
+      .thenAcceptAsync(identifier -> storeMobileFile(storeId, identifier));
+  }
+
+  private void storeMobileFile(UUID storeId, String identifier) {
+    FirebaseRequest.create(deviceConfiguration, googleCredentials, identifier)
+      .send("data", Map.of("storeId", storeId, "filePath",
+        FilePath.of(path, name).compound()));
   }
 
   public void info(CompletableFuture<ActionResult> futureResponse) {
@@ -55,10 +69,10 @@ public final class File {
   ) {
     fileInfoRepository.registerFileRequest(FileRequest.create(infoId,
       device, path, name, futureResponse));
+    workerProxyClient.sendPacket(new PacketOutgoingFileInfoRequest(infoId,
+      device.id(), device.platform(), path, name));
     if (device.platform().isMobile()) {
       findMobileFileInfo(infoId);
-    } else {
-      findDesktopFileInfo(infoId);
     }
   }
 
@@ -73,11 +87,6 @@ public final class File {
         FilePath.of(path, name).compound()));
   }
 
-  private void findDesktopFileInfo(UUID infoId) {
-    workerProxyClient.sendPacket(new PacketOutgoingFileInfoRequest(infoId,
-      device.id(), path, name));
-  }
-
   public void delete(CompletableFuture<ActionResult> futureResponse) {
     generateAvailableRequestId().thenAccept(id -> delete(futureResponse, id));
   }
@@ -87,10 +96,10 @@ public final class File {
   ) {
     fileDeleteRepository.registerFileRequest(FileRequest.create(deleteId,
       device, path, name, futureResponse));
+    workerProxyClient.sendPacket(new PacketOutgoingFileDeleteRequest(deleteId,
+      device.id(), device.platform(), path, name));
     if (device.platform().isMobile()) {
       deleteMobileFile(deleteId);
-    } else {
-      deleteDesktopFile(deleteId);
     }
   }
 
@@ -103,11 +112,6 @@ public final class File {
     FirebaseRequest.create(deviceConfiguration, googleCredentials, identifier)
       .send("data", Map.of("deleteId", deleteId, "filePath",
         FilePath.of(path, name).compound()));
-  }
-
-  private void deleteDesktopFile(UUID deleteId) {
-    workerProxyClient.sendPacket(new PacketOutgoingFileDeleteRequest(deleteId,
-      device.id(), path, name));
   }
 
   public CompletableFuture<UUID> generateAvailableRequestId() {

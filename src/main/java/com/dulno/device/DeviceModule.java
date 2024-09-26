@@ -130,7 +130,7 @@ public final class DeviceModule extends Module {
   private void registerCommandPacketEvents(PacketEventRepository repository) {
     repository.registerEvent(PacketIncomingCommandRequest.class,
       (client, packet) -> WorkerCommandRequestEvent.create(packet.commandId(),
-        packet.deviceId(), packet.command()));
+        packet.deviceId(), packet.devicePlatform(), packet.command()));
     repository.registerEvent(PacketIncomingCommandResponse.class,
       (client, packet) -> WorkerCommandResponseEvent.create(packet.commandId(),
         packet.delivered(), packet.output(), packet.errorMessage(),
@@ -140,8 +140,8 @@ public final class DeviceModule extends Module {
   private void registerFilePacketEvents(PacketEventRepository repository) {
     repository.registerEvent(PacketIncomingFileStorageRequest.class,
       (client, packet) -> WorkerFileStorageRequestEvent.create(packet.storageId(),
-        packet.deviceId(), packet.filePath(), packet.fileName(),
-        packet.content()));
+        packet.deviceId(), packet.devicePlatform(), packet.filePath(),
+        packet.fileName(), packet.content()));
     repository.registerEvent(PacketIncomingFileStorageResponse.class,
       (client, packet) -> WorkerFileStorageResponseEvent.create(packet.storageId(),
         packet.success()));
@@ -150,13 +150,15 @@ public final class DeviceModule extends Module {
         packet.storageId(), packet.redirectUrl()));
     repository.registerEvent(PacketIncomingFileInfoRequest.class,
       (client, packet) -> WorkerFileInfoRequestEvent.create(packet.infoId(),
-        packet.deviceId(), packet.filePath(), packet.fileName()));
+        packet.deviceId(), packet.devicePlatform(), packet.filePath(),
+        packet.fileName()));
     repository.registerEvent(PacketIncomingFileInfoResponse.class,
       (client, packet) -> WorkerFileInfoResponseEvent.create(packet.infoId(),
         packet.content(), packet.success()));
     repository.registerEvent(PacketIncomingFileDeleteRequest.class,
       (client, packet) -> WorkerFileDeleteRequestEvent.create(packet.deleteId(),
-        packet.deviceId(), packet.filePath(), packet.fileName()));
+        packet.deviceId(), packet.devicePlatform(), packet.filePath(),
+        packet.fileName()));
     repository.registerEvent(PacketIncomingFileDeleteResponse.class,
       (client, packet) -> WorkerFileDeleteResponseEvent.create(packet.deleteId(),
         packet.success()));
