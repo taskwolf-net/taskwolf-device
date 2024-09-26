@@ -1,5 +1,6 @@
 package com.dulno.device.file;
 
+import com.dulno.device.file.storage.FileStorageRepository;
 import com.dulno.device.firebase.FirebaseRequest;
 import com.dulno.device.structure.Device;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor(staticName = "create")
 public final class File {
   private final FileRequestRepository fileStorageRepository;
+  private final FileStorageRepository fileStorageContentRepository;
   private final FileRequestRepository fileInfoRepository;
   private final FileRequestRepository fileDeleteRepository;
   private final FileHistoryDatabaseTable fileStorageDatabaseTable;
@@ -42,8 +44,9 @@ public final class File {
   ) {
     fileStorageRepository.registerFileRequest(FileRequest.create(storeId,
       device, path, name, futureResponse));
+    fileStorageContentRepository.registerFileContent(storeId, content);
     workerProxyClient.sendPacket(new PacketOutgoingFileStorageRequest(storeId,
-      device.id(), device.platform(), path, name, content));
+      device.id(), device.platform(), path, name));
     if (device.platform().isMobile()) {
       storeMobileFile(storeId);
     }

@@ -17,5 +17,4 @@ public final class WorkerFileStorageRequestEvent extends Event {
   private final DevicePlatform devicePlatform;
   private final String filePath;
   private final String fileName;
-  private final byte[] content;
 }

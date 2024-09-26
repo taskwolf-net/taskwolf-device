@@ -16,7 +16,6 @@ public final class PacketIncomingFileStorageRequest extends PacketIncoming {
   private DevicePlatform devicePlatform;
   private String filePath;
   private String fileName;
-  private byte[] content;
 
   public PacketIncomingFileStorageRequest() {
     super(0x26);
@@ -29,7 +28,5 @@ public final class PacketIncomingFileStorageRequest extends PacketIncoming {
     devicePlatform = DevicePlatform.valueOf(buffer.readString());
     filePath = buffer.readString();
     fileName = buffer.readString();
-    content = new byte[buffer.readVarInt()];
-    buffer.raw().readBytes(content);
   }
 }

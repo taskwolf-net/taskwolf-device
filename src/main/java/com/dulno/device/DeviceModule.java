@@ -141,7 +141,7 @@ public final class DeviceModule extends Module {
     repository.registerEvent(PacketIncomingFileStorageRequest.class,
       (client, packet) -> WorkerFileStorageRequestEvent.create(packet.storageId(),
         packet.deviceId(), packet.devicePlatform(), packet.filePath(),
-        packet.fileName(), packet.content()));
+        packet.fileName()));
     repository.registerEvent(PacketIncomingFileStorageResponse.class,
       (client, packet) -> WorkerFileStorageResponseEvent.create(packet.storageId(),
         packet.success()));
