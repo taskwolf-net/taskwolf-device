@@ -1,11 +1,13 @@
 package com.dulno.device.file.info;
 
+import com.dulno.core.action.ActionResult;
 import com.dulno.device.access.DeviceController;
-import com.dulno.device.file.FileHistoryDatabaseTable;
-import com.dulno.device.file.FilePath;
+import com.dulno.device.distribution.file.packet.outgoing.PacketOutgoingFileInfoResponse;
+import com.dulno.device.file.*;
 import com.dulno.device.structure.Device;
 import com.dulno.device.structure.DeviceDatabaseTable;
 import com.google.common.collect.Maps;
+import com.google.inject.name.Named;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.dulno.core.access.DulnoRequestBody;
@@ -14,9 +16,7 @@ import com.dulno.core.organization.team.TeamTargetDatabaseTable;
 import com.dulno.core.user.UserDatabaseTable;
 import com.dulno.core.user.UserTargetDatabaseTable;
 import com.dulno.core.worker.client.WorkerProxyClient;
-import com.dulno.device.distribution.file.packet.outgoing.PacketOutgoingFileInfoResponse;
-import com.dulno.device.file.FileHistoryEntry;
-import org.apache.tomcat.util.codec.binary.Base64;
+import com.dulno.device.distribution.file.packet.outgoing.PacketOutgoingFileInfoRedirectRequest;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +34,8 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public final class FileInfoController extends DeviceController {
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
+  private final FileRequestRepository fileInfoRepository;
+  private final FileInfoRedirectRepository fileInfoRedirectRepository;
   private final WorkerProxyClient workerProxyClient;
 
   private FileInfoController(
@@ -44,11 +46,15 @@ public final class FileInfoController extends DeviceController {
     TeamDatabaseTable teamDatabaseTable,
     @Qualifier("fileInfoDatabaseTable")
     FileHistoryDatabaseTable fileInfoDatabaseTable,
+    @Named("fileInfoRequestRepository") FileRequestRepository fileInfoRepository,
+    FileInfoRedirectRepository fileInfoRedirectRepository,
     WorkerProxyClient workerProxyClient
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable,
       userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
     this.fileInfoDatabaseTable = fileInfoDatabaseTable;
+    this.fileInfoRepository = fileInfoRepository;
+    this.fileInfoRedirectRepository = fileInfoRedirectRepository;
     this.workerProxyClient = workerProxyClient;
   }
 
@@ -111,16 +117,44 @@ public final class FileInfoController extends DeviceController {
     HttpServletResponse response
   ) {
     var body = DulnoRequestBody.of(payload, response);
-    performDeviceOperation(findUserId(request), body.getString("device"),
-      device -> deviceFileInfoResponse(body.getUUID("info"),
-        Base64.decodeBase64(body.getString("content"))), () -> {});
+    var deviceId = body.getString("device");
+    performDeviceOperation(findUserId(request), deviceId,
+      device -> deviceFileInfoResponse(deviceId, body.getUUID("info"),
+        findApiKey(request), body.getString("content")), () -> {});
   }
 
   private void deviceFileInfoResponse(
-    UUID infoId, byte[] content
+    String deviceId, UUID infoId, String apiKey, String content
   ) {
-    workerProxyClient.sendPacket(new PacketOutgoingFileInfoResponse(infoId,
-      content, true));
+    var request = fileInfoRepository.findFileRequest(infoId);
+    if (request.isEmpty()) {
+      fileInfoRedirectRepository.registerInfoRedirect(deviceId, infoId,
+        apiKey, content);
+      workerProxyClient.sendPacket(
+        new PacketOutgoingFileInfoRedirectRequest(infoId));
+      return;
+    }
+    workerProxyClient.sendPacket(new PacketOutgoingFileInfoResponse(infoId, true));
+    completeInfoRequest(request.get(), content);
+  }
+
+  private void completeInfoRequest(FileRequest request, String content) {
+    long time = System.currentTimeMillis();
+    request.futureResult().complete(ActionResult.success(buildInformation(
+      request.device(), request.path(), request.name(), content)));
+    fileInfoRepository.unregisterFileRequest(request);
+    fileInfoDatabaseTable.insertEntry(request.id(),
+      request.device().id(), request.path(), request.name(), time);
+  }
+
+  private Map<String, Object> buildInformation(
+    Device device, String filePath, String fileName, String fileContent
+  ) {
+    var information = device.composition();
+    information.put("filePath", filePath);
+    information.put("fileName", fileName);
+    information.put("fileContent", fileContent);
+    return information;
   }
 
   private String formatTime(long time) {

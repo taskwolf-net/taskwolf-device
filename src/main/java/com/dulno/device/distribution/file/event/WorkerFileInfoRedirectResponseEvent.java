@@ -1,16 +1,16 @@
 package com.dulno.device.distribution.file.event;
 
+import com.dulno.core.event.Event;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
-import com.dulno.core.event.Event;
 
 import java.util.UUID;
 
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor(staticName = "create")
-public final class WorkerFileInfoResponseEvent extends Event {
+public final class WorkerFileInfoRedirectResponseEvent extends Event {
   private final UUID infoId;
-  private final boolean success;
+  private final String redirectUrl;
 }

@@ -9,17 +9,15 @@ import java.util.UUID;
 
 @Getter
 @Accessors(fluent = true)
-public final class PacketIncomingFileInfoResponse extends PacketIncoming {
+public final class PacketIncomingFileInfoRedirectRequest extends PacketIncoming {
   private UUID infoId;
-  private boolean success;
 
-  public PacketIncomingFileInfoResponse() {
-    super(0x29);
+  public PacketIncomingFileInfoRedirectRequest() {
+    super(0x40);
   }
 
   @Override
   public void read(PacketBuffer buffer) throws Exception {
     infoId = buffer.readUUID();
-    success = buffer.raw().readBoolean();
   }
 }

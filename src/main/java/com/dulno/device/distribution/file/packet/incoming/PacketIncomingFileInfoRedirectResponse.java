@@ -1,25 +1,25 @@
 package com.dulno.device.distribution.file.packet.incoming;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import com.dulno.core.packet.PacketBuffer;
 import com.dulno.core.worker.packet.incoming.PacketIncoming;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 import java.util.UUID;
 
 @Getter
 @Accessors(fluent = true)
-public final class PacketIncomingFileInfoResponse extends PacketIncoming {
+public final class PacketIncomingFileInfoRedirectResponse extends PacketIncoming {
   private UUID infoId;
-  private boolean success;
+  private String redirectUrl;
 
-  public PacketIncomingFileInfoResponse() {
-    super(0x29);
+  public PacketIncomingFileInfoRedirectResponse() {
+    super(0x41);
   }
 
   @Override
   public void read(PacketBuffer buffer) throws Exception {
     infoId = buffer.readUUID();
-    success = buffer.raw().readBoolean();
+    redirectUrl = buffer.readString();
   }
 }

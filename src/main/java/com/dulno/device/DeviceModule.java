@@ -41,9 +41,6 @@ import com.dulno.device.distribution.command.hook.CommandResponseHook;
 import com.dulno.device.distribution.command.packet.incoming.PacketIncomingCommandRequest;
 import com.dulno.device.distribution.command.packet.incoming.PacketIncomingCommandResponse;
 import com.dulno.device.distribution.device.packet.outgoing.PacketOutgoingDeviceLogout;
-import com.dulno.device.distribution.file.event.*;
-import com.dulno.device.distribution.file.hook.*;
-import com.dulno.device.distribution.file.packet.incoming.*;
 import com.dulno.device.distribution.notification.event.WorkerNotificationRequestEvent;
 import com.dulno.device.distribution.notification.event.WorkerNotificationResponseEvent;
 import com.dulno.device.distribution.notification.hook.NotificationRequestHook;
@@ -107,6 +104,7 @@ public final class DeviceModule extends Module {
     packetRegistry.registerPacket(PacketIncomingFileStorageRedirectResponse.class);
     packetRegistry.registerPacket(PacketIncomingFileInfoRequest.class);
     packetRegistry.registerPacket(PacketIncomingFileInfoResponse.class);
+    packetRegistry.registerPacket(PacketIncomingFileInfoRedirectResponse.class);
     packetRegistry.registerPacket(PacketIncomingFileDeleteRequest.class);
     packetRegistry.registerPacket(PacketIncomingFileDeleteResponse.class);
   }
@@ -154,7 +152,10 @@ public final class DeviceModule extends Module {
         packet.fileName()));
     repository.registerEvent(PacketIncomingFileInfoResponse.class,
       (client, packet) -> WorkerFileInfoResponseEvent.create(packet.infoId(),
-        packet.content(), packet.success()));
+        packet.success()));
+    repository.registerEvent(PacketIncomingFileInfoRedirectResponse.class,
+      (client, packet) -> WorkerFileInfoRedirectResponseEvent.create(
+        packet.infoId(), packet.redirectUrl()));
     repository.registerEvent(PacketIncomingFileDeleteRequest.class,
       (client, packet) -> WorkerFileDeleteRequestEvent.create(packet.deleteId(),
         packet.deviceId(), packet.devicePlatform(), packet.filePath(),
@@ -175,6 +176,7 @@ public final class DeviceModule extends Module {
     hookRegistry.register(injector().getInstance(FileStorageRedirectResponseHook.class));
     hookRegistry.register(injector().getInstance(FileInfoRequestHook.class));
     hookRegistry.register(injector().getInstance(FileInfoResponseHook.class));
+    hookRegistry.register(injector().getInstance(FileInfoRedirectResponseHook.class));
     hookRegistry.register(injector().getInstance(FileDeleteRequestHook.class));
     hookRegistry.register(injector().getInstance(FileDeleteResponseHook.class));
   }

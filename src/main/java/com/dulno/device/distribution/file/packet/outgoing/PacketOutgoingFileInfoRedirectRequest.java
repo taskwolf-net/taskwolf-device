@@ -5,19 +5,16 @@ import com.dulno.core.worker.packet.outgoing.PacketOutgoing;
 
 import java.util.UUID;
 
-public final class PacketOutgoingFileInfoResponse extends PacketOutgoing {
+public final class PacketOutgoingFileInfoRedirectRequest extends PacketOutgoing {
   private final UUID infoId;
-  private final boolean success;
 
-  public PacketOutgoingFileInfoResponse(UUID infoId, boolean success) {
-    super(0x29);
+  public PacketOutgoingFileInfoRedirectRequest(UUID infoId) {
+    super(0x40);
     this.infoId = infoId;
-    this.success = success;
   }
 
   @Override
   public void write(PacketBuffer buffer) throws Exception {
     buffer.writeUUID(infoId);
-    buffer.raw().writeBoolean(success);
   }
 }
