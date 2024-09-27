@@ -1,5 +1,7 @@
 package com.dulno.device;
 
+import com.dulno.device.file.FileRequestRepository;
+import com.dulno.device.file.info.FileInfoRedirectRepository;
 import com.dulno.device.file.storage.FileStorageRedirectRepository;
 import com.dulno.device.structure.DeviceDatabaseTable;
 import com.google.inject.Inject;
@@ -29,6 +31,8 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
   private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FileStorageRepository fileStorageRepository;
   private final FileStorageRedirectRepository fileStorageRedirectRepository;
+  private final FileRequestRepository fileInfoRequestRepository;
+  private final FileInfoRedirectRepository fileInfoRedirectRepository;
   private final FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable;
 
   @Inject
@@ -44,6 +48,8 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     @Named("fileDeleteDatabaseTable") FileHistoryDatabaseTable fileDeleteDatabaseTable,
     FileStorageRepository fileStorageRepository,
     FileStorageRedirectRepository fileStorageRedirectRepository,
+    @Named("fileInfoRequestRepository") FileRequestRepository fileInfoRequestRepository,
+    FileInfoRedirectRepository fileInfoRedirectRepository,
     FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable
   ) {
     this.deviceDatabaseTable = deviceDatabaseTable;
@@ -57,6 +63,8 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     this.fileDeleteDatabaseTable = fileDeleteDatabaseTable;
     this.fileStorageRepository = fileStorageRepository;
     this.fileStorageRedirectRepository = fileStorageRedirectRepository;
+    this.fileInfoRequestRepository = fileInfoRequestRepository;
+    this.fileInfoRedirectRepository = fileInfoRedirectRepository;
     this.fileWorkspaceDatabaseTable = fileWorkspaceDatabaseTable;
   }
 
@@ -71,9 +79,11 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     beanFactory.registerSingleton("commandRequestRepository", commandRequestRepository);
     beanFactory.registerSingleton("fileStorageDatabaseTable", fileStorageDatabaseTable);
     beanFactory.registerSingleton("fileInfoDatabaseTable", fileInfoDatabaseTable);
+    beanFactory.registerSingleton("fileDeleteDatabaseTable", fileDeleteDatabaseTable);
     beanFactory.registerSingleton("fileStorageRepository", fileStorageRepository);
     beanFactory.registerSingleton("fileStorageRedirectRepository", fileStorageRedirectRepository);
-    beanFactory.registerSingleton("fileDeleteDatabaseTable", fileDeleteDatabaseTable);
+    beanFactory.registerSingleton("fileInfoRequestRepository", fileInfoRequestRepository);
+    beanFactory.registerSingleton("fileInfoRedirectRepository", fileInfoRedirectRepository);
     beanFactory.registerSingleton("fileWorkspaceDatabaseTable", fileWorkspaceDatabaseTable);
   }
 }

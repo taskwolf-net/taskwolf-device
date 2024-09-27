@@ -7,7 +7,6 @@ import com.dulno.device.file.*;
 import com.dulno.device.structure.Device;
 import com.dulno.device.structure.DeviceDatabaseTable;
 import com.google.common.collect.Maps;
-import com.google.inject.name.Named;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.dulno.core.access.DulnoRequestBody;
@@ -46,7 +45,7 @@ public final class FileInfoController extends DeviceController {
     TeamDatabaseTable teamDatabaseTable,
     @Qualifier("fileInfoDatabaseTable")
     FileHistoryDatabaseTable fileInfoDatabaseTable,
-    @Named("fileInfoRequestRepository") FileRequestRepository fileInfoRepository,
+    @Qualifier("fileInfoRequestRepository") FileRequestRepository fileInfoRepository,
     FileInfoRedirectRepository fileInfoRedirectRepository,
     WorkerProxyClient workerProxyClient
   ) {
@@ -118,9 +117,10 @@ public final class FileInfoController extends DeviceController {
   ) {
     var body = DulnoRequestBody.of(payload, response);
     var deviceId = body.getString("device");
+    var apiKey = findApiKey(request);
     performDeviceOperation(findUserId(request), deviceId,
       device -> deviceFileInfoResponse(deviceId, body.getUUID("info"),
-        findApiKey(request), body.getString("content")), () -> {});
+        apiKey, body.getString("content")), () -> {});
   }
 
   private void deviceFileInfoResponse(
