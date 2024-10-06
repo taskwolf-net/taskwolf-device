@@ -61,13 +61,13 @@ public final class DeviceWebSocket extends WebSocketServer {
     var pattern = Pattern.compile(HANDSHAKE_FORMAT.replace("?", ""));
     var matcher = pattern.matcher(handshake.getResourceDescriptor().replace("?", ""));
     if (!matcher.matches()) {
-      connection.close();
+      rejectConnection(connection);
       return;
     }
     var token = matcher.group(1);
     var userId = findUserId(token);
     if (userId.isEmpty()) {
-      connection.close();
+      rejectConnection(connection);
       return;
     }
     var device = matcher.group(2);
@@ -79,7 +79,7 @@ public final class DeviceWebSocket extends WebSocketServer {
     UUID userId, String deviceId, WebSocket connection, boolean exists
   ) {
     if (!exists) {
-      connection.close();
+      rejectConnection(connection);
       return;
     }
     deviceDatabaseTable.findDevice(deviceId).thenAccept(device ->
@@ -87,15 +87,20 @@ public final class DeviceWebSocket extends WebSocketServer {
   }
 
   private void classifyConnection(
-          UUID userId, Device device, WebSocket connection
+    UUID userId, Device device, WebSocket connection
   ) {
     if (!device.ownerId().equals(userId)) {
-      connection.close();
+      rejectConnection(connection);
       return;
     }
     connectionRepository.registerConnection(DeviceConnection.create(device,
       connection));
     workerProxyClient.sendPacket(new PacketOutgoingDeviceLogin(device.id()));
+  }
+
+  private void rejectConnection(WebSocket connection) {
+    connection.send("REJECTED");
+    connection.close();
   }
 
   private Optional<UUID> findUserId(String token) {
