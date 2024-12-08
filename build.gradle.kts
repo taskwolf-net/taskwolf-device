@@ -66,7 +66,7 @@ dependencies {
 
   compileOnly("io.jsonwebtoken:jjwt:0.12.6")
 
-  compileOnly("org.springframework.boot:spring-boot-starter-web:3.2.5")
+  compileOnly("org.springframework.boot:spring-boot-starter-web:3.4.0")
 
   implementation("org.java-websocket:Java-WebSocket:1.5.7")
 
