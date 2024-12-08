@@ -68,7 +68,7 @@ dependencies {
 
   compileOnly("org.springframework.boot:spring-boot-starter-web:3.2.5")
 
-  implementation("org.java-websocket:Java-WebSocket:1.5.6")
+  implementation("org.java-websocket:Java-WebSocket:1.5.7")
 
   implementation("com.google.auth:google-auth-library-oauth2-http:1.12.0")
 }
