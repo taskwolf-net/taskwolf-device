@@ -70,7 +70,7 @@ dependencies {
 
   implementation("org.java-websocket:Java-WebSocket:1.5.7")
 
-  implementation("com.google.auth:google-auth-library-oauth2-http:1.30.0")
+  implementation("com.google.auth:google-auth-library-oauth2-http:1.30.1")
 }
 
 tasks.test {
