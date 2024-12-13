@@ -1,11 +1,14 @@
 package com.dulno.device.structure;
 
+import com.dulno.core.database.DatabaseColumn;
+import com.dulno.core.database.DatabaseTable;
 import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import com.dulno.core.database.DatabaseRow;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -13,15 +16,26 @@ import java.util.UUID;
 @Accessors(fluent = true)
 @AllArgsConstructor(staticName = "create")
 public final class Device {
-  public static Device of(DatabaseRow row) {
-    return create(row.findCell(0).stringValue(), row.findCell(1).stringValue(),
-      row.findCell(2).uuidValue(), row.findCell(3).stringValue(),
-      DevicePlatform.valueOf(row.findCell(4).stringValue().toUpperCase()),
-      row.findCell(5).stringValue(), row.findCell(6).booleanValue(),
-      row.findCell(7).booleanValue(), row.findCell(8).booleanValue(),
-      row.findCell(9).booleanValue(), row.findCell(10).booleanValue(),
-      row.findCell(11).booleanValue(), row.findCell(12).booleanValue(),
-      row.findCell(13).booleanValue(), row.findCell(14).booleanValue());
+  public static Device of(DatabaseRow row, DatabaseTable table) {
+    return of(row, table.columns().stream().map(DatabaseColumn::name).toList());
+  }
+
+  public static Device of(DatabaseRow row, List<String> columns) {
+    return create(row.findCell(columns.indexOf("id")).stringValue(),
+      row.findCell(columns.indexOf("machine")).stringValue(),
+      row.findCell(columns.indexOf("owner")).uuidValue(),
+      row.findCell(columns.indexOf("information")).stringValue(),
+      DevicePlatform.valueOf(row.findCell(columns.indexOf("platform")).stringValue()),
+      row.findCell(columns.indexOf("language")).stringValue(),
+      row.findCell(columns.indexOf("workflowNotifications")).booleanValue(),
+      row.findCell(columns.indexOf("errorNotifications")).booleanValue(),
+      row.findCell(columns.indexOf("newsNotifications")).booleanValue(),
+      row.findCell(columns.indexOf("commandExecution")).booleanValue(),
+      row.findCell(columns.indexOf("fileStorage")).booleanValue(),
+      row.findCell(columns.indexOf("fileInfo")).booleanValue(),
+      row.findCell(columns.indexOf("fileDelete")).booleanValue(),
+      row.findCell(columns.indexOf("folderCreate")).booleanValue(),
+      row.findCell(columns.indexOf("folderDelete")).booleanValue());
   }
 
   private final String id;

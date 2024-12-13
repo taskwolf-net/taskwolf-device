@@ -17,8 +17,9 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   ) {
     var columns = Lists.<DatabaseColumn>newArrayList();
     columns.add(DatabaseColumn.create("id", DatabaseDataType.TEXT,
-      DatabaseColumn.Type.PRIMARY_KEY));
-    columns.add(DatabaseColumn.create("machine", DatabaseDataType.TEXT));
+      DatabaseColumn.Type.PARTITION_KEY));
+    columns.add(DatabaseColumn.create("machine", DatabaseDataType.TEXT,
+      DatabaseColumn.Type.CLUSTERING_KEY));
     columns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
     columns.add(DatabaseColumn.create("information", DatabaseDataType.TEXT));
     columns.add(DatabaseColumn.create("platform", DatabaseDataType.TEXT));
@@ -36,9 +37,15 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     columns.add(DatabaseColumn.create("fileDelete", DatabaseDataType.BOOLEAN));
     columns.add(DatabaseColumn.create("folderCreate", DatabaseDataType.BOOLEAN));
     columns.add(DatabaseColumn.create("folderDelete", DatabaseDataType.BOOLEAN));
-    return new DeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
+    var table = new DeviceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
+    table.createIfNotExists();
+    table.createIndexIfNotExists("machine");
+    table.createIndexIfNotExists("owner");
+    table.initializeViews();
+    return table;
   }
 
+  private DatabaseTable machineOwnerView;
   private final Random random = new Random();
 
   private DeviceDatabaseTable(
@@ -46,6 +53,18 @@ public final class DeviceDatabaseTable extends DatabaseTable {
     List<DatabaseColumn> columns
   ) {
     super(connection, keyspace, name, columns);
+  }
+
+  private void initializeViews() {
+    var columns = Lists.<DatabaseColumn>newArrayList();
+    columns.add(DatabaseColumn.create("machine", DatabaseDataType.TEXT,
+      DatabaseColumn.Type.PARTITION_KEY));
+    columns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID,
+      DatabaseColumn.Type.CLUSTERING_KEY));
+    columns.add(DatabaseColumn.create("id", DatabaseDataType.TEXT,
+      DatabaseColumn.Type.CLUSTERING_KEY));
+    machineOwnerView = createMaterializedViewIfNotExists("machine_owner_view",
+      columns);
   }
 
   public void insertDevice(Device device) {
@@ -106,16 +125,17 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   }
 
   private void updateDevice(Device device) {
-    update(device.id(), DatabaseRow.of(device.id(), device.machineId(),
-      device.ownerId(), device.information(), device.platform().toString(),
-      device.language(), device.workflowNotifications(),
-      device.errorNotifications(), device.newsNotifications(),
-      device.commandExecution(), device.fileStorage(), device.fileInfo(),
-      device.fileDelete(), device.folderCreate(), device.folderDelete()));
+    update(DatabaseCondition.of("id", device.id(), "machine", device.machineId()),
+      DatabaseRow.of(device.id(), device.machineId(), device.ownerId(),
+        device.information(), device.platform().toString(), device.language(),
+        device.workflowNotifications(), device.errorNotifications(),
+        device.newsNotifications(), device.commandExecution(),
+        device.fileStorage(), device.fileInfo(), device.fileDelete(),
+        device.folderCreate(), device.folderDelete()));
   }
 
   public void deleteDevice(String deviceId) {
-    delete(deviceId);
+    delete(DatabaseCondition.of("id", deviceId));
   }
 
   public CompletableFuture<String> generateAvailableDeviceId() {
@@ -138,25 +158,26 @@ public final class DeviceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Boolean> deviceExists(String deviceId) {
-    return exists(deviceId);
+    return exists(DatabaseCondition.of("id", deviceId));
   }
 
   public CompletableFuture<Boolean> deviceExists(String machineId, UUID ownerId) {
-    return exists(DatabaseCondition.of("owner", ownerId, "machine", machineId,
-      DatabaseCondition.Filtering.ALLOWED));
+    return machineOwnerView.exists(DatabaseCondition.of("owner", ownerId,
+      "machine", machineId));
   }
 
   public CompletableFuture<Device> findDevice(String deviceId) {
-    return selectRow(deviceId).thenApply(Device::of);
+    return selectRow(DatabaseCondition.of("id", deviceId))
+      .thenApply(row -> Device.of(row, this));
   }
 
   public CompletableFuture<Device> findDevice(String machineId, UUID ownerId) {
-    return selectRow(DatabaseCondition.of("owner", ownerId, "machine", machineId,
-      DatabaseCondition.Filtering.ALLOWED)).thenApply(Device::of);
+    return machineOwnerView.selectRow(DatabaseCondition.of("owner", ownerId,
+      "machine", machineId)).thenApply(row -> Device.of(row, machineOwnerView));
   }
 
   public CompletableFuture<List<Device>> findDevicesOfOwner(UUID ownerId) {
     return selectRows(DatabaseCondition.of("owner", ownerId))
-      .thenApply(rows -> rows.stream().map(Device::of).toList());
+      .thenApply(rows -> rows.stream().map(row -> Device.of(row, this)).toList());
   }
 }

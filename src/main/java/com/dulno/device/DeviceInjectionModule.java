@@ -32,11 +32,7 @@ public final class DeviceInjectionModule extends AbstractModule {
   DeviceDatabaseTable provideDeviceDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
   ) {
-    var deviceDatabaseTable = DeviceDatabaseTable.create(connection, keyspace);
-    deviceDatabaseTable.createIfNotExists();
-    deviceDatabaseTable.createIndexIfNotExists("machine");
-    deviceDatabaseTable.createIndexIfNotExists("owner");
-    return deviceDatabaseTable;
+    return DeviceDatabaseTable.create(connection, keyspace);
   }
 
   @Provides
