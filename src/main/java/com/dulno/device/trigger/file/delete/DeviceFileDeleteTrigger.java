@@ -1,11 +1,10 @@
 package com.dulno.device.trigger.file.delete;
 
-import com.google.common.collect.Lists;
+import com.dulno.device.trigger.TriggerWorkspaceDatabaseTable;
 import lombok.RequiredArgsConstructor;
 import com.dulno.core.database.*;
 import com.dulno.core.database.condition.DatabaseCondition;
 import com.dulno.core.trigger.Trigger;
-import com.dulno.core.trigger.TriggerContentDatabaseTable;
 import com.dulno.core.trigger.TriggerInformation;
 import com.dulno.core.workflow.component.input.InputComponentSelect;
 import com.dulno.core.workflow.component.input.InputComponentVariable;
@@ -23,17 +22,14 @@ public final class DeviceFileDeleteTrigger implements Trigger {
     InputComponentSelect workspaceComponentSelect,
     DatabaseConnection databaseConnection, DatabaseKeyspace databaseKeyspace
   ) {
-    var contentColumns = Lists.<DatabaseColumn>newArrayList();
-    contentColumns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT));
-    contentColumns.add(DatabaseColumn.create("workspace", DatabaseDataType.UUID));
     return new DeviceFileDeleteTrigger(deviceComponentSelect, workspaceComponentSelect,
-      TriggerContentDatabaseTable.create(databaseConnection, databaseKeyspace,
-        "trigger_device_file_delete", contentColumns));
+      TriggerWorkspaceDatabaseTable.create(databaseConnection, databaseKeyspace,
+        "trigger_device_file_delete"));
   }
 
   private final InputComponentSelect deviceComponentSelect;
   private final InputComponentSelect workspaceComponentSelect;
-  private final TriggerContentDatabaseTable contentDatabaseTable;
+  private final TriggerWorkspaceDatabaseTable contentDatabaseTable;
 
   @Override
   public String type() {
@@ -60,28 +56,27 @@ public final class DeviceFileDeleteTrigger implements Trigger {
 
   @Override
   public void initialize() {
-    contentDatabaseTable.createIfNotExists();
-    contentDatabaseTable.createIndexIfNotExists("device");
-    contentDatabaseTable.createIndexIfNotExists("workspace");
+    contentDatabaseTable.initialize();
   }
 
   @Override
   public CompletableFuture<Void> insert(UUID triggerId, Map<String, Object> content) {
-    return contentDatabaseTable.insertContent(triggerId, DatabaseRow.of(
-      content.get("device"), UUID.fromString((String) content.get("workspace"))));
+    return contentDatabaseTable.insertContent(triggerId,
+      (String) content.get("device"),
+      UUID.fromString((String) content.get("workspace")));
   }
 
   @Override
   public CompletableFuture<Map<String, Object>> findContent(UUID triggerId) {
     return contentDatabaseTable.findContent(triggerId).thenApply(row ->
-      Map.of("device", row.findCell(1).stringValue(),
-        "workspace", row.findCell(2).uuidValue()));
+      Map.of("device", row.findCell(0).stringValue(),
+        "workspace", row.findCell(1).uuidValue()));
   }
 
   @Override
   public CompletableFuture<List<UUID>> findEntries(DatabaseCondition condition) {
     return contentDatabaseTable.findContentByCondition(condition).thenApply(
-      rows -> rows.stream().map(row -> row.findCell(0).uuidValue()).toList());
+      rows -> rows.stream().map(row -> row.findCell(2).uuidValue()).toList());
   }
 
   @Override

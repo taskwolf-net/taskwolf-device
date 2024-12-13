@@ -17,17 +17,37 @@ public final class FileWorkspaceDatabaseTable extends DatabaseTable {
   ) {
     var columns = Lists.<DatabaseColumn>newArrayList();
     columns.add(DatabaseColumn.create("id", DatabaseDataType.UUID,
-      DatabaseColumn.Type.PRIMARY_KEY));
-    columns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT));
+      DatabaseColumn.Type.PARTITION_KEY));
+    columns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT,
+      DatabaseColumn.Type.CLUSTERING_KEY));
     columns.add(DatabaseColumn.create("path", DatabaseDataType.TEXT));
-    return new FileWorkspaceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
+    var table = new FileWorkspaceDatabaseTable(connection, keyspace, TABLE_NAME, columns);
+    table.createIfNotExists();
+    table.createIndexIfNotExists("device");
+    table.createIndexIfNotExists("path");
+    table.initializeViews();
+    return table;
   }
+
+  private DatabaseTable devicePathView;
 
   private FileWorkspaceDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace, String name,
     List<DatabaseColumn> columns
   ) {
     super(connection, keyspace, name, columns);
+  }
+
+  private void initializeViews() {
+    var columns = Lists.<DatabaseColumn>newArrayList();
+    columns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT,
+      DatabaseColumn.Type.PARTITION_KEY));
+    columns.add(DatabaseColumn.create("path", DatabaseDataType.TEXT,
+      DatabaseColumn.Type.CLUSTERING_KEY));
+    columns.add(DatabaseColumn.create("id", DatabaseDataType.UUID,
+      DatabaseColumn.Type.CLUSTERING_KEY));
+    devicePathView = createMaterializedViewIfNotExists("device_path_view",
+      columns);
   }
 
   public void insertWorkspace(FileHistoryEntry entry) {
@@ -39,7 +59,7 @@ public final class FileWorkspaceDatabaseTable extends DatabaseTable {
   }
 
   public void deleteWorkspace(UUID workspaceId) {
-    delete(workspaceId);
+    delete(DatabaseCondition.of("id", workspaceId));
   }
 
   public CompletableFuture<UUID> generateAvailableWorkspaceId() {
@@ -52,22 +72,24 @@ public final class FileWorkspaceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Boolean> workspaceExists(UUID workspaceId) {
-    return exists(workspaceId);
+    return exists(DatabaseCondition.of("id", workspaceId));
   }
 
   public CompletableFuture<Boolean> workspaceExists(String deviceId, String path) {
-    return exists(DatabaseCondition.of("device", deviceId, "path", path,
-      DatabaseCondition.Filtering.ALLOWED));
+    return devicePathView.exists(DatabaseCondition.of("device", deviceId,
+      "path", path));
   }
 
   public CompletableFuture<FileWorkspace> findWorkspace(UUID workspaceId) {
-    return selectRow(workspaceId).thenApply(FileWorkspace::of);
+    return selectRow(DatabaseCondition.of("id", workspaceId))
+      .thenApply(row -> FileWorkspace.of(row, this));
   }
 
   public CompletableFuture<List<FileWorkspace>> findWorkspacesOfDevice(
     String deviceId
   ) {
     return selectRows(DatabaseCondition.of("device", deviceId))
-      .thenApply(rows -> rows.stream().map(FileWorkspace::of).toList());
+      .thenApply(rows -> rows.stream().map(row -> FileWorkspace.of(row, this))
+        .toList());
   }
 }

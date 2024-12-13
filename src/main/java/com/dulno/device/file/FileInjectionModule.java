@@ -76,11 +76,6 @@ public final class FileInjectionModule extends AbstractModule {
   FileWorkspaceDatabaseTable provideFileWorkspaceDatabaseTable(
     DatabaseConnection connection, DatabaseKeyspace keyspace
   ) {
-    var workspaceDatabaseTable = FileWorkspaceDatabaseTable.create(
-      connection, keyspace);
-    workspaceDatabaseTable.createIfNotExists();
-    workspaceDatabaseTable.createIndexIfNotExists("device");
-    workspaceDatabaseTable.createIndexIfNotExists("path");
-    return workspaceDatabaseTable;
+    return FileWorkspaceDatabaseTable.create(connection, keyspace);
   }
 }

@@ -187,8 +187,7 @@ public final class FileWorkspaceController extends DeviceController {
       return;
     }
     coreModule.triggerWorkflows("device", identifier,
-      DatabaseCondition.of("device", device.id(), "workspace", workspace.id(),
-        DatabaseCondition.Filtering.ALLOWED),
+      DatabaseCondition.of("device", device.id(), "workspace", workspace.id()),
       fileTriggerInformation(device, workspace.path(), filePath, fileName));
   }
 
@@ -249,8 +248,7 @@ public final class FileWorkspaceController extends DeviceController {
       return;
     }
     coreModule.triggerWorkflows("device", identifier,
-      DatabaseCondition.of("device", device.id(), "workspace", workspace.id(),
-        DatabaseCondition.Filtering.ALLOWED),
+      DatabaseCondition.of("device", device.id(), "workspace", workspace.id()),
       folderTriggerInformation(device, workspace.path(), folderPath));
   }
 
