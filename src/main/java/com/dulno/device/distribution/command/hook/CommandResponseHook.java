@@ -3,12 +3,12 @@ package com.dulno.device.distribution.command.hook;
 import com.dulno.device.command.CommandExecutionDatabaseTable;
 import com.dulno.device.command.CommandRequestRepository;
 import com.dulno.device.structure.Device;
+import com.dulno.workflow.WorkflowModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import com.dulno.core.CoreModule;
-import com.dulno.core.action.ActionResult;
+import com.dulno.workflow.action.ActionResult;
 import com.dulno.core.database.condition.DatabaseCondition;
 import com.dulno.core.event.EventHook;
 import com.dulno.core.event.Hook;
@@ -23,7 +23,7 @@ import java.util.Map;
 public final class CommandResponseHook implements Hook {
   private final CommandRequestRepository commandRequestRepository;
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
-  private final CoreModule coreModule;
+  private final WorkflowModule workflowModule;
 
   @EventHook
   private void commandResponse(WorkerCommandResponseEvent event) {
@@ -50,8 +50,8 @@ public final class CommandResponseHook implements Hook {
   }
 
   private Map<String, Object> buildInformation(
-          Device device, String command, String commandOutput,
-          String commandErrorMessage, int commandExitCode, String commandExecutionTime
+    Device device, String command, String commandOutput,
+    String commandErrorMessage, int commandExitCode, String commandExecutionTime
   ) {
     var information = device.composition();
     information.put("command", command);
@@ -63,7 +63,7 @@ public final class CommandResponseHook implements Hook {
   }
 
   private void triggerWorkflows(Device device, Map<String, Object> information) {
-    coreModule.triggerWorkflows("device", "device-command-trigger",
+    workflowModule.triggerWorkflows("device", "device-command-trigger",
       DatabaseCondition.of("device", device.id()), information);
   }
 

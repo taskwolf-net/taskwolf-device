@@ -1,6 +1,6 @@
 package com.dulno.device.file.info;
 
-import com.dulno.core.action.ActionResult;
+import com.dulno.workflow.action.ActionResult;
 import com.dulno.device.access.DeviceController;
 import com.dulno.device.distribution.file.packet.outgoing.PacketOutgoingFileInfoResponse;
 import com.dulno.device.file.*;

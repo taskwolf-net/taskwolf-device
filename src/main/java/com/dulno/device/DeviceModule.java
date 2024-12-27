@@ -10,10 +10,11 @@ import com.dulno.device.file.workspace.FileWorkspaceDatabaseTable;
 import com.dulno.device.structure.DeviceDatabaseTable;
 import com.dulno.device.structure.UserDeviceDatabaseTable;
 import com.dulno.device.trigger.notification.DeviceNotificationTrigger;
+import com.dulno.workflow.integration.Integration;
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
 import com.dulno.core.account.AccountLink;
-import com.dulno.core.action.ActionRepository;
+import com.dulno.workflow.action.ActionRepository;
 import com.dulno.core.database.DatabaseConnection;
 import com.dulno.core.database.DatabaseKeyspace;
 import com.dulno.core.event.HookRegistry;
@@ -24,9 +25,9 @@ import com.dulno.core.module.ModuleInformation;
 import com.dulno.core.module.ModuleLoadPriority;
 import com.dulno.core.packet.PacketEventRepository;
 import com.dulno.core.packet.PacketRegistry;
-import com.dulno.core.trigger.TriggerRepository;
+import com.dulno.workflow.trigger.TriggerRepository;
 import com.dulno.core.worker.client.WorkerProxyClient;
-import com.dulno.core.workflow.component.input.InputComponentSelect;
+import com.dulno.workflow.component.input.InputComponentSelect;
 import com.dulno.device.action.command.DeviceCommandAction;
 import com.dulno.device.action.file.store.DeviceFileStoreAction;
 import com.dulno.device.action.folder.create.DeviceFolderCreateAction;
@@ -59,7 +60,7 @@ import org.springframework.boot.SpringApplication;
 
 @ModuleDescription(name = "device", version = "1.0.0-SNAPSHOT",
   priority = ModuleLoadPriority.NEUTRAL)
-public final class DeviceModule extends Module {
+public final class DeviceModule extends Integration {
   private Log log;
   private AccountLink accountLink;
   private InputComponentSelect deviceComponentSelect;

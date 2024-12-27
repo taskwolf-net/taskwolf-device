@@ -3,10 +3,10 @@ package com.dulno.device.file.workspace;
 import com.dulno.device.access.DeviceController;
 import com.dulno.device.structure.Device;
 import com.dulno.device.structure.DeviceDatabaseTable;
+import com.dulno.workflow.WorkflowModule;
 import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import com.dulno.core.CoreModule;
 import com.dulno.core.access.DulnoRequestBody;
 import com.dulno.core.database.condition.DatabaseCondition;
 import com.dulno.core.organization.team.TeamDatabaseTable;
@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 public final class FileWorkspaceController extends DeviceController {
   private final FileWorkspaceDatabaseTable workspaceDatabaseTable;
-  private final CoreModule coreModule;
+  private final WorkflowModule workflowModule;
 
   private FileWorkspaceController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
@@ -34,12 +34,12 @@ public final class FileWorkspaceController extends DeviceController {
     UserTargetDatabaseTable userTargetDatabaseTable,
     TeamTargetDatabaseTable teamTargetDatabaseTable,
     TeamDatabaseTable teamDatabaseTable,
-    FileWorkspaceDatabaseTable workspaceDatabaseTable, CoreModule coreModule
+    FileWorkspaceDatabaseTable workspaceDatabaseTable, WorkflowModule workflowModule
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable,
       userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
     this.workspaceDatabaseTable = workspaceDatabaseTable;
-    this.coreModule = coreModule;
+    this.workflowModule = workflowModule;
   }
 
   @RequestMapping(path = "/device/file/workspaces/find/", method = RequestMethod.POST)
@@ -186,7 +186,7 @@ public final class FileWorkspaceController extends DeviceController {
     if (!workspace.device().equals(device.id())) {
       return;
     }
-    coreModule.triggerWorkflows("device", identifier,
+    workflowModule.triggerWorkflows("device", identifier,
       DatabaseCondition.of("device", device.id(), "workspace", workspace.id()),
       fileTriggerInformation(device, workspace.path(), filePath, fileName));
   }
@@ -247,7 +247,7 @@ public final class FileWorkspaceController extends DeviceController {
     if (!workspace.device().equals(device.id())) {
       return;
     }
-    coreModule.triggerWorkflows("device", identifier,
+    workflowModule.triggerWorkflows("device", identifier,
       DatabaseCondition.of("device", device.id(), "workspace", workspace.id()),
       folderTriggerInformation(device, workspace.path(), folderPath));
   }

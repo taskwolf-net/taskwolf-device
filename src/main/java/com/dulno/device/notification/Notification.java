@@ -2,9 +2,9 @@ package com.dulno.device.notification;
 
 import com.dulno.device.firebase.FirebaseRequest;
 import com.dulno.device.structure.Device;
+import com.dulno.workflow.WorkflowModule;
 import com.google.auth.oauth2.GoogleCredentials;
 import lombok.RequiredArgsConstructor;
-import com.dulno.core.CoreModule;
 import com.dulno.core.database.condition.DatabaseCondition;
 import com.dulno.core.worker.client.WorkerProxyClient;
 import com.dulno.device.DeviceConfiguration;
@@ -20,7 +20,7 @@ public final class Notification {
   private final DeviceConfiguration deviceConfiguration;
   private final GoogleCredentials googleCredentials;
   private final WorkerProxyClient workerProxyClient;
-  private final CoreModule coreModule;
+  private final WorkflowModule workflowModule;
   private final Device device;
   private final String title;
   private final String body;
@@ -55,7 +55,7 @@ public final class Notification {
   }
 
   private void triggerWorkflows() {
-    coreModule.triggerWorkflows("device", "device-notification-trigger",
+    workflowModule.triggerWorkflows("device", "device-notification-trigger",
       DatabaseCondition.of("device", device.id()), triggerInformation());
   }
 

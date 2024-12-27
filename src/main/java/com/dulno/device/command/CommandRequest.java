@@ -4,7 +4,7 @@ import com.dulno.device.structure.Device;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
-import com.dulno.core.action.ActionResult;
+import com.dulno.workflow.action.ActionResult;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;

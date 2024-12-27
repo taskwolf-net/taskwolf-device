@@ -4,7 +4,7 @@ import com.dulno.device.structure.Device;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.dulno.core.action.ActionResult;
+import com.dulno.workflow.action.ActionResult;
 import com.dulno.core.event.EventHook;
 import com.dulno.core.event.Hook;
 import com.dulno.device.distribution.file.event.WorkerFileStorageResponseEvent;

@@ -1,11 +1,12 @@
 package com.dulno.device.access;
 
+import com.dulno.core.locale.Translation;
 import com.dulno.device.structure.*;
+import com.dulno.workflow.WorkflowModule;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import com.dulno.core.CoreModule;
 import com.dulno.core.access.DulnoRequestBody;
 import com.dulno.core.database.paging.DatabaseDirection;
 import com.dulno.core.database.paging.DatabaseOrder;
@@ -18,7 +19,6 @@ import com.dulno.core.organization.team.TeamTargetDatabaseTable;
 import com.dulno.core.user.User;
 import com.dulno.core.user.UserDatabaseTable;
 import com.dulno.core.user.UserTargetDatabaseTable;
-import com.dulno.device.structure.*;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 public final class DeviceInformationController extends DeviceController {
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final OrganizationDatabaseTable organizationDatabaseTable;
-  private final CoreModule coreModule;
+  private final Translation translation;
 
   private DeviceInformationController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
@@ -43,13 +43,13 @@ public final class DeviceInformationController extends DeviceController {
     TeamTargetDatabaseTable teamTargetDatabaseTable,
     TeamDatabaseTable teamDatabaseTable,
     UserDeviceDatabaseTable userDeviceDatabaseTable,
-    OrganizationDatabaseTable organizationDatabaseTable, CoreModule coreModule
+    OrganizationDatabaseTable organizationDatabaseTable, Translation translation
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable,
       userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
     this.organizationDatabaseTable = organizationDatabaseTable;
-    this.coreModule = coreModule;
+    this.translation = translation;
   }
 
   @RequestMapping(path = "/device/find/", method = RequestMethod.POST)
@@ -218,7 +218,7 @@ public final class DeviceInformationController extends DeviceController {
   ) {
     return organizationDatabaseTable.organizationExists(targetId)
       .thenCompose(exists -> exists ?
-        findUserInformation(targetId, targetId, coreModule.translate(user,
+        findUserInformation(targetId, targetId, translation.translate(user,
           "organization.team.target.global")) :
         teamDatabaseTable().findTeam(targetId).thenCompose(team ->
           findUserInformation(team.organizationId(), team.id(), team.name())));

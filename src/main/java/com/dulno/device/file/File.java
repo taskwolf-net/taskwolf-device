@@ -5,7 +5,7 @@ import com.dulno.device.firebase.FirebaseRequest;
 import com.dulno.device.structure.Device;
 import com.google.auth.oauth2.GoogleCredentials;
 import lombok.RequiredArgsConstructor;
-import com.dulno.core.action.ActionResult;
+import com.dulno.workflow.action.ActionResult;
 import com.dulno.core.worker.client.WorkerProxyClient;
 import com.dulno.device.DeviceConfiguration;
 import com.dulno.device.distribution.file.packet.outgoing.PacketOutgoingFileDeleteRequest;

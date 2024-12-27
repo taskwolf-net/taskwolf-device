@@ -3,9 +3,9 @@ package com.dulno.device.action.notification;
 import com.dulno.device.structure.Device;
 import com.dulno.device.structure.DeviceDatabaseTable;
 import lombok.AllArgsConstructor;
-import com.dulno.core.action.ActionExecutor;
-import com.dulno.core.action.ActionResult;
-import com.dulno.core.workflow.placeholder.PlaceholderDissolve;
+import com.dulno.workflow.action.ActionExecutor;
+import com.dulno.workflow.action.ActionResult;
+import com.dulno.workflow.placeholder.PlaceholderDissolve;
 import com.dulno.device.notification.NotificationFactory;
 
 import java.util.Map;
