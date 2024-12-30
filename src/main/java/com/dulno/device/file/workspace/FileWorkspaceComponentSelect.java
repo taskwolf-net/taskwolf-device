@@ -1,5 +1,6 @@
 package com.dulno.device.file.workspace;
 
+import com.dulno.device.structure.UserDeviceDatabaseTable;
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import com.dulno.core.user.User;
@@ -15,18 +16,31 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor(staticName = "create")
 public class FileWorkspaceComponentSelect implements InputComponentSelect {
   private final FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable;
+  private final UserDeviceDatabaseTable userDeviceDatabaseTable;
 
   @Override
   public CompletableFuture<List<InputComponentSelectEntry>> compile(
     User user, UUID target, Map<String, String> previousInputs
   ) {
-    if (!previousInputs.containsKey("device")) {
+    try {
+      var deviceId = previousInputs.get("device");
+      return userDeviceDatabaseTable.userHasDevice(target, deviceId)
+        .thenCompose(has -> checkDeviceAccess(deviceId, has));
+    } catch (Exception exception) {
       return CompletableFuture.completedFuture(Lists.newArrayList());
     }
-    return fileWorkspaceDatabaseTable.findWorkspacesOfDevice(previousInputs.get("device"))
+  }
+
+  private CompletableFuture<List<InputComponentSelectEntry>> checkDeviceAccess(
+    String deviceId, boolean hasAccess
+  ) {
+    if (!hasAccess) {
+      return CompletableFuture.completedFuture(Lists.newArrayList());
+    }
+    return fileWorkspaceDatabaseTable.findWorkspacesOfDevice(deviceId)
       .thenApply(workspaces -> workspaces.stream()
-        .map(workspace -> InputComponentSelectEntry.create(workspace.id().toString(),
-          workspace.path()))
-        .collect(Collectors.toList()));
+        .map(workspace -> InputComponentSelectEntry.create(
+          workspace.id().toString(), workspace.path()))
+        .toList());
   }
 }

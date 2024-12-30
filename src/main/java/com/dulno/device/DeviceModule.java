@@ -76,11 +76,12 @@ public final class DeviceModule extends Integration {
     injector().getInstance(SpringApplication.class).addInitializers(
       injector().getInstance(DeviceContextInitializer.class));
     var deviceDatabaseTable = injector().getInstance(DeviceDatabaseTable.class);
+    var userDeviceDatabaseTable = injector().getInstance(UserDeviceDatabaseTable.class);
     accountLink = DeviceAccountLink.create();
-    deviceComponentSelect = DeviceComponentSelect.create(
-      injector().getInstance(UserDeviceDatabaseTable.class));
+    deviceComponentSelect = DeviceComponentSelect.create(userDeviceDatabaseTable);
     fileWorkspaceComponentSelect = FileWorkspaceComponentSelect.create(
-      injector().getInstance(FileWorkspaceDatabaseTable.class));
+      injector().getInstance(FileWorkspaceDatabaseTable.class),
+      userDeviceDatabaseTable);
     registerPackets();
     registerPacketEvents();
     registerHooks();
