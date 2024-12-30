@@ -5,6 +5,7 @@ import com.dulno.device.file.workspace.FileWorkspace;
 import com.dulno.device.file.workspace.FileWorkspaceDatabaseTable;
 import com.dulno.device.structure.Device;
 import com.dulno.device.structure.DeviceDatabaseTable;
+import com.dulno.device.structure.UserDeviceDatabaseTable;
 import lombok.AllArgsConstructor;
 import com.dulno.workflow.action.ActionExecutor;
 import com.dulno.workflow.action.ActionResult;
@@ -17,8 +18,10 @@ import java.util.concurrent.CompletableFuture;
 @AllArgsConstructor(staticName = "create")
 public final class DeviceFileDeleteActionExecutor implements ActionExecutor {
   private final DeviceDatabaseTable deviceDatabaseTable;
+  private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final FileWorkspaceDatabaseTable workspaceDatabaseTable;
   private final FileFactory fileFactory;
+  private final UUID ownerId;
   private final String deviceId;
   private final UUID workspaceId;
   private String filePath;
@@ -30,12 +33,20 @@ public final class DeviceFileDeleteActionExecutor implements ActionExecutor {
     filePath = dissolve.dissolve(filePath);
     fileName = dissolve.dissolve(fileName);
     return deviceDatabaseTable.deviceExists(deviceId)
-      .thenCompose(this::deleteFile);
+      .thenCompose(this::checkDeviceExistence);
   }
 
-  private CompletableFuture<ActionResult> deleteFile(boolean deviceExists) {
+  private CompletableFuture<ActionResult> checkDeviceExistence(boolean deviceExists) {
     if (!deviceExists) {
       return ActionResult.futureFailure("device.action.file.delete.failure.device.not.found");
+    }
+    return userDeviceDatabaseTable.userHasDevice(ownerId, deviceId)
+      .thenCompose(this::checkDeviceAccess);
+  }
+
+  private CompletableFuture<ActionResult> checkDeviceAccess(boolean hasPermission) {
+    if (!hasPermission) {
+      return ActionResult.futureFailure("device.action.file.delete.failure.device.access");
     }
     return deviceDatabaseTable.findDevice(deviceId)
       .thenCompose(this::deleteFile);

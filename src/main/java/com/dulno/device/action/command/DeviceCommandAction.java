@@ -1,6 +1,7 @@
 package com.dulno.device.action.command;
 
 import com.dulno.device.structure.DeviceDatabaseTable;
+import com.dulno.device.structure.UserDeviceDatabaseTable;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import com.dulno.workflow.action.Action;
@@ -20,20 +21,24 @@ import java.util.concurrent.CompletableFuture;
 @AllArgsConstructor(staticName = "create")
 public final class DeviceCommandAction implements Action<DeviceCommandActionExecutor> {
   public static DeviceCommandAction create(
-          InputComponentSelect deviceComponentSelect,
-          DeviceDatabaseTable deviceDatabaseTable, CommandFactory commandFactory,
-          DatabaseConnection databaseConnection, DatabaseKeyspace databaseKeyspace
+    InputComponentSelect deviceComponentSelect,
+    DeviceDatabaseTable deviceDatabaseTable,
+    UserDeviceDatabaseTable userDeviceDatabaseTable, CommandFactory commandFactory,
+    DatabaseConnection databaseConnection, DatabaseKeyspace databaseKeyspace
   ) {
     var contentColumns = Lists.<DatabaseColumn>newArrayList();
+    contentColumns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
     contentColumns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT));
     contentColumns.add(DatabaseColumn.create("command", DatabaseDataType.TEXT));
     return new DeviceCommandAction(deviceComponentSelect, deviceDatabaseTable,
-      commandFactory, ActionContentDatabaseTable.create(databaseConnection,
-      databaseKeyspace, "action_device_command", contentColumns));
+      userDeviceDatabaseTable, commandFactory,
+      ActionContentDatabaseTable.create(databaseConnection, databaseKeyspace,
+        "action_device_command", contentColumns));
   }
 
   private final InputComponentSelect deviceComponentSelect;
   private final DeviceDatabaseTable deviceDatabaseTable;
+  private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final CommandFactory commandFactory;
   private final ActionContentDatabaseTable contentDatabaseTable;
 
@@ -68,23 +73,26 @@ public final class DeviceCommandAction implements Action<DeviceCommandActionExec
   }
 
   @Override
-  public CompletableFuture<Void> insert(UUID actionId, Map<String, Object> content) {
-    return contentDatabaseTable.insertContent(actionId, DatabaseRow.of(
+  public CompletableFuture<Void> insert(
+    UUID actionId, UUID ownerId, Map<String, Object> content
+  ) {
+    return contentDatabaseTable.insertContent(actionId, DatabaseRow.of(ownerId,
       content.get("device"), content.get("command")));
   }
 
   @Override
   public CompletableFuture<Map<String, Object>> findContent(UUID triggerId) {
     return contentDatabaseTable.findContent(triggerId).thenApply(row ->
-      Map.of("device", row.findCell(1).stringValue(),
-        "command", row.findCell(2).stringValue()));
+      Map.of("device", row.findCell(2).stringValue(),
+        "command", row.findCell(3).stringValue()));
   }
 
   @Override
   public CompletableFuture<DeviceCommandActionExecutor> build(UUID actionId) {
     return contentDatabaseTable.findContent(actionId).thenApply(content ->
-      DeviceCommandActionExecutor.create(deviceDatabaseTable, commandFactory,
-        content.findCell(1).stringValue(), content.findCell(2).stringValue()));
+      DeviceCommandActionExecutor.create(deviceDatabaseTable,
+        userDeviceDatabaseTable, commandFactory, content.findCell(1).uuidValue(),
+        content.findCell(2).stringValue(), content.findCell(3).stringValue()));
   }
 
   @Override

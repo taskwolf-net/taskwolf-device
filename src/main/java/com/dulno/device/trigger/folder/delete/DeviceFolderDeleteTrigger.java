@@ -1,5 +1,6 @@
 package com.dulno.device.trigger.folder.delete;
 
+import com.dulno.device.structure.UserDeviceDatabaseTable;
 import com.dulno.device.trigger.TriggerWorkspaceDatabaseTable;
 import lombok.RequiredArgsConstructor;
 import com.dulno.core.database.*;
@@ -18,15 +19,18 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor(staticName = "create")
 public final class DeviceFolderDeleteTrigger implements Trigger {
   public static DeviceFolderDeleteTrigger create(
+    UserDeviceDatabaseTable deviceDatabaseTable,
     InputComponentSelect deviceComponentSelect,
     InputComponentSelect workspaceComponentSelect,
     DatabaseConnection databaseConnection, DatabaseKeyspace databaseKeyspace
   ) {
-    return new DeviceFolderDeleteTrigger(deviceComponentSelect, workspaceComponentSelect,
+    return new DeviceFolderDeleteTrigger(deviceDatabaseTable, deviceComponentSelect,
+      workspaceComponentSelect,
       TriggerWorkspaceDatabaseTable.create(databaseConnection, databaseKeyspace,
         "trigger_device_folder_delete"));
   }
 
+  private final UserDeviceDatabaseTable deviceDatabaseTable;
   private final InputComponentSelect deviceComponentSelect;
   private final InputComponentSelect workspaceComponentSelect;
   private final TriggerWorkspaceDatabaseTable contentDatabaseTable;
@@ -59,10 +63,19 @@ public final class DeviceFolderDeleteTrigger implements Trigger {
   }
 
   @Override
-  public CompletableFuture<Void> insert(UUID triggerId, Map<String, Object> content) {
-    return contentDatabaseTable.insertContent(triggerId,
+  public CompletableFuture<Void> insert(
+    UUID triggerId, UUID ownerId, Map<String, Object> content
+  ) {
+    return contentDatabaseTable.insertContent(triggerId, ownerId,
       (String) content.get("device"),
       UUID.fromString((String) content.get("workspace")));
+  }
+
+  @Override
+  public CompletableFuture<Boolean> checkExecution(UUID triggerId) {
+    return contentDatabaseTable.findContent(triggerId)
+      .thenCompose(row -> deviceDatabaseTable.userHasDevice(
+        row.findCell(3).uuidValue(), row.findCell(0).stringValue()));
   }
 
   @Override

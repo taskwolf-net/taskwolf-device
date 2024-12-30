@@ -19,6 +19,7 @@ public final class TriggerWorkspaceDatabaseTable extends DatabaseTable {
       DatabaseColumn.Type.CLUSTERING_KEY));
     columns.add(DatabaseColumn.create("trigger", DatabaseDataType.UUID,
       DatabaseColumn.Type.CLUSTERING_KEY));
+    columns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
     return new TriggerWorkspaceDatabaseTable(connection, keyspace, tableName, columns);
   }
 
@@ -35,9 +36,9 @@ public final class TriggerWorkspaceDatabaseTable extends DatabaseTable {
   }
 
   public CompletableFuture<Void> insertContent(
-    UUID triggerId, String device, UUID workspace
+    UUID triggerId, UUID ownerId, String device, UUID workspace
   ) {
-    return insert(DatabaseRow.of(device, workspace, triggerId));
+    return insert(DatabaseRow.of(device, workspace, triggerId, ownerId));
   }
 
   public CompletableFuture<Void> deleteContent(UUID triggerId) {

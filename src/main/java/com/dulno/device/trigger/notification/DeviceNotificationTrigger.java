@@ -1,5 +1,6 @@
 package com.dulno.device.trigger.notification;
 
+import com.dulno.device.structure.UserDeviceDatabaseTable;
 import com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 import com.dulno.core.database.*;
@@ -19,16 +20,19 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor(staticName = "create")
 public final class DeviceNotificationTrigger implements Trigger {
   public static DeviceNotificationTrigger create(
+    UserDeviceDatabaseTable deviceDatabaseTable,
     InputComponentSelect deviceComponentSelect,
     DatabaseConnection databaseConnection, DatabaseKeyspace databaseKeyspace
   ) {
     var contentColumns = Lists.<DatabaseColumn>newArrayList();
+    contentColumns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
     contentColumns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT));
-    return new DeviceNotificationTrigger(deviceComponentSelect,
+    return new DeviceNotificationTrigger(deviceDatabaseTable, deviceComponentSelect,
       TriggerContentDatabaseTable.create(databaseConnection, databaseKeyspace,
         "trigger_device_notification", contentColumns));
   }
 
+  private final UserDeviceDatabaseTable deviceDatabaseTable;
   private final InputComponentSelect deviceComponentSelect;
   private final TriggerContentDatabaseTable contentDatabaseTable;
 
@@ -59,15 +63,24 @@ public final class DeviceNotificationTrigger implements Trigger {
   }
 
   @Override
-  public CompletableFuture<Void> insert(UUID triggerId, Map<String, Object> content) {
-    return contentDatabaseTable.insertContent(triggerId, DatabaseRow.of(
+  public CompletableFuture<Void> insert(
+    UUID triggerId, UUID ownerId, Map<String, Object> content
+  ) {
+    return contentDatabaseTable.insertContent(triggerId, DatabaseRow.of(ownerId,
       content.get("device")));
+  }
+
+  @Override
+  public CompletableFuture<Boolean> checkExecution(UUID triggerId) {
+    return contentDatabaseTable.findContent(triggerId)
+      .thenCompose(row -> deviceDatabaseTable.userHasDevice(
+        row.findCell(1).uuidValue(), row.findCell(2).stringValue()));
   }
 
   @Override
   public CompletableFuture<Map<String, Object>> findContent(UUID triggerId) {
     return contentDatabaseTable.findContent(triggerId).thenApply(row ->
-      Map.of("device", row.findCell(1).stringValue()));
+      Map.of("device", row.findCell(2).stringValue()));
   }
 
   @Override

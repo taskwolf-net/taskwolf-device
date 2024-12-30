@@ -19,7 +19,6 @@ import com.dulno.core.database.DatabaseConnection;
 import com.dulno.core.database.DatabaseKeyspace;
 import com.dulno.core.event.HookRegistry;
 import com.dulno.core.log.Log;
-import com.dulno.core.module.Module;
 import com.dulno.core.module.ModuleDescription;
 import com.dulno.core.module.ModuleInformation;
 import com.dulno.core.module.ModuleLoadPriority;
@@ -209,19 +208,24 @@ public final class DeviceModule extends Integration {
   public TriggerRepository triggerRepository() {
     var databaseConnection = injector().getInstance(DatabaseConnection.class);
     var databaseKeyspace = injector().getInstance(DatabaseKeyspace.class);
+    var deviceDatabaseTable = injector().getInstance(UserDeviceDatabaseTable.class);
     var repository = TriggerRepository.create();
-    repository.registerTrigger(DeviceNotificationTrigger.create(deviceComponentSelect,
-      databaseConnection, databaseKeyspace));
-    repository.registerTrigger(DeviceCommandTrigger.create(deviceComponentSelect,
-      databaseConnection, databaseKeyspace));
-    repository.registerTrigger(DeviceFileCreateTrigger.create(deviceComponentSelect,
-      fileWorkspaceComponentSelect, databaseConnection, databaseKeyspace));
-    repository.registerTrigger(DeviceFileDeleteTrigger.create(deviceComponentSelect,
-      fileWorkspaceComponentSelect, databaseConnection, databaseKeyspace));
-    repository.registerTrigger(DeviceFolderCreateTrigger.create(deviceComponentSelect,
-      fileWorkspaceComponentSelect, databaseConnection, databaseKeyspace));
-    repository.registerTrigger(DeviceFolderDeleteTrigger.create(deviceComponentSelect,
-      fileWorkspaceComponentSelect, databaseConnection, databaseKeyspace));
+    repository.registerTrigger(DeviceNotificationTrigger.create(deviceDatabaseTable,
+      deviceComponentSelect, databaseConnection, databaseKeyspace));
+    repository.registerTrigger(DeviceCommandTrigger.create(deviceDatabaseTable,
+      deviceComponentSelect, databaseConnection, databaseKeyspace));
+    repository.registerTrigger(DeviceFileCreateTrigger.create(deviceDatabaseTable,
+      deviceComponentSelect, fileWorkspaceComponentSelect, databaseConnection,
+      databaseKeyspace));
+    repository.registerTrigger(DeviceFileDeleteTrigger.create(deviceDatabaseTable,
+      deviceComponentSelect, fileWorkspaceComponentSelect, databaseConnection,
+      databaseKeyspace));
+    repository.registerTrigger(DeviceFolderCreateTrigger.create(deviceDatabaseTable,
+      deviceComponentSelect, fileWorkspaceComponentSelect, databaseConnection,
+      databaseKeyspace));
+    repository.registerTrigger(DeviceFolderDeleteTrigger.create(deviceDatabaseTable,
+      deviceComponentSelect, fileWorkspaceComponentSelect, databaseConnection,
+      databaseKeyspace));
     return repository;
   }
 
@@ -230,30 +234,33 @@ public final class DeviceModule extends Integration {
     var databaseConnection = injector().getInstance(DatabaseConnection.class);
     var databaseKeyspace = injector().getInstance(DatabaseKeyspace.class);
     var deviceDatabaseTable = injector().getInstance(DeviceDatabaseTable.class);
+    var userDeviceDatabaseTable = injector().getInstance(UserDeviceDatabaseTable.class);
     var workspaceDatabaseTable = injector().getInstance(FileWorkspaceDatabaseTable.class);
     var fileFactory = injector().getInstance(FileFactory.class);
     var repository = ActionRepository.create();
     repository.registerAction(DeviceNotificationAction.create(deviceComponentSelect,
-      deviceDatabaseTable, injector().getInstance(NotificationFactory.class),
-      databaseConnection, databaseKeyspace));
+      deviceDatabaseTable, userDeviceDatabaseTable,
+      injector().getInstance(NotificationFactory.class), databaseConnection,
+      databaseKeyspace));
     repository.registerAction(DeviceCommandAction.create(deviceComponentSelect,
-      deviceDatabaseTable, injector().getInstance(CommandFactory.class),
-      databaseConnection, databaseKeyspace));
+      deviceDatabaseTable, userDeviceDatabaseTable,
+      injector().getInstance(CommandFactory.class), databaseConnection,
+      databaseKeyspace));
     repository.registerAction(DeviceFileStoreAction.create(deviceComponentSelect,
-      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
-      fileFactory, databaseConnection, databaseKeyspace));
+      fileWorkspaceComponentSelect, deviceDatabaseTable, userDeviceDatabaseTable,
+      workspaceDatabaseTable, fileFactory, databaseConnection, databaseKeyspace));
     repository.registerAction(DeviceFileInfoAction.create(deviceComponentSelect,
-      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
-      fileFactory, databaseConnection, databaseKeyspace));
+      fileWorkspaceComponentSelect, deviceDatabaseTable, userDeviceDatabaseTable,
+      workspaceDatabaseTable, fileFactory, databaseConnection, databaseKeyspace));
     repository.registerAction(DeviceFileDeleteAction.create(deviceComponentSelect,
-      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
-      fileFactory, databaseConnection, databaseKeyspace));
+      fileWorkspaceComponentSelect, deviceDatabaseTable, userDeviceDatabaseTable,
+      workspaceDatabaseTable, fileFactory, databaseConnection, databaseKeyspace));
     repository.registerAction(DeviceFolderCreateAction.create(deviceComponentSelect,
-      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
-      fileFactory, databaseConnection, databaseKeyspace));
+      fileWorkspaceComponentSelect, deviceDatabaseTable, userDeviceDatabaseTable,
+      workspaceDatabaseTable, fileFactory, databaseConnection, databaseKeyspace));
     repository.registerAction(DeviceFolderDeleteAction.create(deviceComponentSelect,
-      fileWorkspaceComponentSelect, deviceDatabaseTable, workspaceDatabaseTable,
-      fileFactory, databaseConnection, databaseKeyspace));
+      fileWorkspaceComponentSelect, deviceDatabaseTable, userDeviceDatabaseTable,
+      workspaceDatabaseTable, fileFactory, databaseConnection, databaseKeyspace));
     return repository;
   }
 }

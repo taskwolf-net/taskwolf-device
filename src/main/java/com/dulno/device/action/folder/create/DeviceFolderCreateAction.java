@@ -2,6 +2,7 @@ package com.dulno.device.action.folder.create;
 
 import com.dulno.device.file.workspace.FileWorkspaceDatabaseTable;
 import com.dulno.device.structure.DeviceDatabaseTable;
+import com.dulno.device.structure.UserDeviceDatabaseTable;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import com.dulno.workflow.action.Action;
@@ -21,18 +22,21 @@ import java.util.concurrent.CompletableFuture;
 @AllArgsConstructor(staticName = "create")
 public final class DeviceFolderCreateAction implements Action<DeviceFolderCreateActionExecutor> {
   public static DeviceFolderCreateAction create(
-          InputComponentSelect deviceComponentSelect,
-          InputComponentSelect workspaceComponentSelect,
-          DeviceDatabaseTable deviceDatabaseTable,
-          FileWorkspaceDatabaseTable workspaceDatabaseTable, FileFactory fileFactory,
-          DatabaseConnection databaseConnection, DatabaseKeyspace databaseKeyspace
+    InputComponentSelect deviceComponentSelect,
+    InputComponentSelect workspaceComponentSelect,
+    DeviceDatabaseTable deviceDatabaseTable,
+    UserDeviceDatabaseTable userDeviceDatabaseTable,
+    FileWorkspaceDatabaseTable workspaceDatabaseTable, FileFactory fileFactory,
+    DatabaseConnection databaseConnection, DatabaseKeyspace databaseKeyspace
   ) {
     var contentColumns = Lists.<DatabaseColumn>newArrayList();
+    contentColumns.add(DatabaseColumn.create("owner", DatabaseDataType.UUID));
     contentColumns.add(DatabaseColumn.create("device", DatabaseDataType.TEXT));
     contentColumns.add(DatabaseColumn.create("workspace", DatabaseDataType.UUID));
     contentColumns.add(DatabaseColumn.create("folderPath", DatabaseDataType.TEXT));
-    return new DeviceFolderCreateAction(deviceComponentSelect, workspaceComponentSelect,
-      deviceDatabaseTable, workspaceDatabaseTable, fileFactory,
+    return new DeviceFolderCreateAction(deviceComponentSelect,
+      workspaceComponentSelect, deviceDatabaseTable, userDeviceDatabaseTable,
+      workspaceDatabaseTable, fileFactory,
       ActionContentDatabaseTable.create(databaseConnection, databaseKeyspace,
         "action_device_folder_create", contentColumns));
   }
@@ -40,6 +44,7 @@ public final class DeviceFolderCreateAction implements Action<DeviceFolderCreate
   private final InputComponentSelect deviceComponentSelect;
   private final InputComponentSelect workspaceComponentSelect;
   private final DeviceDatabaseTable deviceDatabaseTable;
+  private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final FileWorkspaceDatabaseTable workspaceDatabaseTable;
   private final FileFactory fileFactory;
   private final ActionContentDatabaseTable contentDatabaseTable;
@@ -74,8 +79,10 @@ public final class DeviceFolderCreateAction implements Action<DeviceFolderCreate
   }
 
   @Override
-  public CompletableFuture<Void> insert(UUID actionId, Map<String, Object> content) {
-    return contentDatabaseTable.insertContent(actionId, DatabaseRow.of(
+  public CompletableFuture<Void> insert(
+    UUID actionId, UUID ownerId, Map<String, Object> content
+  ) {
+    return contentDatabaseTable.insertContent(actionId, DatabaseRow.of(ownerId,
       content.get("device"), UUID.fromString((String) content.get("workspace")),
       content.get("folderPath")));
   }
@@ -83,17 +90,18 @@ public final class DeviceFolderCreateAction implements Action<DeviceFolderCreate
   @Override
   public CompletableFuture<Map<String, Object>> findContent(UUID actionId) {
     return contentDatabaseTable.findContent(actionId).thenApply(row ->
-      Map.of("device", row.findCell(1).stringValue(),
-        "workspace", row.findCell(2).uuidValue(),
-        "folderPath", row.findCell(3).stringValue()));
+      Map.of("device", row.findCell(2).stringValue(),
+        "workspace", row.findCell(3).uuidValue(),
+        "folderPath", row.findCell(4).stringValue()));
   }
 
   @Override
   public CompletableFuture<DeviceFolderCreateActionExecutor> build(UUID actionId) {
     return contentDatabaseTable.findContent(actionId).thenApply(content ->
       DeviceFolderCreateActionExecutor.create(deviceDatabaseTable,
-        workspaceDatabaseTable, fileFactory, content.findCell(1).stringValue(),
-        content.findCell(2).uuidValue(), content.findCell(3).stringValue()));
+        userDeviceDatabaseTable, workspaceDatabaseTable, fileFactory,
+        content.findCell(1).uuidValue(), content.findCell(2).stringValue(),
+        content.findCell(3).uuidValue(), content.findCell(3).stringValue()));
   }
 
   @Override
