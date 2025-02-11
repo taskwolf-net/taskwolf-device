@@ -83,7 +83,7 @@ dependencies {
 
   implementation("org.java-websocket:Java-WebSocket:1.6.0")
 
-  implementation("com.google.auth:google-auth-library-oauth2-http:1.30.1")
+  implementation("com.google.auth:google-auth-library-oauth2-http:1.32.1")
 }
 
 tasks.test {
