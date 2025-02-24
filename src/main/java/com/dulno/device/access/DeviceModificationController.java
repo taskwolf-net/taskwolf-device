@@ -1,10 +1,10 @@
 package com.dulno.device.access;
 
+import com.dulno.core.hashing.Hashing;
 import com.dulno.device.command.CommandExecutionDatabaseTable;
 import com.dulno.device.file.FileHistoryDatabaseTable;
 import com.dulno.device.file.workspace.FileWorkspaceDatabaseTable;
 import com.dulno.device.structure.*;
-import com.google.common.hash.Hashing;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.dulno.core.access.DulnoRequestBody;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Map;
 import java.util.UUID;
@@ -38,6 +37,7 @@ public final class DeviceModificationController extends DeviceController {
   private final FileHistoryDatabaseTable fileInfoDatabaseTable;
   private final FileHistoryDatabaseTable fileDeleteDatabaseTable;
   private final FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable;
+  private final Hashing hashing;
 
   private DeviceModificationController(
     Key secretKey, UserDatabaseTable userDatabaseTable,
@@ -55,7 +55,7 @@ public final class DeviceModificationController extends DeviceController {
     FileHistoryDatabaseTable fileInfoDatabaseTable,
     @Qualifier("fileDeleteDatabaseTable")
     FileHistoryDatabaseTable fileDeleteDatabaseTable,
-    FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable
+    FileWorkspaceDatabaseTable fileWorkspaceDatabaseTable, Hashing hashing
   ) {
     super(secretKey, userDatabaseTable, deviceDatabaseTable,
       userTargetDatabaseTable, teamTargetDatabaseTable, teamDatabaseTable);
@@ -67,6 +67,7 @@ public final class DeviceModificationController extends DeviceController {
     this.fileInfoDatabaseTable = fileInfoDatabaseTable;
     this.fileDeleteDatabaseTable = fileDeleteDatabaseTable;
     this.fileWorkspaceDatabaseTable = fileWorkspaceDatabaseTable;
+    this.hashing = hashing;
   }
 
   @RequestMapping(path = "/device/login/", method = RequestMethod.POST)
@@ -204,7 +205,7 @@ public final class DeviceModificationController extends DeviceController {
     User user, Device device, String password, String newAccountEmail,
     String newAccountPassword, boolean exists
   ) {
-    if (!user.passwordHash().equals(hashPassword(password))) {
+    if (!hashing.matches(password, user.passwordHash())) {
       return CompletableFuture.completedFuture(Map.of("success", false,
         "errorCode", 1000));
     }
@@ -219,7 +220,7 @@ public final class DeviceModificationController extends DeviceController {
   private Map<String, Object> changeDeviceAccount(
     Device device, String newAccountPassword, User target
   ) {
-    if (!target.passwordHash().equals(hashPassword(newAccountPassword))) {
+    if (!hashing.matches(newAccountPassword, target.passwordHash())) {
       return Map.of("success", false, "errorCode", 1002);
     }
     removeDeviceFromUsers(device);
@@ -244,7 +245,7 @@ public final class DeviceModificationController extends DeviceController {
   private Map<String, Object> deleteDevice(
     User user, Device device, String password
   ) {
-    if (!user.passwordHash().equals(hashPassword(password))) {
+    if (!hashing.matches(password, user.passwordHash())) {
       return Map.of("success", false);
     }
     deleteDevice(device);
@@ -277,10 +278,5 @@ public final class DeviceModificationController extends DeviceController {
     userDeviceDatabaseTable.findUsersOfDevice(device.id())
       .thenAccept(users -> users.forEach(target ->
         userDeviceDatabaseTable.deleteUserDevice(target, device.id())));
-  }
-
-  private String hashPassword(String password) {
-    return Hashing.sha256().hashString(password, StandardCharsets.UTF_8)
-      .toString();
   }
 }
