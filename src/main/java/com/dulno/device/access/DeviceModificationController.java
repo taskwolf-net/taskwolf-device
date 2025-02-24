@@ -77,7 +77,7 @@ public final class DeviceModificationController extends DeviceController {
   ) {
     var body = DulnoRequestBody.of(payload, response);
     var deviceId = body.getString("device");
-    var information = body.getString("information");
+    var information = body.getSanitizedString("information");
     var platform = DevicePlatform.valueOf(body.getString("platform").toUpperCase());
     var firebaseToken = platform.isAndroid() ? body.getString("firebaseToken") : "";
     var futureResponse = new CompletableFuture<Map<String, Object>>();
