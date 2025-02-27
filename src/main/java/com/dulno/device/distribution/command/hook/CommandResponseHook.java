@@ -64,7 +64,7 @@ public final class CommandResponseHook implements Hook {
 
   private void triggerWorkflows(Device device, Map<String, Object> information) {
     workflowModule.triggerWorkflows("device", "device-command-trigger",
-      DatabaseCondition.of("device", device.id()), information);
+      DatabaseCondition.of("device", device.id()), information, false);
   }
 
   private String formatTime(long time) {

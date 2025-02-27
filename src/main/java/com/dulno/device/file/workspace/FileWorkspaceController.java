@@ -188,7 +188,7 @@ public final class FileWorkspaceController extends DeviceController {
     }
     workflowModule.triggerWorkflows("device", identifier,
       DatabaseCondition.of("device", device.id(), "workspace", workspace.id()),
-      fileTriggerInformation(device, workspace.path(), filePath, fileName));
+      fileTriggerInformation(device, workspace.path(), filePath, fileName), false);
   }
 
   private Map<String, Object> fileTriggerInformation(
@@ -249,7 +249,7 @@ public final class FileWorkspaceController extends DeviceController {
     }
     workflowModule.triggerWorkflows("device", identifier,
       DatabaseCondition.of("device", device.id(), "workspace", workspace.id()),
-      folderTriggerInformation(device, workspace.path(), folderPath));
+      folderTriggerInformation(device, workspace.path(), folderPath), false);
   }
 
   private Map<String, Object> folderTriggerInformation(

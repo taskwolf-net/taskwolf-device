@@ -56,7 +56,7 @@ public final class Notification {
 
   private void triggerWorkflows() {
     workflowModule.triggerWorkflows("device", "device-notification-trigger",
-      DatabaseCondition.of("device", device.id()), triggerInformation());
+      DatabaseCondition.of("device", device.id()), triggerInformation(), false);
   }
 
   private Map<String, Object> triggerInformation() {
