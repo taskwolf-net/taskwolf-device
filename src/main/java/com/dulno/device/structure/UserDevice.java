@@ -29,8 +29,12 @@ public final class UserDevice {
   private final UUID targetId;
   private final String deviceId;
   private UUID ownerId;
-  private final String information;
+  private String information;
   private final DevicePlatform platform;
+
+  public void renameDevice(String newName) {
+    this.information = newName;
+  }
 
   public void updateOwner(UUID ownerId) {
     this.ownerId = ownerId;
