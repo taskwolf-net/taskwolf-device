@@ -89,6 +89,11 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       folderDelete));
   }
 
+  public void renameDevice(Device device, String newName) {
+    device.renameDevice(newName);
+    updateDevice(device);
+  }
+
   public void changeDeviceOwner(Device device, UUID owner) {
     device.updateOwner(owner);
     updateDevice(device);

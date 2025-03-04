@@ -77,7 +77,7 @@ public final class DeviceModificationController extends DeviceController {
   ) {
     var body = DulnoRequestBody.of(payload, response);
     var deviceId = body.getString("device");
-    var information = body.getSanitizedString("information");
+    var information = body.getSanitizedString("information", 64);
     var platform = DevicePlatform.valueOf(body.getString("platform").toUpperCase());
     var firebaseToken = platform.isAndroid() ? body.getString("firebaseToken") : "";
     var futureResponse = new CompletableFuture<Map<String, Object>>();
@@ -103,7 +103,7 @@ public final class DeviceModificationController extends DeviceController {
   }
 
   private Map<String, Object> existingDeviceLogin(
-          Device device, DevicePlatform platform, String firebaseToken
+    Device device, DevicePlatform platform, String firebaseToken
   ) {
     if (platform.isMobile()) {
       firebaseDeviceDatabaseTable.storeDeviceIdentifier(device.id(), firebaseToken);
@@ -225,6 +225,32 @@ public final class DeviceModificationController extends DeviceController {
     }
     removeDeviceFromUsers(device);
     deviceDatabaseTable().changeDeviceOwner(device, target.id());
+    return Map.of("success", true);
+  }
+
+  @RequestMapping(path = "/device/rename/", method = RequestMethod.POST)
+  public CompletableFuture<Map<String, Object>> renameDevice(
+    HttpServletRequest request, @RequestBody String payload,
+    HttpServletResponse response
+  ) {
+    var body = DulnoRequestBody.of(payload, response);
+    var deviceId = body.getString("device");
+    var information = body.getSanitizedString("information", 64);
+    var futureResponse = new CompletableFuture<Map<String, Object>>();
+    findUser(request).thenAccept(user -> performDeviceOperation(user.id(),
+      deviceId, device -> futureResponse.complete(
+        renameDevice(device, information)),
+      () -> futureResponse.complete(Map.of("success", false))));
+    return futureResponse;
+  }
+
+  private Map<String, Object> renameDevice(
+    Device device, String information
+  ) {
+    deviceDatabaseTable().renameDevice(device, information);
+    userDeviceDatabaseTable.findUserDevicesById(device.id())
+      .thenAccept(userDevices -> userDevices.forEach(userDevice ->
+        userDeviceDatabaseTable.renameUserDevice(userDevice, information)));
     return Map.of("success", true);
   }
 

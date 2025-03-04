@@ -41,7 +41,7 @@ public final class Device {
   private final String id;
   private final String machineId;
   private UUID ownerId;
-  private final String information;
+  private String information;
   private final DevicePlatform platform;
   private String language;
   private boolean workflowNotifications;
@@ -53,6 +53,10 @@ public final class Device {
   private boolean fileDelete;
   private boolean folderCreate;
   private boolean folderDelete;
+
+  public void renameDevice(String newName) {
+    this.information = newName;
+  }
 
   public void updateOwner(UUID ownerId) {
     this.ownerId = ownerId;
