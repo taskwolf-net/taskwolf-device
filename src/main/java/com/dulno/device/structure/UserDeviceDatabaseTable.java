@@ -69,6 +69,18 @@ public final class UserDeviceDatabaseTable extends DatabaseTable {
       platform.toString()));
   }
 
+  public void renameUserDevice(UserDevice device, String newName) {
+    device.renameDevice(newName);
+    updateUserDevice(device);
+  }
+
+  private void updateUserDevice(UserDevice device) {
+    update(DatabaseCondition.of("target", device.targetId(),
+        "device", device.deviceId()),
+      DatabaseRow.of(device.targetId(), device.deviceId(), device.ownerId(),
+        device.information(), device.platform().toString()));
+  }
+
   public void deleteUserDevice(UUID targetId, String deviceId) {
     delete(DatabaseCondition.of("target", targetId, "device", deviceId));
   }
