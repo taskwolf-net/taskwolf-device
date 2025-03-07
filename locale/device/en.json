@@ -1,4 +1,6 @@
 {
+  "device.module": "Device",
+
   "device.link.description": "Great news! You don't need to link an account to use this module. Just click on \"skip\" to go to the next page.",
 
   "device.trigger.notification.name": "Device Notification",

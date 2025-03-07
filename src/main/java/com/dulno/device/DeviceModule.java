@@ -201,7 +201,7 @@ public final class DeviceModule extends Integration {
 
   @Override
   public ModuleInformation moduleInformation() {
-    return ModuleInformation.create("Device", "", "device.png",
+    return ModuleInformation.create("device.module", "", "device.png",
       ModuleInformation.Type.PUBLIC);
   }
 
