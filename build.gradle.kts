@@ -44,6 +44,17 @@ repositories {
     }
   }
   maven {
+    url = uri("https://git.dulno.com/api/v4/projects/20/packages/maven")
+    credentials(HttpHeaderCredentials::class) {
+      name = "Private-Token"
+      value = System.getenv("DULNO_GITLAB_PRIVATE_TOKEN") ?:
+        findProperty("dulnoGitlabPrivateToken") as String?
+    }
+    authentication {
+      create("header", HttpHeaderAuthentication::class)
+    }
+  }
+  maven {
     url = uri("https://git.dulno.com/api/v4/projects/41/packages/maven")
     credentials(HttpHeaderCredentials::class) {
       name = "Private-Token"
@@ -62,6 +73,7 @@ dependencies {
 
   compileOnly("com.dulno:core:1.0.0-SNAPSHOT")
   compileOnly("com.dulno:workflow:1.0.0-SNAPSHOT")
+  compileOnly("com.dulno:access:1.0.0-SNAPSHOT")
 
   compileOnly("com.google.inject:guice:7.0.0")
 
@@ -86,6 +98,9 @@ dependencies {
   implementation("com.google.auth:google-auth-library-oauth2-http:1.33.1")
 
   compileOnly("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20240325.1")
+
+  implementation("com.google.zxing:core:3.5.3")
+  implementation("com.google.zxing:javase:3.5.3")
 }
 
 tasks.test {
