@@ -88,7 +88,7 @@ public final class DeviceModificationController extends DeviceController {
     return futureResponse;
   }
 
-  private CompletableFuture<Map<String, Object>> deviceLogin(
+  public CompletableFuture<Map<String, Object>> deviceLogin(
     User user, String deviceId, String information, DevicePlatform platform,
     String firebaseToken, boolean exists
   ) {
