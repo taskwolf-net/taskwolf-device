@@ -1,6 +1,7 @@
 package com.dulno.device;
 
 import com.dulno.device.structure.DeviceDatabaseTable;
+import com.dulno.device.structure.DeviceScanDatabaseTable;
 import com.dulno.device.structure.UserDeviceDatabaseTable;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -42,5 +43,13 @@ public final class DeviceInjectionModule extends AbstractModule {
   ) {
     return UserDeviceDatabaseTable.create(connection,
       keyspace);
+  }
+
+  @Provides
+  @Singleton
+  DeviceScanDatabaseTable provideDeviceScanDatabaseTable(
+    DatabaseConnection connection, DatabaseKeyspace keyspace
+  ) {
+    return DeviceScanDatabaseTable.create(connection, keyspace);
   }
 }
