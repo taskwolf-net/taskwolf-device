@@ -4,6 +4,7 @@ import com.dulno.device.file.FileRequestRepository;
 import com.dulno.device.file.info.FileInfoRedirectRepository;
 import com.dulno.device.file.storage.FileStorageRedirectRepository;
 import com.dulno.device.structure.DeviceDatabaseTable;
+import com.dulno.device.structure.DeviceScanDatabaseTable;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -22,6 +23,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 public final class DeviceContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
   private final DeviceDatabaseTable deviceDatabaseTable;
   private final UserDeviceDatabaseTable userDeviceDatabaseTable;
+  private final DeviceScanDatabaseTable deviceScanDatabaseTable;
   private final FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable;
   private final NotificationFactory notificationFactory;
   private final CommandExecutionDatabaseTable commandExecutionDatabaseTable;
@@ -39,6 +41,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
   private DeviceContextInitializer(
     DeviceDatabaseTable deviceDatabaseTable,
     UserDeviceDatabaseTable userDeviceDatabaseTable,
+    DeviceScanDatabaseTable deviceScanDatabaseTable,
     FirebaseDeviceDatabaseTable firebaseDeviceDatabaseTable,
     NotificationFactory notificationFactory,
     CommandExecutionDatabaseTable commandExecutionDatabaseTable,
@@ -54,6 +57,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
   ) {
     this.deviceDatabaseTable = deviceDatabaseTable;
     this.userDeviceDatabaseTable = userDeviceDatabaseTable;
+    this.deviceScanDatabaseTable = deviceScanDatabaseTable;
     this.firebaseDeviceDatabaseTable = firebaseDeviceDatabaseTable;
     this.notificationFactory = notificationFactory;
     this.commandExecutionDatabaseTable = commandExecutionDatabaseTable;
@@ -73,6 +77,7 @@ public final class DeviceContextInitializer implements ApplicationContextInitial
     var beanFactory = applicationContext.getBeanFactory();
     beanFactory.registerSingleton("deviceDatabaseTable", deviceDatabaseTable);
     beanFactory.registerSingleton("userDeviceDatabaseTable", userDeviceDatabaseTable);
+    beanFactory.registerSingleton("deviceScanDatabaseTable", deviceScanDatabaseTable);
     beanFactory.registerSingleton("firebaseDeviceDatabaseTable", firebaseDeviceDatabaseTable);
     beanFactory.registerSingleton("notificationFactory", notificationFactory);
     beanFactory.registerSingleton("commandExecutionDatabaseTable", commandExecutionDatabaseTable);
