@@ -10,10 +10,7 @@ import com.dulno.core.organization.team.TeamTargetDatabaseTable;
 import com.dulno.core.user.User;
 import com.dulno.core.user.UserDatabaseTable;
 import com.dulno.core.user.UserTargetDatabaseTable;
-import com.dulno.device.structure.DeviceDatabaseTable;
-import com.dulno.device.structure.DevicePlatform;
-import com.dulno.device.structure.DeviceScan;
-import com.dulno.device.structure.DeviceScanDatabaseTable;
+import com.dulno.device.structure.*;
 import com.dulno.access.verification.VerificationLoginController;
 import com.google.common.collect.Maps;
 import com.google.zxing.BarcodeFormat;
@@ -40,6 +37,7 @@ public final class DeviceScanController extends DeviceController {
   private final Key homeKey;
   private final Key refreshKey;
   private final DeviceScanDatabaseTable deviceScanDatabaseTable;
+  private final UserDeviceDatabaseTable userDeviceDatabaseTable;
   private final DeviceModificationController deviceModificationController;
   private final VerificationLoginController verificationLoginController;
   private final ErrorRepository errorRepository;
@@ -54,6 +52,7 @@ public final class DeviceScanController extends DeviceController {
     TeamTargetDatabaseTable teamTargetDatabaseTable,
     TeamDatabaseTable teamDatabaseTable,
     DeviceScanDatabaseTable deviceScanDatabaseTable,
+    UserDeviceDatabaseTable userDeviceDatabaseTable,
     DeviceModificationController deviceModificationController,
     VerificationLoginController verificationLoginController,
     ErrorRepository errorRepository, DulnoEnvironment environment, Hashing hashing
@@ -63,6 +62,7 @@ public final class DeviceScanController extends DeviceController {
     this.homeKey = homeKey;
     this.refreshKey = refreshKey;
     this.deviceScanDatabaseTable = deviceScanDatabaseTable;
+    this.userDeviceDatabaseTable = userDeviceDatabaseTable;
     this.deviceModificationController = deviceModificationController;
     this.verificationLoginController = verificationLoginController;
     this.errorRepository = errorRepository;
@@ -312,6 +312,11 @@ public final class DeviceScanController extends DeviceController {
     Map<String, Object> loginResult
   ) {
     deviceScanDatabaseTable.deleteScan(scan.id());
+    if (!scan.targetId().equals(scan.creatorId())) {
+      userDeviceDatabaseTable.insertUserDevice(scan.targetId(),
+        (String) deviceResult.get("id"), scan.creatorId(), scan.information(),
+        DevicePlatform.valueOf(scan.platform()));
+    }
     var information = Maps.<String, Object>newHashMap();
     information.putAll(deviceResult);
     information.putAll(loginResult);
