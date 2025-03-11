@@ -67,8 +67,8 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       columns);
   }
 
-  public void insertDevice(Device device) {
-    insertDevice(device.id(), device.machineId(), device.ownerId(),
+  public CompletableFuture<Void> insertDevice(Device device) {
+    return insertDevice(device.id(), device.machineId(), device.ownerId(),
       device.information(), device.platform().toString(), device.language(),
       device.workflowNotifications(), device.errorNotifications(),
       device.newsNotifications(), device.commandExecution(),
@@ -76,61 +76,61 @@ public final class DeviceDatabaseTable extends DatabaseTable {
       device.folderCreate(), device.folderDelete());
   }
 
-  public void insertDevice(
+  public CompletableFuture<Void> insertDevice(
     String id, String machineId, UUID ownerId, String information,
     String platform, String language, boolean workflowNotifications,
     boolean errorNotifications, boolean newsNotifications,
     boolean commandExecution, boolean fileStorage, boolean fileInfo,
     boolean fileDelete, boolean folderCreate, boolean folderDelete
   ) {
-    insert(DatabaseRow.of(id, machineId, ownerId, information, platform,
+    return insert(DatabaseRow.of(id, machineId, ownerId, information, platform,
       language, workflowNotifications, errorNotifications, newsNotifications,
       commandExecution, fileStorage, fileInfo, fileDelete, folderCreate,
       folderDelete));
   }
 
-  public void renameDevice(Device device, String newName) {
+  public CompletableFuture<Void> renameDevice(Device device, String newName) {
     device.renameDevice(newName);
-    updateDevice(device);
+    return updateDevice(device);
   }
 
-  public void changeDeviceOwner(Device device, UUID owner) {
+  public CompletableFuture<Void> changeDeviceOwner(Device device, UUID owner) {
     device.updateOwner(owner);
-    updateDevice(device);
+    return updateDevice(device);
   }
 
-  public void updateDeviceLanguage(Device device, String language) {
+  public CompletableFuture<Void> updateDeviceLanguage(Device device, String language) {
     device.updateLanguage(language);
-    updateDevice(device);
+    return updateDevice(device);
   }
 
-  public void updateDeviceNotificationSettings(
+  public CompletableFuture<Void> updateDeviceNotificationSettings(
     Device device, boolean workflowNotifications, boolean errorNotifications,
     boolean newsNotifications
   ) {
     device.updateNotificationSettings(workflowNotifications, errorNotifications,
       newsNotifications);
-    updateDevice(device);
+    return updateDevice(device);
   }
 
-  public void updateDeviceCommandSettings(
+  public CompletableFuture<Void> updateDeviceCommandSettings(
     Device device, boolean commandExecution
   ) {
     device.updateCommandSettings(commandExecution);
-    updateDevice(device);
+    return updateDevice(device);
   }
 
-  public void updateDeviceFileSettings(
+  public CompletableFuture<Void> updateDeviceFileSettings(
     Device device, boolean fileStorage, boolean fileInfo, boolean fileDelete,
     boolean folderCreate, boolean folderDelete
   ) {
     device.updateFileSettings(fileStorage, fileInfo, fileDelete,
       folderCreate, folderDelete);
-    updateDevice(device);
+    return updateDevice(device);
   }
 
-  private void updateDevice(Device device) {
-    update(DatabaseCondition.of("id", device.id(), "machine", device.machineId()),
+  private CompletableFuture<Void> updateDevice(Device device) {
+    return update(DatabaseCondition.of("id", device.id(), "machine", device.machineId()),
       DatabaseRow.of(device.id(), device.machineId(), device.ownerId(),
         device.information(), device.platform().toString(), device.language(),
         device.workflowNotifications(), device.errorNotifications(),
@@ -139,8 +139,8 @@ public final class DeviceDatabaseTable extends DatabaseTable {
         device.folderCreate(), device.folderDelete()));
   }
 
-  public void deleteDevice(String deviceId) {
-    delete(DatabaseCondition.of("id", deviceId));
+  public CompletableFuture<Void> deleteDevice(String deviceId) {
+    return delete(DatabaseCondition.of("id", deviceId));
   }
 
   public CompletableFuture<String> generateAvailableDeviceId() {

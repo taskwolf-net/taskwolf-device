@@ -313,9 +313,9 @@ public final class DeviceScanController extends DeviceController {
   ) {
     deviceScanDatabaseTable.deleteScan(scan.id());
     if (!scan.targetId().equals(scan.creatorId())) {
-      userDeviceDatabaseTable.insertUserDevice(scan.targetId(),
-        (String) deviceResult.get("id"), scan.creatorId(), scan.information(),
-        DevicePlatform.valueOf(scan.platform()));
+      var deviceId = (String) deviceResult.get("id");
+      userDeviceDatabaseTable.userHasDevice(scan.targetId(), deviceId)
+        .thenAccept(isTrusted -> trustScanTarget(deviceId, scan, isTrusted));
     }
     var information = Maps.<String, Object>newHashMap();
     information.putAll(deviceResult);
@@ -323,5 +323,14 @@ public final class DeviceScanController extends DeviceController {
     information.put("success", true);
     information.put("approved", true);
     return information;
+  }
+
+  private void trustScanTarget(String deviceId, DeviceScan scan, boolean isTrusted) {
+    if (isTrusted) {
+      return;
+    }
+    deviceDatabaseTable().findDevice(deviceId).thenAccept(device ->
+      userDeviceDatabaseTable.insertUserDevice(scan.targetId(), device.id(),
+        device.ownerId(), device.information(), device.platform()));
   }
 }

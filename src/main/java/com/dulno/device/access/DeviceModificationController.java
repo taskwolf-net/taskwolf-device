@@ -96,10 +96,9 @@ public final class DeviceModificationController extends DeviceController {
       return deviceDatabaseTable().findDevice(deviceId, user.id())
         .thenApply(device -> existingDeviceLogin(device, platform, firebaseToken));
     }
-    var futureId = deviceDatabaseTable().generateAvailableDeviceId();
-    futureId.thenAccept(id -> newDeviceLogin(user, deviceId, information,
-      platform, firebaseToken, id));
-    return futureId.thenApply(id -> Map.of("id", id));
+    return deviceDatabaseTable().generateAvailableDeviceId()
+      .thenCompose(id -> newDeviceLogin(user, deviceId, information,
+        platform, firebaseToken, id));
   }
 
   private Map<String, Object> existingDeviceLogin(
@@ -111,20 +110,21 @@ public final class DeviceModificationController extends DeviceController {
     return Map.of("id", device.id());
   }
 
-  private void newDeviceLogin(
+  private CompletableFuture<Map<String, Object>> newDeviceLogin(
     User user, String deviceId, String information, DevicePlatform platform,
     String firebaseToken, String id
   ) {
-    deviceDatabaseTable().insertDevice(id, deviceId, user.id(), information,
-      platform.toString(), user.language(), true, true, true, true, true, true,
-      true, true, true);
-    userDeviceDatabaseTable.insertUserDevice(UserDevice.create(user.id(), id,
-      user.id(), information, platform));
     if (platform.isMobile()) {
       firebaseDeviceDatabaseTable.storeDeviceIdentifier(id, firebaseToken);
     }
     activityDatabaseTable.insertActivity(user.id(), "activity.device.new.title",
       "activity.device.new.description", ActivityType.DEVICE);
+    return deviceDatabaseTable().insertDevice(id, deviceId, user.id(),
+      information, platform.toString(), user.language(), true, true, true, true,
+      true, true, true, true, true)
+      .thenCompose(value -> userDeviceDatabaseTable.insertUserDevice(
+        UserDevice.create(user.id(), id, user.id(), information, platform)))
+      .thenApply(value -> Map.of("id", id));
   }
 
   @RequestMapping(path = "/device/organization/add/", method = RequestMethod.POST)
