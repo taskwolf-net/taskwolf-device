@@ -10,8 +10,8 @@ import lombok.AllArgsConstructor;
 import net.taskwolf.workflow.action.ActionExecutor;
 import net.taskwolf.workflow.action.ActionResult;
 import net.taskwolf.workflow.placeholder.PlaceholderDissolve;
-import org.apache.tomcat.util.codec.binary.Base64;
 
+import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -78,7 +78,7 @@ public final class DeviceFileStoreActionExecutor implements ActionExecutor {
   ) {
     var futureResponse = new CompletableFuture<ActionResult>();
     fileFactory.createFile(device, workspace.path() + filePath, fileName)
-      .store(Base64.decodeBase64(fileContent), futureResponse);
+      .store(Base64.getMimeDecoder().decode(fileContent), futureResponse);
     return futureResponse;
   }
 }
