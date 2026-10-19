@@ -17,7 +17,6 @@ import net.taskwolf.core.user.UserDatabaseTable;
 import net.taskwolf.core.user.UserTargetDatabaseTable;
 import net.taskwolf.core.worker.client.WorkerProxyClient;
 import net.taskwolf.device.distribution.file.packet.outgoing.PacketOutgoingFileStorageResponse;
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Key;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Map;
@@ -139,7 +139,7 @@ public final class FileStoreController extends DeviceController {
       return futureResponse;
     }
     var result = Map.<String, Object>of("content",
-      Base64.encodeBase64String(content.get()));
+      Base64.getEncoder().encodeToString(content.get()));
     workerProxyClient.sendPacket(new PacketOutgoingFileStorageResponse(storageId,
       true));
     fileStorageRepository.unregisterFileContent(storageId);
