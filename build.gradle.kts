@@ -1,7 +1,7 @@
 plugins {
   id("java")
   id("maven-publish")
-  id("io.freefair.lombok") version "9.8.0"
+  id("io.freefair.lombok") version "9.8.2"
 }
 
 group = "net.taskwolf"
@@ -46,13 +46,13 @@ dependencies {
 
   compileOnly("io.jsonwebtoken:jjwt:0.13.0")
 
-  compileOnly("org.springframework.boot:spring-boot-starter-web:4.1.1")
+  compileOnly("org.springframework.boot:spring-boot-starter-web:4.1.2")
 
   implementation("org.java-websocket:Java-WebSocket:1.6.0")
 
-  implementation("com.google.auth:google-auth-library-oauth2-http:1.54.0")
+  implementation("com.google.auth:google-auth-library-oauth2-http:1.55.0")
 
-  compileOnly("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260924.2")
+  compileOnly("com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20261011.1")
 
   implementation("com.google.zxing:core:3.5.4")
   implementation("com.google.zxing:javase:3.5.4")
